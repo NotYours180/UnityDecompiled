@@ -1,163 +1,214 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	public sealed class HierarchyProperty : IHierarchyProperty
 	{
 		private IntPtr m_Property;
+
 		public extern int instanceID
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern UnityEngine.Object pptrValue
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern string name
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern bool hasChildren
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int depth
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int[] ancestors
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int row
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int colorCode
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern string guid
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern bool alphaSorted
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool isValid
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern bool isMainRepresentation
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern bool hasFullPreviewImage
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern IconDrawStyle iconDrawStyle
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern bool isFolder
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern Texture2D icon
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern HierarchyProperty(HierarchyType hierarchytType);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Reset();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Dispose();
+
 		~HierarchyProperty()
 		{
 			this.Dispose();
 		}
-		[WrapperlessIcall]
+
+		public Scene GetScene()
+		{
+			Scene result;
+			HierarchyProperty.INTERNAL_CALL_GetScene(this, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetScene(HierarchyProperty self, out Scene value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool IsExpanded(int[] expanded);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool Next(int[] expanded);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool NextWithDepthCheck(int[] expanded, int minDepth);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool Previous(int[] expanded);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool Parent();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool Find(int instanceID, int[] expanded);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool Skip(int count, int[] expanded);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int CountRemaining(int[] expanded);
+
 		public void SetSearchFilter(string searchString, int mode)
 		{
 			SearchFilter searchFilter = SearchableEditorWindow.CreateFilter(searchString, (SearchableEditorWindow.SearchMode)mode);
 			this.SetSearchFilter(searchFilter);
 		}
+
 		internal void SetSearchFilter(SearchFilter filter)
 		{
-			this.SetSearchFilterINTERNAL(filter.SplitNameFilter(), filter.classNames, filter.assetLabels, filter.assetBundleNames, filter.referencingInstanceIDs, filter.showAllHits);
+			this.SetSearchFilterINTERNAL(SearchFilter.Split(filter.nameFilter), filter.classNames, filter.assetLabels, filter.assetBundleNames, filter.versionControlStates, filter.referencingInstanceIDs, filter.scenePaths, filter.showAllHits);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void SetSearchFilterINTERNAL(string[] nameFilters, string[] classNames, string[] assetLabels, string[] assetBundleNames, int[] referencingInstanceIDs, bool showAllHits);
-		[WrapperlessIcall]
+		private extern void SetSearchFilterINTERNAL(string[] nameFilters, string[] classNames, string[] assetLabels, string[] assetBundleNames, string[] versionControlStates, int[] referencingInstanceIDs, string[] scenePaths, bool showAllHits);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int[] FindAllAncestors(int[] instanceIDs);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ClearSceneObjectsFilter();
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void FilterSingleSceneObject(int instanceID, bool otherVisibilityState);
 	}

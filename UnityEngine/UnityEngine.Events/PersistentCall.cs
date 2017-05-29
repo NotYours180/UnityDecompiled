@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using UnityEngine.Serialization;
+
 namespace UnityEngine.Events
 {
 	[Serializable]
@@ -8,14 +9,19 @@ namespace UnityEngine.Events
 	{
 		[FormerlySerializedAs("instance"), SerializeField]
 		private UnityEngine.Object m_Target;
+
 		[FormerlySerializedAs("methodName"), SerializeField]
 		private string m_MethodName;
+
 		[FormerlySerializedAs("mode"), SerializeField]
-		private PersistentListenerMode m_Mode;
+		private PersistentListenerMode m_Mode = PersistentListenerMode.EventDefined;
+
 		[FormerlySerializedAs("arguments"), SerializeField]
 		private ArgumentCache m_Arguments = new ArgumentCache();
+
 		[FormerlySerializedAs("enabled"), FormerlySerializedAs("m_Enabled"), SerializeField]
 		private UnityEventCallState m_CallState = UnityEventCallState.RuntimeOnly;
+
 		public UnityEngine.Object target
 		{
 			get
@@ -23,6 +29,7 @@ namespace UnityEngine.Events
 				return this.m_Target;
 			}
 		}
+
 		public string methodName
 		{
 			get
@@ -30,6 +37,7 @@ namespace UnityEngine.Events
 				return this.m_MethodName;
 			}
 		}
+
 		public PersistentListenerMode mode
 		{
 			get
@@ -41,6 +49,7 @@ namespace UnityEngine.Events
 				this.m_Mode = value;
 			}
 		}
+
 		public ArgumentCache arguments
 		{
 			get
@@ -48,6 +57,7 @@ namespace UnityEngine.Events
 				return this.m_Arguments;
 			}
 		}
+
 		public UnityEventCallState callState
 		{
 			get
@@ -59,45 +69,64 @@ namespace UnityEngine.Events
 				this.m_CallState = value;
 			}
 		}
+
 		public bool IsValid()
 		{
 			return this.target != null && !string.IsNullOrEmpty(this.methodName);
 		}
+
 		public BaseInvokableCall GetRuntimeCall(UnityEventBase theEvent)
 		{
+			BaseInvokableCall result;
 			if (this.m_CallState == UnityEventCallState.RuntimeOnly && !Application.isPlaying)
 			{
-				return null;
+				result = null;
 			}
-			if (this.m_CallState == UnityEventCallState.Off || theEvent == null)
+			else if (this.m_CallState == UnityEventCallState.Off || theEvent == null)
 			{
-				return null;
+				result = null;
 			}
-			MethodInfo methodInfo = theEvent.FindMethod(this);
-			if (methodInfo == null)
+			else
 			{
-				return null;
+				MethodInfo methodInfo = theEvent.FindMethod(this);
+				if (methodInfo == null)
+				{
+					result = null;
+				}
+				else
+				{
+					switch (this.m_Mode)
+					{
+					case PersistentListenerMode.EventDefined:
+						result = theEvent.GetDelegate(this.target, methodInfo);
+						break;
+					case PersistentListenerMode.Void:
+						result = new InvokableCall(this.target, methodInfo);
+						break;
+					case PersistentListenerMode.Object:
+						result = PersistentCall.GetObjectCall(this.target, methodInfo, this.m_Arguments);
+						break;
+					case PersistentListenerMode.Int:
+						result = new CachedInvokableCall<int>(this.target, methodInfo, this.m_Arguments.intArgument);
+						break;
+					case PersistentListenerMode.Float:
+						result = new CachedInvokableCall<float>(this.target, methodInfo, this.m_Arguments.floatArgument);
+						break;
+					case PersistentListenerMode.String:
+						result = new CachedInvokableCall<string>(this.target, methodInfo, this.m_Arguments.stringArgument);
+						break;
+					case PersistentListenerMode.Bool:
+						result = new CachedInvokableCall<bool>(this.target, methodInfo, this.m_Arguments.boolArgument);
+						break;
+					default:
+						result = null;
+						break;
+					}
+				}
 			}
-			switch (this.m_Mode)
-			{
-			case PersistentListenerMode.EventDefined:
-				return theEvent.GetDelegate(this.target, methodInfo);
-			case PersistentListenerMode.Void:
-				return new InvokableCall(this.target, methodInfo);
-			case PersistentListenerMode.Object:
-				return PersistentCall.GetObjectCall(this.target, methodInfo, this.m_Arguments);
-			case PersistentListenerMode.Int:
-				return new CachedInvokableCall<int>(this.target, methodInfo, this.m_Arguments.intArgument);
-			case PersistentListenerMode.Float:
-				return new CachedInvokableCall<float>(this.target, methodInfo, this.m_Arguments.floatArgument);
-			case PersistentListenerMode.String:
-				return new CachedInvokableCall<string>(this.target, methodInfo, this.m_Arguments.stringArgument);
-			case PersistentListenerMode.Bool:
-				return new CachedInvokableCall<bool>(this.target, methodInfo, this.m_Arguments.boolArgument);
-			default:
-				return null;
-			}
+			return result;
 		}
+
 		private static BaseInvokableCall GetObjectCall(UnityEngine.Object target, MethodInfo method, ArgumentCache arguments)
 		{
 			Type type = typeof(UnityEngine.Object);
@@ -128,11 +157,13 @@ namespace UnityEngine.Events
 				@object
 			}) as BaseInvokableCall;
 		}
+
 		public void RegisterPersistentListener(UnityEngine.Object ttarget, string mmethodName)
 		{
 			this.m_Target = ttarget;
 			this.m_MethodName = mmethodName;
 		}
+
 		public void UnregisterPersistentListener()
 		{
 			this.m_MethodName = string.Empty;

@@ -1,34 +1,45 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PreviewWindow : InspectorWindow
 	{
 		[SerializeField]
 		private InspectorWindow m_ParentInspectorWindow;
+
 		public void SetParentInspector(InspectorWindow inspector)
 		{
 			this.m_ParentInspectorWindow = inspector;
+			this.CreateTracker();
 		}
+
 		protected override void OnEnable()
 		{
 			base.OnEnable();
-			base.title = "Preview";
+			base.titleContent = EditorGUIUtility.TextContent("Preview");
 			base.minSize = new Vector2(260f, 220f);
 		}
+
 		protected override void OnDisable()
 		{
 			base.OnDisable();
 			this.m_ParentInspectorWindow.Repaint();
 		}
+
 		protected override void CreateTracker()
 		{
-			this.m_Tracker = this.m_ParentInspectorWindow.GetTracker();
+			if (this.m_ParentInspectorWindow != null)
+			{
+				this.m_Tracker = this.m_ParentInspectorWindow.tracker;
+			}
 		}
+
 		public override Editor GetLastInteractedEditor()
 		{
 			return this.m_ParentInspectorWindow.GetLastInteractedEditor();
 		}
+
 		protected override void OnGUI()
 		{
 			if (!this.m_ParentInspectorWindow)
@@ -37,10 +48,9 @@ namespace UnityEditor
 				GUIUtility.ExitGUI();
 			}
 			Editor.m_AllowMultiObjectAccess = true;
-			this.CreateTracker();
 			this.CreatePreviewables();
-			base.AssignAssetEditor(this.m_Tracker.activeEditors);
-			IPreviewable[] editorsWithPreviews = base.GetEditorsWithPreviews(this.m_Tracker.activeEditors);
+			base.AssignAssetEditor(base.tracker.activeEditors);
+			IPreviewable[] editorsWithPreviews = base.GetEditorsWithPreviews(base.tracker.activeEditors);
 			IPreviewable editorThatControlsPreview = base.GetEditorThatControlsPreview(editorsWithPreviews);
 			bool flag = editorThatControlsPreview != null && editorThatControlsPreview.HasPreviewGUI();
 			Rect rect = EditorGUILayout.BeginHorizontal(GUIContent.none, InspectorWindow.styles.preToolbar, new GUILayoutOption[]
@@ -65,21 +75,25 @@ namespace UnityEditor
 			{
 				base.Close();
 				current.Use();
-				return;
 			}
-			Rect rect2 = GUILayoutUtility.GetRect(0f, 10240f, 64f, 10240f);
-			if (Event.current.type == EventType.Repaint)
+			else
 			{
-				InspectorWindow.styles.preBackground.Draw(rect2, false, false, false, false);
-			}
-			if (editorThatControlsPreview != null && editorThatControlsPreview.HasPreviewGUI())
-			{
-				editorThatControlsPreview.DrawPreview(rect2);
+				Rect rect2 = GUILayoutUtility.GetRect(0f, 10240f, 64f, 10240f);
+				if (Event.current.type == EventType.Repaint)
+				{
+					InspectorWindow.styles.preBackground.Draw(rect2, false, false, false, false);
+				}
+				if (editorThatControlsPreview != null && editorThatControlsPreview.HasPreviewGUI())
+				{
+					editorThatControlsPreview.DrawPreview(rect2);
+				}
 			}
 		}
+
 		public override void AddItemsToMenu(GenericMenu menu)
 		{
 		}
+
 		protected override void ShowButton(Rect r)
 		{
 		}

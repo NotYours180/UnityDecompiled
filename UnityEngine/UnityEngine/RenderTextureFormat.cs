@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	public enum RenderTextureFormat
@@ -13,7 +14,8 @@ namespace UnityEngine
 		Default,
 		ARGB2101010,
 		DefaultHDR,
-		ARGBFloat = 11,
+		ARGB64,
+		ARGBFloat,
 		RGFloat,
 		RGHalf,
 		RFloat,
@@ -21,6 +23,9 @@ namespace UnityEngine
 		R8,
 		ARGBInt,
 		RGInt,
-		RInt
+		RInt,
+		BGRA32,
+		RGB111110Float = 22,
+		RG32
 	}
 }

@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(QualitySettings))]
@@ -9,48 +11,81 @@ namespace UnityEditor
 	{
 		private static class Styles
 		{
-			public const int kMinToggleWidth = 15;
-			public const int kMaxToggleWidth = 20;
-			public const int kHeaderRowHeight = 20;
-			public const int kLabelWidth = 80;
 			public static readonly GUIStyle kToggle = "OL Toggle";
+
 			public static readonly GUIStyle kDefaultToggle = "OL ToggleWhite";
-			public static readonly GUIStyle kButton = "Button";
-			public static readonly GUIStyle kSelected = "PR Label";
-			public static readonly GUIContent kPlatformTooltip = new GUIContent(string.Empty, "Allow quality setting on platform");
-			public static readonly GUIContent kIconTrash = EditorGUIUtility.IconContent("TreeEditor.Trash", "Delete Level");
-			public static readonly GUIContent kSoftParticlesHint = EditorGUIUtility.TextContent("QualitySettings.SoftParticlesHint");
-			public static readonly GUIContent kBillboardsFaceCameraPos = EditorGUIUtility.TextContent("QualitySettings.BillboardsFaceCameraPos");
+
+			public static readonly GUIContent kPlatformTooltip = new GUIContent("", "Allow quality setting on platform");
+
+			public static readonly GUIContent kIconTrash = EditorGUIUtility.IconContent("TreeEditor.Trash", "|Delete Level");
+
+			public static readonly GUIContent kSoftParticlesHint = EditorGUIUtility.TextContent("Soft Particles require using Deferred Lighting or making camera render the depth texture.");
+
+			public static readonly GUIContent kBillboardsFaceCameraPos = EditorGUIUtility.TextContent("Billboards Face Camera Position|Make billboards face towards camera position. Otherwise they face towards camera plane. This makes billboards look nicer when camera rotates but is more expensive to render.");
+
 			public static readonly GUIStyle kListEvenBg = "ObjectPickerResultsOdd";
+
 			public static readonly GUIStyle kListOddBg = "ObjectPickerResultsEven";
+
 			public static readonly GUIStyle kDefaultDropdown = "QualitySettingsDefault";
+
+			public const int kMinToggleWidth = 15;
+
+			public const int kMaxToggleWidth = 20;
+
+			public const int kHeaderRowHeight = 20;
+
+			public const int kLabelWidth = 80;
 		}
+
 		private struct QualitySetting
 		{
 			public string m_Name;
+
 			public string m_PropertyPath;
+
 			public List<string> m_ExcludedPlatforms;
 		}
+
 		private class Dragging
 		{
 			public int m_StartPosition;
+
 			public int m_Position;
 		}
+
+		public const int kMinAsyncRingBufferSize = 2;
+
+		public const int kMaxAsyncRingBufferSize = 512;
+
+		public const int kMinAsyncUploadTimeSlice = 1;
+
+		public const int kMaxAsyncUploadTimeSlice = 33;
+
 		private SerializedObject m_QualitySettings;
+
 		private SerializedProperty m_QualitySettingsProperty;
+
 		private SerializedProperty m_PerPlatformDefaultQualityProperty;
+
 		private List<BuildPlayerWindow.BuildPlatform> m_ValidPlatforms;
+
 		private readonly int m_QualityElementHash = "QualityElementHash".GetHashCode();
+
 		private QualitySettingsEditor.Dragging m_Dragging;
+
 		private bool m_ShouldAddNewLevel;
+
 		private int m_DeleteLevel = -1;
+
 		public void OnEnable()
 		{
-			this.m_QualitySettings = new SerializedObject(this.target);
+			this.m_QualitySettings = new SerializedObject(base.target);
 			this.m_QualitySettingsProperty = this.m_QualitySettings.FindProperty("m_QualitySettings");
 			this.m_PerPlatformDefaultQualityProperty = this.m_QualitySettings.FindProperty("m_PerPlatformDefaultQuality");
 			this.m_ValidPlatforms = BuildPlayerWindow.GetValidPlatforms();
 		}
+
 		private int DoQualityLevelSelection(int currentQualitylevel, IList<QualitySettingsEditor.QualitySetting> qualitySettings, Dictionary<string, int> platformDefaultQualitySettings)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -76,9 +111,9 @@ namespace UnityEditor
 					GUILayout.Height(20f)
 				});
 				GUIContent gUIContent = EditorGUIUtility.TempContent(current.smallIcon);
-				gUIContent.tooltip = current.name;
+				gUIContent.tooltip = current.title.text;
 				GUI.Label(rect2, gUIContent);
-				gUIContent.tooltip = string.Empty;
+				gUIContent.tooltip = "";
 			}
 			GUILayoutUtility.GetRect(GUIContent.none, QualitySettingsEditor.Styles.kToggle, new GUILayoutOption[]
 			{
@@ -106,6 +141,7 @@ namespace UnityEditor
 						num = i;
 						GUIUtility.keyboardControl = 0;
 						GUIUtility.hotControl = this.m_QualityElementHash;
+						GUI.changed = true;
 						this.m_Dragging = new QualitySettingsEditor.Dragging
 						{
 							m_StartPosition = i,
@@ -122,10 +158,13 @@ namespace UnityEditor
 					}
 					break;
 				case EventType.MouseDrag:
-					if (GUIUtility.hotControl == this.m_QualityElementHash && rect3.Contains(current2.mousePosition))
+					if (GUIUtility.hotControl == this.m_QualityElementHash)
 					{
-						this.m_Dragging.m_Position = i;
-						current2.Use();
+						if (rect3.Contains(current2.mousePosition))
+						{
+							this.m_Dragging.m_Position = i;
+							current2.Use();
+						}
 					}
 					break;
 				case EventType.KeyDown:
@@ -134,6 +173,7 @@ namespace UnityEditor
 						num += ((current2.keyCode != KeyCode.UpArrow) ? 1 : -1);
 						num = Mathf.Clamp(num, 0, qualitySettings.Count - 1);
 						GUIUtility.keyboardControl = 0;
+						GUI.changed = true;
 						current2.Use();
 					}
 					break;
@@ -225,9 +265,8 @@ namespace UnityEditor
 				{
 					platformDefaultQualitySettings.Add(current4.name, 0);
 				}
-				num2 = EditorGUI.Popup(rect7, num2, (
-					from x in qualitySettings
-					select x.m_Name).ToArray<string>(), QualitySettingsEditor.Styles.kDefaultDropdown);
+				num2 = EditorGUI.Popup(rect7, num2, (from x in qualitySettings
+				select x.m_Name).ToArray<string>(), QualitySettingsEditor.Styles.kDefaultDropdown);
 				platformDefaultQualitySettings[current4.name] = num2;
 			}
 			GUILayout.EndHorizontal();
@@ -253,28 +292,56 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			return num;
 		}
+
 		private List<QualitySettingsEditor.QualitySetting> GetQualitySettings()
 		{
 			List<QualitySettingsEditor.QualitySetting> list = new List<QualitySettingsEditor.QualitySetting>();
-			foreach (SerializedProperty serializedProperty in this.m_QualitySettingsProperty)
+			IEnumerator enumerator = this.m_QualitySettingsProperty.GetEnumerator();
+			try
 			{
-				QualitySettingsEditor.QualitySetting qualitySetting = default(QualitySettingsEditor.QualitySetting);
-				QualitySettingsEditor.QualitySetting qualitySetting2 = qualitySetting;
-				qualitySetting2.m_Name = serializedProperty.FindPropertyRelative("name").stringValue;
-				qualitySetting2.m_PropertyPath = serializedProperty.propertyPath;
-				qualitySetting = qualitySetting2;
-				qualitySetting.m_PropertyPath = serializedProperty.propertyPath;
-				List<string> list2 = new List<string>();
-				SerializedProperty serializedProperty2 = serializedProperty.FindPropertyRelative("excludedTargetPlatforms");
-				foreach (SerializedProperty serializedProperty3 in serializedProperty2)
+				while (enumerator.MoveNext())
 				{
-					list2.Add(serializedProperty3.stringValue);
+					SerializedProperty serializedProperty = (SerializedProperty)enumerator.Current;
+					QualitySettingsEditor.QualitySetting item = new QualitySettingsEditor.QualitySetting
+					{
+						m_Name = serializedProperty.FindPropertyRelative("name").stringValue,
+						m_PropertyPath = serializedProperty.propertyPath
+					};
+					item.m_PropertyPath = serializedProperty.propertyPath;
+					List<string> list2 = new List<string>();
+					SerializedProperty serializedProperty2 = serializedProperty.FindPropertyRelative("excludedTargetPlatforms");
+					IEnumerator enumerator2 = serializedProperty2.GetEnumerator();
+					try
+					{
+						while (enumerator2.MoveNext())
+						{
+							SerializedProperty serializedProperty3 = (SerializedProperty)enumerator2.Current;
+							list2.Add(serializedProperty3.stringValue);
+						}
+					}
+					finally
+					{
+						IDisposable disposable;
+						if ((disposable = (enumerator2 as IDisposable)) != null)
+						{
+							disposable.Dispose();
+						}
+					}
+					item.m_ExcludedPlatforms = list2;
+					list.Add(item);
 				}
-				qualitySetting.m_ExcludedPlatforms = list2;
-				list.Add(qualitySetting);
+			}
+			finally
+			{
+				IDisposable disposable2;
+				if ((disposable2 = (enumerator as IDisposable)) != null)
+				{
+					disposable2.Dispose();
+				}
 			}
 			return list;
 		}
+
 		private void SetQualitySettings(IEnumerable<QualitySettingsEditor.QualitySetting> settings)
 		{
 			foreach (QualitySettingsEditor.QualitySetting current in settings)
@@ -288,18 +355,32 @@ namespace UnityEditor
 						serializedProperty2.arraySize = current.m_ExcludedPlatforms.Count;
 					}
 					int num = 0;
-					foreach (SerializedProperty serializedProperty3 in serializedProperty2)
+					IEnumerator enumerator2 = serializedProperty2.GetEnumerator();
+					try
 					{
-						if (serializedProperty3.stringValue != current.m_ExcludedPlatforms[num])
+						while (enumerator2.MoveNext())
 						{
-							serializedProperty3.stringValue = current.m_ExcludedPlatforms[num];
+							SerializedProperty serializedProperty3 = (SerializedProperty)enumerator2.Current;
+							if (serializedProperty3.stringValue != current.m_ExcludedPlatforms[num])
+							{
+								serializedProperty3.stringValue = current.m_ExcludedPlatforms[num];
+							}
+							num++;
 						}
-						num++;
+					}
+					finally
+					{
+						IDisposable disposable;
+						if ((disposable = (enumerator2 as IDisposable)) != null)
+						{
+							disposable.Dispose();
+						}
 					}
 				}
 			}
 		}
-		private void HandleAddRemoveQualitySetting(ref int selectedLevel)
+
+		private void HandleAddRemoveQualitySetting(ref int selectedLevel, Dictionary<string, int> platformDefaults)
 		{
 			if (this.m_DeleteLevel >= 0)
 			{
@@ -310,6 +391,16 @@ namespace UnityEditor
 				if (this.m_QualitySettingsProperty.arraySize > 1 && this.m_DeleteLevel >= 0 && this.m_DeleteLevel < this.m_QualitySettingsProperty.arraySize)
 				{
 					this.m_QualitySettingsProperty.DeleteArrayElementAtIndex(this.m_DeleteLevel);
+					List<string> list = new List<string>(platformDefaults.Keys);
+					foreach (string current in list)
+					{
+						int num = platformDefaults[current];
+						if (num != 0 && num >= this.m_DeleteLevel)
+						{
+							string key;
+							platformDefaults[key = current] = platformDefaults[key] - 1;
+						}
+					}
 				}
 				this.m_DeleteLevel = -1;
 			}
@@ -322,15 +413,30 @@ namespace UnityEditor
 				this.m_ShouldAddNewLevel = false;
 			}
 		}
+
 		private Dictionary<string, int> GetDefaultQualityForPlatforms()
 		{
 			Dictionary<string, int> dictionary = new Dictionary<string, int>();
-			foreach (SerializedProperty serializedProperty in this.m_PerPlatformDefaultQualityProperty)
+			IEnumerator enumerator = this.m_PerPlatformDefaultQualityProperty.GetEnumerator();
+			try
 			{
-				dictionary.Add(serializedProperty.FindPropertyRelative("first").stringValue, serializedProperty.FindPropertyRelative("second").intValue);
+				while (enumerator.MoveNext())
+				{
+					SerializedProperty serializedProperty = (SerializedProperty)enumerator.Current;
+					dictionary.Add(serializedProperty.FindPropertyRelative("first").stringValue, serializedProperty.FindPropertyRelative("second").intValue);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 			return dictionary;
 		}
+
 		private void SetDefaultQualityForPlatforms(Dictionary<string, int> platformDefaults)
 		{
 			if (this.m_PerPlatformDefaultQualityProperty.arraySize != platformDefaults.Count)
@@ -351,6 +457,7 @@ namespace UnityEditor
 				num++;
 			}
 		}
+
 		private static void DrawHorizontalDivider()
 		{
 			Rect rect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, new GUILayoutOption[]
@@ -373,24 +480,23 @@ namespace UnityEditor
 			}
 			GUI.backgroundColor = backgroundColor;
 		}
+
 		private void SoftParticlesHintGUI()
 		{
 			Camera main = Camera.main;
-			if (main == null)
+			if (!(main == null))
 			{
-				return;
+				RenderingPath actualRenderingPath = main.actualRenderingPath;
+				if (actualRenderingPath != RenderingPath.DeferredLighting && actualRenderingPath != RenderingPath.DeferredShading)
+				{
+					if ((main.depthTextureMode & DepthTextureMode.Depth) == DepthTextureMode.None)
+					{
+						EditorGUILayout.HelpBox(QualitySettingsEditor.Styles.kSoftParticlesHint.text, MessageType.Warning, false);
+					}
+				}
 			}
-			RenderingPath actualRenderingPath = main.actualRenderingPath;
-			if (actualRenderingPath == RenderingPath.DeferredLighting || actualRenderingPath == RenderingPath.DeferredShading)
-			{
-				return;
-			}
-			if ((main.depthTextureMode & DepthTextureMode.Depth) != DepthTextureMode.None)
-			{
-				return;
-			}
-			EditorGUILayout.HelpBox(QualitySettingsEditor.Styles.kSoftParticlesHint.text, MessageType.Warning, false);
 		}
+
 		private void DrawCascadeSplitGUI<T>(ref SerializedProperty shadowCascadeSplit)
 		{
 			float[] array = null;
@@ -402,36 +508,38 @@ namespace UnityEditor
 					shadowCascadeSplit.floatValue
 				};
 			}
-			else
+			else if (typeFromHandle == typeof(Vector3))
 			{
-				if (typeFromHandle == typeof(Vector3))
+				Vector3 vector3Value = shadowCascadeSplit.vector3Value;
+				array = new float[]
 				{
-					Vector3 vector3Value = shadowCascadeSplit.vector3Value;
-					array = new float[]
-					{
-						Mathf.Clamp(vector3Value[0], 0f, 1f),
-						Mathf.Clamp(vector3Value[1] - vector3Value[0], 0f, 1f),
-						Mathf.Clamp(vector3Value[2] - vector3Value[1], 0f, 1f)
-					};
-				}
+					Mathf.Clamp(vector3Value[0], 0f, 1f),
+					Mathf.Clamp(vector3Value[1] - vector3Value[0], 0f, 1f),
+					Mathf.Clamp(vector3Value[2] - vector3Value[1], 0f, 1f)
+				};
 			}
 			if (array != null)
 			{
+				EditorGUI.BeginChangeCheck();
 				ShadowCascadeSplitGUI.HandleCascadeSliderGUI(ref array);
-				if (typeFromHandle == typeof(float))
+				if (EditorGUI.EndChangeCheck())
 				{
-					shadowCascadeSplit.floatValue = array[0];
-				}
-				else
-				{
-					Vector3 vector3Value2 = default(Vector3);
-					vector3Value2[0] = array[0];
-					vector3Value2[1] = vector3Value2[0] + array[1];
-					vector3Value2[2] = vector3Value2[1] + array[2];
-					shadowCascadeSplit.vector3Value = vector3Value2;
+					if (typeFromHandle == typeof(float))
+					{
+						shadowCascadeSplit.floatValue = array[0];
+					}
+					else
+					{
+						Vector3 vector3Value2 = default(Vector3);
+						vector3Value2[0] = array[0];
+						vector3Value2[1] = vector3Value2[0] + array[1];
+						vector3Value2[2] = vector3Value2[1] + array[2];
+						shadowCascadeSplit.vector3Value = vector3Value2;
+					}
 				}
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -442,9 +550,14 @@ namespace UnityEditor
 			List<QualitySettingsEditor.QualitySetting> qualitySettings = this.GetQualitySettings();
 			Dictionary<string, int> defaultQualityForPlatforms = this.GetDefaultQualityForPlatforms();
 			int num = QualitySettings.GetQualityLevel();
+			EditorGUI.BeginChangeCheck();
 			num = this.DoQualityLevelSelection(num, qualitySettings, defaultQualityForPlatforms);
+			if (EditorGUI.EndChangeCheck())
+			{
+				QualitySettings.SetQualityLevel(num);
+			}
 			this.SetQualitySettings(qualitySettings);
-			this.HandleAddRemoveQualitySetting(ref num);
+			this.HandleAddRemoveQualitySetting(ref num, defaultQualityForPlatforms);
 			this.SetDefaultQualityForPlatforms(defaultQualityForPlatforms);
 			GUILayout.Space(10f);
 			QualitySettingsEditor.DrawHorizontalDivider();
@@ -457,19 +570,22 @@ namespace UnityEditor
 			SerializedProperty property4 = arrayElementAtIndex.FindPropertyRelative("shadowProjection");
 			SerializedProperty serializedProperty2 = arrayElementAtIndex.FindPropertyRelative("shadowCascades");
 			SerializedProperty property5 = arrayElementAtIndex.FindPropertyRelative("shadowDistance");
+			SerializedProperty property6 = arrayElementAtIndex.FindPropertyRelative("shadowNearPlaneOffset");
 			SerializedProperty serializedProperty3 = arrayElementAtIndex.FindPropertyRelative("shadowCascade2Split");
 			SerializedProperty serializedProperty4 = arrayElementAtIndex.FindPropertyRelative("shadowCascade4Split");
-			SerializedProperty property6 = arrayElementAtIndex.FindPropertyRelative("blendWeights");
-			SerializedProperty property7 = arrayElementAtIndex.FindPropertyRelative("textureQuality");
-			SerializedProperty property8 = arrayElementAtIndex.FindPropertyRelative("anisotropicTextures");
-			SerializedProperty property9 = arrayElementAtIndex.FindPropertyRelative("antiAliasing");
+			SerializedProperty property7 = arrayElementAtIndex.FindPropertyRelative("blendWeights");
+			SerializedProperty property8 = arrayElementAtIndex.FindPropertyRelative("textureQuality");
+			SerializedProperty property9 = arrayElementAtIndex.FindPropertyRelative("anisotropicTextures");
+			SerializedProperty property10 = arrayElementAtIndex.FindPropertyRelative("antiAliasing");
 			SerializedProperty serializedProperty5 = arrayElementAtIndex.FindPropertyRelative("softParticles");
-			SerializedProperty property10 = arrayElementAtIndex.FindPropertyRelative("realtimeReflectionProbes");
-			SerializedProperty property11 = arrayElementAtIndex.FindPropertyRelative("billboardsFaceCameraPosition");
-			SerializedProperty property12 = arrayElementAtIndex.FindPropertyRelative("vSyncCount");
-			SerializedProperty property13 = arrayElementAtIndex.FindPropertyRelative("lodBias");
-			SerializedProperty property14 = arrayElementAtIndex.FindPropertyRelative("maximumLODLevel");
-			SerializedProperty property15 = arrayElementAtIndex.FindPropertyRelative("particleRaycastBudget");
+			SerializedProperty property11 = arrayElementAtIndex.FindPropertyRelative("realtimeReflectionProbes");
+			SerializedProperty property12 = arrayElementAtIndex.FindPropertyRelative("billboardsFaceCameraPosition");
+			SerializedProperty property13 = arrayElementAtIndex.FindPropertyRelative("vSyncCount");
+			SerializedProperty property14 = arrayElementAtIndex.FindPropertyRelative("lodBias");
+			SerializedProperty property15 = arrayElementAtIndex.FindPropertyRelative("maximumLODLevel");
+			SerializedProperty property16 = arrayElementAtIndex.FindPropertyRelative("particleRaycastBudget");
+			SerializedProperty serializedProperty6 = arrayElementAtIndex.FindPropertyRelative("asyncUploadTimeSlice");
+			SerializedProperty serializedProperty7 = arrayElementAtIndex.FindPropertyRelative("asyncUploadBufferSize");
 			if (string.IsNullOrEmpty(serializedProperty.stringValue))
 			{
 				serializedProperty.stringValue = "Level " + num;
@@ -478,49 +594,52 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			GUILayout.Label(EditorGUIUtility.TempContent("Rendering"), EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property7, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property8, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property9, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property10, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(serializedProperty5, new GUILayoutOption[0]);
 			if (serializedProperty5.boolValue)
 			{
 				this.SoftParticlesHintGUI();
 			}
-			EditorGUILayout.PropertyField(property10, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property11, QualitySettingsEditor.Styles.kBillboardsFaceCameraPos, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property11, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property12, QualitySettingsEditor.Styles.kBillboardsFaceCameraPos, new GUILayoutOption[0]);
 			GUILayout.Space(10f);
 			GUILayout.Label(EditorGUIUtility.TempContent("Shadows"), EditorStyles.boldLabel, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property2, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property3, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property4, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property5, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property6, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(serializedProperty2, new GUILayoutOption[0]);
 			if (serializedProperty2.intValue == 2)
 			{
 				this.DrawCascadeSplitGUI<float>(ref serializedProperty3);
 			}
-			else
+			else if (serializedProperty2.intValue == 4)
 			{
-				if (serializedProperty2.intValue == 4)
-				{
-					this.DrawCascadeSplitGUI<Vector3>(ref serializedProperty4);
-				}
+				this.DrawCascadeSplitGUI<Vector3>(ref serializedProperty4);
 			}
 			GUILayout.Space(10f);
 			GUILayout.Label(EditorGUIUtility.TempContent("Other"), EditorStyles.boldLabel, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property6, new GUILayoutOption[0]);
-			EditorGUILayout.PropertyField(property12, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property7, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property13, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property14, new GUILayoutOption[0]);
 			EditorGUILayout.PropertyField(property15, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(property16, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(serializedProperty6, new GUILayoutOption[0]);
+			EditorGUILayout.PropertyField(serializedProperty7, new GUILayoutOption[0]);
+			serializedProperty6.intValue = Mathf.Clamp(serializedProperty6.intValue, 1, 33);
+			serializedProperty7.intValue = Mathf.Clamp(serializedProperty7.intValue, 2, 512);
 			if (this.m_Dragging != null && this.m_Dragging.m_Position != this.m_Dragging.m_StartPosition)
 			{
 				this.m_QualitySettingsProperty.MoveArrayElement(this.m_Dragging.m_StartPosition, this.m_Dragging.m_Position);
 				this.m_Dragging.m_StartPosition = this.m_Dragging.m_Position;
 				num = this.m_Dragging.m_Position;
+				this.m_QualitySettings.ApplyModifiedProperties();
+				QualitySettings.SetQualityLevel(Mathf.Clamp(num, 0, this.m_QualitySettingsProperty.arraySize - 1));
 			}
 			this.m_QualitySettings.ApplyModifiedProperties();
-			QualitySettings.SetQualityLevel(Mathf.Clamp(num, 0, this.m_QualitySettingsProperty.arraySize - 1));
 		}
 	}
 }

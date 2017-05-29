@@ -1,28 +1,35 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public sealed class Input
 	{
-		private static Gyroscope m_MainGyro;
+		private static Gyroscope m_MainGyro = null;
+
 		private static LocationService locationServiceInstance;
+
 		private static Compass compassInstance;
+
 		public static extern bool compensateSensors
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("isGyroAvailable property is deprecated. Please use SystemInfo.supportsGyroscope instead.")]
 		public static extern bool isGyroAvailable
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static Gyroscope gyro
 		{
 			get
@@ -34,58 +41,75 @@ namespace UnityEngine
 				return Input.m_MainGyro;
 			}
 		}
-		public static extern Vector3 mousePosition
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern Vector2 mouseScrollDelta
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static bool mousePresent
+
+		public static Vector3 mousePosition
 		{
 			get
 			{
-				return !Input.touchSupported;
+				Vector3 result;
+				Input.INTERNAL_get_mousePosition(out result);
+				return result;
 			}
 		}
-		public static extern bool simulateMouseWithTouches
+
+		public static Vector2 mouseScrollDelta
 		{
-			[WrapperlessIcall]
+			get
+			{
+				Vector2 result;
+				Input.INTERNAL_get_mouseScrollDelta(out result);
+				return result;
+			}
+		}
+
+		public static extern bool mousePresent
+		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+		}
+
+		public static extern bool simulateMouseWithTouches
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool anyKey
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern bool anyKeyDown
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern string inputString
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static extern Vector3 acceleration
+
+		public static Vector3 acceleration
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				Vector3 result;
+				Input.INTERNAL_get_acceleration(out result);
+				return result;
+			}
 		}
+
 		public static AccelerationEvent[] accelerationEvents
 		{
 			get
@@ -99,12 +123,14 @@ namespace UnityEngine
 				return array;
 			}
 		}
+
 		public static extern int accelerationEventCount
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static Touch[] touches
 		{
 			get
@@ -118,38 +144,56 @@ namespace UnityEngine
 				return array;
 			}
 		}
+
 		public static extern int touchCount
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[Obsolete("eatKeyPressOnTextFieldFocus property is deprecated, and only provided to support legacy behavior.")]
 		public static extern bool eatKeyPressOnTextFieldFocus
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static bool touchSupported
+
+		public static extern bool touchPressureSupported
 		{
-			get
-			{
-				return false;
-			}
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
 		}
+
+		public static extern bool stylusTouchSupported
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern bool touchSupported
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		public static extern bool multiTouchEnabled
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static LocationService location
 		{
 			get
@@ -161,6 +205,7 @@ namespace UnityEngine
 				return Input.locationServiceInstance;
 			}
 		}
+
 		public static Compass compass
 		{
 			get
@@ -172,33 +217,38 @@ namespace UnityEngine
 				return Input.compassInstance;
 			}
 		}
+
 		public static extern DeviceOrientation deviceOrientation
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern IMECompositionMode imeCompositionMode
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern string compositionString
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern bool imeIsSelected
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static Vector2 compositionCursorPos
 		{
 			get
@@ -212,104 +262,158 @@ namespace UnityEngine
 				Input.INTERNAL_set_compositionCursorPos(ref value);
 			}
 		}
-		[WrapperlessIcall]
+
+		public static extern bool backButtonLeavesApp
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int mainGyroIndex_Internal();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetKeyInt(int key);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetKeyString(string name);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetKeyUpInt(int key);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetKeyUpString(string name);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetKeyDownInt(int key);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool GetKeyDownString(string name);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern float GetAxis(string axisName);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern float GetAxisRaw(string axisName);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetButton(string buttonName);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetButtonDown(string buttonName);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetButtonUp(string buttonName);
+
 		public static bool GetKey(string name)
 		{
 			return Input.GetKeyString(name);
 		}
+
 		public static bool GetKey(KeyCode key)
 		{
 			return Input.GetKeyInt((int)key);
 		}
+
 		public static bool GetKeyDown(string name)
 		{
 			return Input.GetKeyDownString(name);
 		}
+
 		public static bool GetKeyDown(KeyCode key)
 		{
 			return Input.GetKeyDownInt((int)key);
 		}
+
 		public static bool GetKeyUp(string name)
 		{
 			return Input.GetKeyUpString(name);
 		}
+
 		public static bool GetKeyUp(KeyCode key)
 		{
 			return Input.GetKeyUpInt((int)key);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetJoystickNames();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsJoystickPreconfigured(string joystickName);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetMouseButton(int button);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetMouseButtonDown(int button);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetMouseButtonUp(int button);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ResetInputAxes();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern AccelerationEvent GetAccelerationEvent(int index);
-		[WrapperlessIcall]
+		private static extern void INTERNAL_get_mousePosition(out Vector3 value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Touch GetTouch(int index);
-		[Obsolete("Use ps3 move API instead", true)]
-		public static Quaternion GetRotation(int deviceID)
+		private static extern void INTERNAL_get_mouseScrollDelta(out Vector2 value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_get_acceleration(out Vector3 value);
+
+		public static AccelerationEvent GetAccelerationEvent(int index)
 		{
-			return Quaternion.identity;
+			AccelerationEvent result;
+			Input.INTERNAL_CALL_GetAccelerationEvent(index, out result);
+			return result;
 		}
-		[Obsolete("Use ps3 move API instead", true)]
-		public static Vector3 GetPosition(int deviceID)
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetAccelerationEvent(int index, out AccelerationEvent value);
+
+		public static Touch GetTouch(int index)
 		{
-			return Vector3.zero;
+			Touch result;
+			Input.INTERNAL_CALL_GetTouch(index, out result);
+			return result;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetTouch(int index, out Touch value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_get_compositionCursorPos(out Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_set_compositionCursorPos(ref Vector2 value);
 	}

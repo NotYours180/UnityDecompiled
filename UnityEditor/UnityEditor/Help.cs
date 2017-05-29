@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	public sealed class Help
@@ -9,23 +11,33 @@ namespace UnityEditor
 		{
 			return Help.HasHelpForObject(obj, true);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasHelpForObject(UnityEngine.Object obj, bool defaultToMonoBehaviour);
+
 		internal static string GetNiceHelpNameForObject(UnityEngine.Object obj)
 		{
 			return Help.GetNiceHelpNameForObject(obj, true);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern string GetNiceHelpNameForObject(UnityEngine.Object obj, bool defaultToMonoBehaviour);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetHelpURLForObject(UnityEngine.Object obj);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ShowHelpForObject(UnityEngine.Object obj);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void ShowHelpPage(string page);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void BrowseURL(string url);
 	}

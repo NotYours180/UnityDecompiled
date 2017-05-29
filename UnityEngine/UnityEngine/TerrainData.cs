@@ -1,36 +1,79 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public sealed class TerrainData : Object
 	{
+		private static readonly int kMaximumResolution = TerrainData.Internal_GetMaximumResolution();
+
+		private static readonly int kMinimumDetailResolutionPerPatch = TerrainData.Internal_GetMinimumDetailResolutionPerPatch();
+
+		private static readonly int kMaximumDetailResolutionPerPatch = TerrainData.Internal_GetMaximumDetailResolutionPerPatch();
+
+		private static readonly int kMaximumDetailPatchCount = TerrainData.Internal_GetMaximumDetailPatchCount();
+
+		private static readonly int kMinimumAlphamapResolution = TerrainData.Internal_GetMinimumAlphamapResolution();
+
+		private static readonly int kMaximumAlphamapResolution = TerrainData.Internal_GetMaximumAlphamapResolution();
+
+		private static readonly int kMinimumBaseMapResolution = TerrainData.Internal_GetMinimumBaseMapResolution();
+
+		private static readonly int kMaximumBaseMapResolution = TerrainData.Internal_GetMaximumBaseMapResolution();
+
 		public extern int heightmapWidth
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int heightmapHeight
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public extern int heightmapResolution
+
+		public int heightmapResolution
 		{
-			[WrapperlessIcall]
+			get
+			{
+				return this.Internal_heightmapResolution;
+			}
+			set
+			{
+				int internal_heightmapResolution = value;
+				if (value < 0 || value > TerrainData.kMaximumResolution)
+				{
+					Debug.LogWarning("heightmapResolution is clamped to the range of [0, " + TerrainData.kMaximumResolution + "].");
+					internal_heightmapResolution = Math.Min(TerrainData.kMaximumResolution, Math.Max(value, 0));
+				}
+				this.Internal_heightmapResolution = internal_heightmapResolution;
+			}
+		}
+
+		private extern int Internal_heightmapResolution
+		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public extern Vector3 heightmapScale
+
+		public Vector3 heightmapScale
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				Vector3 result;
+				this.INTERNAL_get_heightmapScale(out result);
+				return result;
+			}
 		}
+
 		public Vector3 size
 		{
 			get
@@ -44,42 +87,57 @@ namespace UnityEngine
 				this.INTERNAL_set_size(ref value);
 			}
 		}
+
+		public Bounds bounds
+		{
+			get
+			{
+				Bounds result;
+				this.INTERNAL_get_bounds(out result);
+				return result;
+			}
+		}
+
 		public extern float thickness
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float wavingGrassStrength
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float wavingGrassAmount
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float wavingGrassSpeed
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Color wavingGrassTint
 		{
 			get
@@ -93,106 +151,173 @@ namespace UnityEngine
 				this.INTERNAL_set_wavingGrassTint(ref value);
 			}
 		}
+
 		public extern int detailWidth
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int detailHeight
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int detailResolution
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		internal extern int detailResolutionPerPatch
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern DetailPrototype[] detailPrototypes
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern TreeInstance[] treeInstances
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int treeInstanceCount
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern TreePrototype[] treePrototypes
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int alphamapLayers
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public extern int alphamapResolution
+
+		public int alphamapResolution
 		{
-			[WrapperlessIcall]
+			get
+			{
+				return this.Internal_alphamapResolution;
+			}
+			set
+			{
+				int internal_alphamapResolution = value;
+				if (value < TerrainData.kMinimumAlphamapResolution || value > TerrainData.kMaximumAlphamapResolution)
+				{
+					Debug.LogWarning(string.Concat(new object[]
+					{
+						"alphamapResolution is clamped to the range of [",
+						TerrainData.kMinimumAlphamapResolution,
+						", ",
+						TerrainData.kMaximumAlphamapResolution,
+						"]."
+					}));
+					internal_alphamapResolution = Math.Min(TerrainData.kMaximumAlphamapResolution, Math.Max(value, TerrainData.kMinimumAlphamapResolution));
+				}
+				this.Internal_alphamapResolution = internal_alphamapResolution;
+			}
+		}
+
+		private extern int Internal_alphamapResolution
+		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public extern int alphamapWidth
+
+		public int alphamapWidth
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return this.alphamapResolution;
+			}
 		}
-		public extern int alphamapHeight
+
+		public int alphamapHeight
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return this.alphamapResolution;
+			}
 		}
-		public extern int baseMapResolution
+
+		public int baseMapResolution
 		{
-			[WrapperlessIcall]
+			get
+			{
+				return this.Internal_baseMapResolution;
+			}
+			set
+			{
+				int internal_baseMapResolution = value;
+				if (value < TerrainData.kMinimumBaseMapResolution || value > TerrainData.kMaximumBaseMapResolution)
+				{
+					Debug.LogWarning(string.Concat(new object[]
+					{
+						"baseMapResolution is clamped to the range of [",
+						TerrainData.kMinimumBaseMapResolution,
+						", ",
+						TerrainData.kMaximumBaseMapResolution,
+						"]."
+					}));
+					internal_baseMapResolution = Math.Min(TerrainData.kMaximumBaseMapResolution, Math.Max(value, TerrainData.kMinimumBaseMapResolution));
+				}
+				this.Internal_baseMapResolution = internal_baseMapResolution;
+			}
+		}
+
+		private extern int Internal_baseMapResolution
+		{
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		private extern int alphamapTextureCount
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		internal Texture2D[] alphamapTextures
+
+		public Texture2D[] alphamapTextures
 		{
 			get
 			{
@@ -204,46 +329,98 @@ namespace UnityEngine
 				return array;
 			}
 		}
+
 		public extern SplatPrototype[] splatPrototypes
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public TerrainData()
 		{
 			this.Internal_Create(this);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int Internal_GetMaximumResolution();
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int Internal_GetMinimumDetailResolutionPerPatch();
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int Internal_GetMaximumDetailResolutionPerPatch();
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int Internal_GetMaximumDetailPatchCount();
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int Internal_GetMinimumAlphamapResolution();
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int Internal_GetMaximumAlphamapResolution();
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int Internal_GetMinimumBaseMapResolution();
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern int Internal_GetMaximumBaseMapResolution();
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void Internal_Create([Writable] TerrainData terrainData);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool HasUser(GameObject user);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void AddUser(GameObject user);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveUser(GameObject user);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_heightmapScale(out Vector3 value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_size(out Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_size(ref Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_bounds(out Bounds value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetHeight(int x, int y);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetInterpolatedHeight(float x, float y);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float[,] GetHeights(int xBase, int yBase, int width, int height);
+
 		public void SetHeights(int xBase, int yBase, float[,] heights)
 		{
 			if (heights == null)
@@ -262,75 +439,176 @@ namespace UnityEngine
 			}
 			this.Internal_SetHeights(xBase, yBase, heights.GetLength(1), heights.GetLength(0), heights);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetHeights(int xBase, int yBase, int width, int height, float[,] heights);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetHeightsDelayLOD(int xBase, int yBase, int width, int height, float[,] heights);
-		internal void SetHeightsDelayLOD(int xBase, int yBase, float[,] heights)
+
+		public void SetHeightsDelayLOD(int xBase, int yBase, float[,] heights)
 		{
-			this.Internal_SetHeightsDelayLOD(xBase, yBase, heights.GetLength(1), heights.GetLength(0), heights);
+			if (heights == null)
+			{
+				throw new ArgumentNullException("heights");
+			}
+			int length = heights.GetLength(0);
+			int length2 = heights.GetLength(1);
+			if (xBase < 0 || xBase + length2 < 0 || xBase + length2 > this.heightmapWidth)
+			{
+				throw new ArgumentException(UnityString.Format("X out of bounds - trying to set {0}-{1} but the terrain ranges from 0-{2}", new object[]
+				{
+					xBase,
+					xBase + length2,
+					this.heightmapWidth
+				}));
+			}
+			if (yBase < 0 || yBase + length < 0 || yBase + length > this.heightmapHeight)
+			{
+				throw new ArgumentException(UnityString.Format("Y out of bounds - trying to set {0}-{1} but the terrain ranges from 0-{2}", new object[]
+				{
+					yBase,
+					yBase + length,
+					this.heightmapHeight
+				}));
+			}
+			this.Internal_SetHeightsDelayLOD(xBase, yBase, length2, length, heights);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetSteepness(float x, float y);
-		[WrapperlessIcall]
+
+		public Vector3 GetInterpolatedNormal(float x, float y)
+		{
+			Vector3 result;
+			TerrainData.INTERNAL_CALL_GetInterpolatedNormal(this, x, y, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern Vector3 GetInterpolatedNormal(float x, float y);
-		[WrapperlessIcall]
+		private static extern void INTERNAL_CALL_GetInterpolatedNormal(TerrainData self, float x, float y, out Vector3 value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern int GetAdjustedSize(int size);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_wavingGrassTint(out Color value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_wavingGrassTint(ref Color value);
-		[WrapperlessIcall]
+
+		public void SetDetailResolution(int detailResolution, int resolutionPerPatch)
+		{
+			if (detailResolution < 0)
+			{
+				Debug.LogWarning("detailResolution must not be negative.");
+				detailResolution = 0;
+			}
+			if (resolutionPerPatch < TerrainData.kMinimumDetailResolutionPerPatch || resolutionPerPatch > TerrainData.kMaximumDetailResolutionPerPatch)
+			{
+				Debug.LogWarning(string.Concat(new object[]
+				{
+					"resolutionPerPatch is clamped to the range of [",
+					TerrainData.kMinimumDetailResolutionPerPatch,
+					", ",
+					TerrainData.kMaximumDetailResolutionPerPatch,
+					"]."
+				}));
+				resolutionPerPatch = Math.Min(TerrainData.kMaximumDetailResolutionPerPatch, Math.Max(resolutionPerPatch, TerrainData.kMinimumDetailResolutionPerPatch));
+			}
+			int num = detailResolution / resolutionPerPatch;
+			if (num > TerrainData.kMaximumDetailPatchCount)
+			{
+				Debug.LogWarning("Patch count (detailResolution / resolutionPerPatch) is clamped to the range of [0, " + TerrainData.kMaximumDetailPatchCount + "].");
+				num = Math.Min(TerrainData.kMaximumDetailPatchCount, Math.Max(num, 0));
+			}
+			this.Internal_SetDetailResolution(num, resolutionPerPatch);
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetDetailResolution(int detailResolution, int resolutionPerPatch);
-		[WrapperlessIcall]
+		private extern void Internal_SetDetailResolution(int patchCount, int resolutionPerPatch);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void ResetDirtyDetails();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void RefreshPrototypes();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int[] GetSupportedLayers(int xBase, int yBase, int totalWidth, int totalHeight);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int[,] GetDetailLayer(int xBase, int yBase, int width, int height, int layer);
+
 		public void SetDetailLayer(int xBase, int yBase, int layer, int[,] details)
 		{
 			this.Internal_SetDetailLayer(xBase, yBase, details.GetLength(1), details.GetLength(0), layer, details);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetDetailLayer(int xBase, int yBase, int totalWidth, int totalHeight, int detailIndex, int[,] data);
-		[WrapperlessIcall]
+
+		public TreeInstance GetTreeInstance(int index)
+		{
+			TreeInstance result;
+			TerrainData.INTERNAL_CALL_GetTreeInstance(this, index, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern TreeInstance GetTreeInstance(int index);
+		private static extern void INTERNAL_CALL_GetTreeInstance(TerrainData self, int index, out TreeInstance value);
+
 		public void SetTreeInstance(int index, TreeInstance instance)
 		{
 			TerrainData.INTERNAL_CALL_SetTreeInstance(this, index, ref instance);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetTreeInstance(TerrainData self, int index, ref TreeInstance instance);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveTreePrototype(int index);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RecalculateTreePositions();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RemoveDetailPrototype(int index);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern bool NeedUpgradeScaledTreePrototypes();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void UpgradeScaledTreePrototype();
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float[,,] GetAlphamaps(int x, int y, int width, int height);
+
+		[GeneratedByOldBindingsGenerator, RequiredByNativeCode]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern float GetAlphamapResolutionInternal();
+
 		public void SetAlphamaps(int x, int y, float[,,] map)
 		{
 			if (map.GetLength(2) != this.alphamapLayers)
@@ -342,26 +620,33 @@ namespace UnityEngine
 			}
 			this.Internal_SetAlphamaps(x, y, map.GetLength(1), map.GetLength(0), map);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Internal_SetAlphamaps(int x, int y, int width, int height, float[,,] map);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void RecalculateBasemapIfDirty();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void SetBasemapDirty(bool dirty);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Texture2D GetAlphamapTexture(int index);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void AddTree(out TreeInstance tree);
+
 		internal int RemoveTrees(Vector2 position, float radius, int prototypeIndex)
 		{
 			return TerrainData.INTERNAL_CALL_RemoveTrees(this, ref position, radius, prototypeIndex);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern int INTERNAL_CALL_RemoveTrees(TerrainData self, ref Vector2 position, float radius, int prototypeIndex);
 	}

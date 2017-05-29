@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AvatarControl
@@ -14,8 +15,9 @@ namespace UnityEditor
 				EditorGUIUtility.IconContent("AvatarInspector/LeftHandZoomSilhouette"),
 				EditorGUIUtility.IconContent("AvatarInspector/RightHandZoomSilhouette")
 			};
+
 			public GUIContent[,] BodyPart;
-			public GUILayoutOption ButtonSize;
+
 			public Styles()
 			{
 				GUIContent[,] expr_49 = new GUIContent[4, 9];
@@ -31,10 +33,10 @@ namespace UnityEditor
 				expr_49[2, 4] = EditorGUIUtility.IconContent("AvatarInspector/LeftHandZoom");
 				expr_49[3, 6] = EditorGUIUtility.IconContent("AvatarInspector/RightHandZoom");
 				this.BodyPart = expr_49;
-				this.ButtonSize = GUILayout.MaxWidth(120f);
 				base..ctor();
 			}
 		}
+
 		public enum BodyPartColor
 		{
 			Off,
@@ -43,9 +45,13 @@ namespace UnityEditor
 			IKGreen = 4,
 			IKRed = 8
 		}
+
 		public delegate AvatarControl.BodyPartColor BodyPartFeedback(BodyPart bodyPart);
+
 		private static AvatarControl.Styles s_Styles;
+
 		private static Vector2[,] s_BonePositions;
+
 		private static AvatarControl.Styles styles
 		{
 			get
@@ -57,6 +63,7 @@ namespace UnityEditor
 				return AvatarControl.s_Styles;
 			}
 		}
+
 		static AvatarControl()
 		{
 			AvatarControl.s_BonePositions = new Vector2[4, HumanTrait.BoneCount];
@@ -68,8 +75,9 @@ namespace UnityEditor
 			AvatarControl.s_BonePositions[num, 4] = new Vector2(-0.21f, -0.4f);
 			AvatarControl.s_BonePositions[num, 5] = new Vector2(0.23f, -0.8f);
 			AvatarControl.s_BonePositions[num, 6] = new Vector2(-0.23f, -0.8f);
-			AvatarControl.s_BonePositions[num, 7] = new Vector2(0f, 0.25f);
-			AvatarControl.s_BonePositions[num, 8] = new Vector2(0f, 0.43f);
+			AvatarControl.s_BonePositions[num, 7] = new Vector2(0f, 0.2f);
+			AvatarControl.s_BonePositions[num, 8] = new Vector2(0f, 0.35f);
+			AvatarControl.s_BonePositions[num, 54] = new Vector2(0f, 0.5f);
 			AvatarControl.s_BonePositions[num, 9] = new Vector2(0f, 0.66f);
 			AvatarControl.s_BonePositions[num, 10] = new Vector2(0f, 0.76f);
 			AvatarControl.s_BonePositions[num, 11] = new Vector2(0.14f, 0.6f);
@@ -109,6 +117,7 @@ namespace UnityEditor
 				AvatarControl.s_BonePositions[num, 24 + j + 15] = Vector2.Scale(AvatarControl.s_BonePositions[num - 1, 24 + j], new Vector2(-1f, 1f));
 			}
 		}
+
 		public static int ShowBoneMapping(int shownBodyView, AvatarControl.BodyPartFeedback bodyPartCallback, AvatarSetupTool.BoneWrapper[] bones, SerializedObject serializedObject, AvatarMappingEditor editor)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -153,6 +162,7 @@ namespace UnityEditor
 			}
 			return shownBodyView;
 		}
+
 		public static void DrawBodyParts(Rect rect, int shownBodyView, AvatarControl.BodyPartFeedback bodyPartCallback)
 		{
 			GUI.color = new Color(0.2f, 0.2f, 0.2f, 1f);
@@ -165,6 +175,7 @@ namespace UnityEditor
 				AvatarControl.DrawBodyPart(shownBodyView, i, rect, bodyPartCallback((BodyPart)i));
 			}
 		}
+
 		protected static void DrawBodyPart(int shownBodyView, int i, Rect rect, AvatarControl.BodyPartColor bodyPartColor)
 		{
 			if (AvatarControl.styles.BodyPart[shownBodyView, i] != null && AvatarControl.styles.BodyPart[shownBodyView, i].image != null)
@@ -173,50 +184,53 @@ namespace UnityEditor
 				{
 					GUI.color = Color.green;
 				}
+				else if ((bodyPartColor & AvatarControl.BodyPartColor.Red) == AvatarControl.BodyPartColor.Red)
+				{
+					GUI.color = Color.red;
+				}
 				else
 				{
-					if ((bodyPartColor & AvatarControl.BodyPartColor.Red) == AvatarControl.BodyPartColor.Red)
-					{
-						GUI.color = Color.red;
-					}
-					else
-					{
-						GUI.color = Color.gray;
-					}
+					GUI.color = Color.gray;
 				}
 				GUI.DrawTexture(rect, AvatarControl.styles.BodyPart[shownBodyView, i].image);
 				GUI.color = Color.white;
 			}
 		}
+
 		public static List<int> GetViewsThatContainBone(int bone)
 		{
 			List<int> list = new List<int>();
+			List<int> result;
 			if (bone < 0 || bone >= HumanTrait.BoneCount)
 			{
-				return list;
+				result = list;
 			}
-			for (int i = 0; i < 4; i++)
+			else
 			{
-				if (AvatarControl.s_BonePositions[i, bone] != Vector2.zero)
+				for (int i = 0; i < 4; i++)
 				{
-					list.Add(i);
+					if (AvatarControl.s_BonePositions[i, bone] != Vector2.zero)
+					{
+						list.Add(i);
+					}
 				}
+				result = list;
 			}
-			return list;
+			return result;
 		}
+
 		protected static void DrawBone(int shownBodyView, int i, Rect rect, AvatarSetupTool.BoneWrapper bone, SerializedObject serializedObject, AvatarMappingEditor editor)
 		{
-			if (AvatarControl.s_BonePositions[shownBodyView, i] == Vector2.zero)
+			if (!(AvatarControl.s_BonePositions[shownBodyView, i] == Vector2.zero))
 			{
-				return;
+				Vector2 b = AvatarControl.s_BonePositions[shownBodyView, i];
+				b.y *= -1f;
+				b.Scale(new Vector2(rect.width * 0.5f, rect.height * 0.5f));
+				b = rect.center + b;
+				int num = 19;
+				Rect rect2 = new Rect(b.x - (float)num * 0.5f, b.y - (float)num * 0.5f, (float)num, (float)num);
+				bone.BoneDotGUI(rect2, rect2, i, true, true, true, serializedObject, editor);
 			}
-			Vector2 b = AvatarControl.s_BonePositions[shownBodyView, i];
-			b.y *= -1f;
-			b.Scale(new Vector2(rect.width * 0.5f, rect.height * 0.5f));
-			b = rect.center + b;
-			int num = 19;
-			Rect rect2 = new Rect(b.x - (float)num * 0.5f, b.y - (float)num * 0.5f, (float)num, (float)num);
-			bone.BoneDotGUI(rect2, i, true, true, serializedObject, editor);
 		}
 	}
 }

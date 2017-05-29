@@ -1,108 +1,181 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	internal sealed class GUIClip
 	{
 		public static extern bool enabled
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static extern Rect topmostRect
+
+		public static Rect topmostRect
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				Rect result;
+				GUIClip.INTERNAL_get_topmostRect(out result);
+				return result;
+			}
 		}
-		public static extern Rect visibleRect
+
+		public static Rect visibleRect
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				Rect result;
+				GUIClip.INTERNAL_get_visibleRect(out result);
+				return result;
+			}
 		}
+
 		internal static void Push(Rect screenRect, Vector2 scrollOffset, Vector2 renderOffset, bool resetOffset)
 		{
-			GUIClip.INTERNAL_CALL_Push(ref screenRect, ref scrollOffset, ref renderOffset, resetOffset);
+			GUIClip.Internal_Push(screenRect, scrollOffset, renderOffset, resetOffset);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Push(ref Rect screenRect, ref Vector2 scrollOffset, ref Vector2 renderOffset, bool resetOffset);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void Pop();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern Rect GetTopRect();
+
+		internal static void Pop()
+		{
+			GUIClip.Internal_Pop();
+		}
+
 		public static Vector2 Unclip(Vector2 pos)
 		{
 			GUIClip.Unclip_Vector2(ref pos);
 			return pos;
 		}
-		private static void Unclip_Vector2(ref Vector2 pos)
-		{
-			GUIClip.INTERNAL_CALL_Unclip_Vector2(ref pos);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Unclip_Vector2(ref Vector2 pos);
+
 		public static Rect Unclip(Rect rect)
 		{
 			GUIClip.Unclip_Rect(ref rect);
 			return rect;
 		}
-		private static void Unclip_Rect(ref Rect rect)
-		{
-			GUIClip.INTERNAL_CALL_Unclip_Rect(ref rect);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Unclip_Rect(ref Rect rect);
+
 		public static Vector2 Clip(Vector2 absolutePos)
 		{
 			GUIClip.Clip_Vector2(ref absolutePos);
 			return absolutePos;
 		}
-		private static void Clip_Vector2(ref Vector2 absolutePos)
-		{
-			GUIClip.INTERNAL_CALL_Clip_Vector2(ref absolutePos);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Clip_Vector2(ref Vector2 absolutePos);
+
 		public static Rect Clip(Rect absoluteRect)
 		{
 			GUIClip.Internal_Clip_Rect(ref absoluteRect);
 			return absoluteRect;
 		}
-		private static void Internal_Clip_Rect(ref Rect absoluteRect)
-		{
-			GUIClip.INTERNAL_CALL_Internal_Clip_Rect(ref absoluteRect);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_Internal_Clip_Rect(ref Rect absoluteRect);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void Reapply();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern Matrix4x4 GetMatrix();
-		internal static void SetMatrix(Matrix4x4 m)
-		{
-			GUIClip.INTERNAL_CALL_SetMatrix(ref m);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void INTERNAL_CALL_SetMatrix(ref Matrix4x4 m);
+
 		public static Vector2 GetAbsoluteMousePosition()
 		{
 			Vector2 result;
 			GUIClip.Internal_GetAbsoluteMousePosition(out result);
 			return result;
 		}
-		[WrapperlessIcall]
+
+		internal static void Internal_Push(Rect screenRect, Vector2 scrollOffset, Vector2 renderOffset, bool resetOffset)
+		{
+			GUIClip.INTERNAL_CALL_Internal_Push(ref screenRect, ref scrollOffset, ref renderOffset, resetOffset);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_Push(ref Rect screenRect, ref Vector2 scrollOffset, ref Vector2 renderOffset, bool resetOffset);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void Internal_Pop();
+
+		internal static Rect GetTopRect()
+		{
+			Rect result;
+			GUIClip.INTERNAL_CALL_GetTopRect(out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetTopRect(out Rect value);
+
+		private static void Unclip_Vector2(ref Vector2 pos)
+		{
+			GUIClip.INTERNAL_CALL_Unclip_Vector2(ref pos);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Unclip_Vector2(ref Vector2 pos);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_get_topmostRect(out Rect value);
+
+		private static void Unclip_Rect(ref Rect rect)
+		{
+			GUIClip.INTERNAL_CALL_Unclip_Rect(ref rect);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Unclip_Rect(ref Rect rect);
+
+		private static void Clip_Vector2(ref Vector2 absolutePos)
+		{
+			GUIClip.INTERNAL_CALL_Clip_Vector2(ref absolutePos);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Clip_Vector2(ref Vector2 absolutePos);
+
+		private static void Internal_Clip_Rect(ref Rect absoluteRect)
+		{
+			GUIClip.INTERNAL_CALL_Internal_Clip_Rect(ref absoluteRect);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Internal_Clip_Rect(ref Rect absoluteRect);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void Reapply();
+
+		internal static Matrix4x4 GetMatrix()
+		{
+			Matrix4x4 result;
+			GUIClip.INTERNAL_CALL_GetMatrix(out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetMatrix(out Matrix4x4 value);
+
+		internal static void SetMatrix(Matrix4x4 m)
+		{
+			GUIClip.INTERNAL_CALL_SetMatrix(ref m);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetMatrix(ref Matrix4x4 m);
+
+		internal static void SetTransform(Matrix4x4 clipTransform, Matrix4x4 objectTransform, Rect clipRect)
+		{
+			GUIClip.INTERNAL_CALL_SetTransform(ref clipTransform, ref objectTransform, ref clipRect);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_SetTransform(ref Matrix4x4 clipTransform, ref Matrix4x4 objectTransform, ref Rect clipRect);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_get_visibleRect(out Rect value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_GetAbsoluteMousePosition(out Vector2 output);
 	}

@@ -1,18 +1,25 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	internal sealed class OSUtil
 	{
-		[WrapperlessIcall]
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetDefaultApps(string fileType);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetAppFriendlyName(string app);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetDefaultAppPath(string fileType);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetDefaultCachePath();
 	}
 }

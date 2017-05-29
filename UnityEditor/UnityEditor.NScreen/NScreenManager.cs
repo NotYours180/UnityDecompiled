@@ -1,17 +1,25 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor.NScreen
 {
 	internal class NScreenManager : ScriptableSingleton<NScreenManager>
 	{
 		[SerializeField]
-		private int m_LatestId;
+		private int m_LatestId = 0;
+
 		[SerializeField]
 		private bool m_BuildOnPlay = true;
+
 		[SerializeField]
 		private int m_SelectedSizeIndex;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache0;
+
 		internal bool BuildOnPlay
 		{
 			get
@@ -23,6 +31,7 @@ namespace UnityEditor.NScreen
 				this.m_BuildOnPlay = value;
 			}
 		}
+
 		internal bool HasBuild
 		{
 			get
@@ -30,6 +39,7 @@ namespace UnityEditor.NScreen
 				return Directory.Exists("Temp/NScreen/NScreen.app");
 			}
 		}
+
 		internal int SelectedSizeIndex
 		{
 			get
@@ -41,47 +51,50 @@ namespace UnityEditor.NScreen
 				this.m_SelectedSizeIndex = value;
 			}
 		}
+
 		static NScreenManager()
 		{
-			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.playmodeStateChanged, new EditorApplication.CallbackFunction(NScreenManager.PlayModeStateChanged));
+			Delegate arg_23_0 = EditorApplication.playmodeStateChanged;
+			if (NScreenManager.<>f__mg$cache0 == null)
+			{
+				NScreenManager.<>f__mg$cache0 = new EditorApplication.CallbackFunction(NScreenManager.PlayModeStateChanged);
+			}
+			EditorApplication.playmodeStateChanged = (EditorApplication.CallbackFunction)Delegate.Combine(arg_23_0, NScreenManager.<>f__mg$cache0);
 		}
+
 		internal void ResetIds()
 		{
 			this.m_LatestId = 0;
 		}
+
 		internal int GetNewId()
 		{
 			return ++this.m_LatestId;
 		}
+
 		internal static void PlayModeStateChanged()
 		{
-			if (EditorApplication.isPaused)
+			if (!EditorApplication.isPaused)
 			{
-				return;
-			}
-			if (!EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode && Resources.FindObjectsOfTypeAll<RemoteGame>().Length > 0 && ScriptableSingleton<NScreenManager>.instance.BuildOnPlay)
-			{
-				NScreenManager.Build();
-			}
-			if (EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
-			{
-				NScreenManager.StartAll();
-			}
-			else
-			{
-				if (EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
+				if (!EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode && Resources.FindObjectsOfTypeAll<RemoteGame>().Length > 0 && ScriptableSingleton<NScreenManager>.instance.BuildOnPlay)
+				{
+					NScreenManager.Build();
+				}
+				if (EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
+				{
+					NScreenManager.StartAll();
+				}
+				else if (EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
 				{
 					NScreenManager.StopAll();
 				}
-				else
+				else if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
 				{
-					if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode)
-					{
-						NScreenManager.RepaintAllGameViews();
-					}
+					NScreenManager.RepaintAllGameViews();
 				}
 			}
 		}
+
 		internal static void Init()
 		{
 			RemoteGame remoteGame = (RemoteGame)EditorWindow.GetWindow(typeof(RemoteGame));
@@ -91,6 +104,7 @@ namespace UnityEditor.NScreen
 				remoteGame.StartGame();
 			}
 		}
+
 		internal static void OpenAnotherWindow()
 		{
 			RemoteGame remoteGame = ScriptableObject.CreateInstance<RemoteGame>();
@@ -98,7 +112,7 @@ namespace UnityEditor.NScreen
 			for (int i = 0; i < windows.Length; i++)
 			{
 				ContainerWindow containerWindow = windows[i];
-				View[] allChildren = containerWindow.mainView.allChildren;
+				View[] allChildren = containerWindow.rootView.allChildren;
 				for (int j = 0; j < allChildren.Length; j++)
 				{
 					View view = allChildren[j];
@@ -120,6 +134,7 @@ namespace UnityEditor.NScreen
 				remoteGame.StartGame();
 			}
 		}
+
 		internal static void StartAll()
 		{
 			ScriptableSingleton<NScreenManager>.instance.ResetIds();
@@ -131,6 +146,7 @@ namespace UnityEditor.NScreen
 				remoteGame.StartGame();
 			}
 		}
+
 		internal static void StopAll()
 		{
 			RemoteGame[] array = Resources.FindObjectsOfTypeAll<RemoteGame>();
@@ -140,6 +156,7 @@ namespace UnityEditor.NScreen
 				remoteGame.StopGame();
 			}
 		}
+
 		internal static void RepaintAllGameViews()
 		{
 			RemoteGame[] array = Resources.FindObjectsOfTypeAll<RemoteGame>();
@@ -150,6 +167,7 @@ namespace UnityEditor.NScreen
 				remoteGame.GameViewAspectWasChanged();
 			}
 		}
+
 		internal static void Build()
 		{
 			string[] array = new string[EditorBuildSettings.scenes.Length];
@@ -172,14 +190,19 @@ namespace UnityEditor.NScreen
 			PlayerSettings.defaultIsFullScreen = false;
 			try
 			{
+				BuildPlayerOptions buildPlayerOptions = default(BuildPlayerOptions);
+				buildPlayerOptions.scenes = array;
+				buildPlayerOptions.options = BuildOptions.None;
+				buildPlayerOptions.locationPathName = "Temp/NScreen/NScreen.app";
 				if (IntPtr.Size == 4)
 				{
-					BuildPipeline.BuildPlayer(array, "Temp/NScreen/NScreen.app", BuildTarget.StandaloneOSXIntel, BuildOptions.None);
+					buildPlayerOptions.target = BuildTarget.StandaloneOSXIntel;
 				}
 				else
 				{
-					BuildPipeline.BuildPlayer(array, "Temp/NScreen/NScreen.app", BuildTarget.StandaloneOSXIntel64, BuildOptions.None);
+					buildPlayerOptions.target = BuildTarget.StandaloneOSXIntel64;
 				}
+				BuildPipeline.BuildPlayer(buildPlayerOptions);
 			}
 			finally
 			{

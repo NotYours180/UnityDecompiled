@@ -1,37 +1,44 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public sealed class LocationService
 	{
 		public extern bool isEnabledByUser
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern LocationServiceStatus status
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern LocationInfo lastData
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Start([DefaultValue("10f")] float desiredAccuracyInMeters, [DefaultValue("10f")] float updateDistanceInMeters);
+
 		[ExcludeFromDocs]
 		public void Start(float desiredAccuracyInMeters)
 		{
 			float updateDistanceInMeters = 10f;
 			this.Start(desiredAccuracyInMeters, updateDistanceInMeters);
 		}
+
 		[ExcludeFromDocs]
 		public void Start()
 		{
@@ -39,7 +46,8 @@ namespace UnityEngine
 			float desiredAccuracyInMeters = 10f;
 			this.Start(desiredAccuracyInMeters, updateDistanceInMeters);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Stop();
 	}

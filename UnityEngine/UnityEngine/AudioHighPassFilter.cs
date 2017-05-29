@@ -1,34 +1,41 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[RequireComponent(typeof(AudioBehaviour))]
 	public sealed class AudioHighPassFilter : Behaviour
 	{
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("AudioHighPassFilter.highpassResonaceQ is obsolete. Use highpassResonanceQ instead (UnityUpgradable) -> highpassResonanceQ", true)]
+		public float highpassResonaceQ
+		{
+			get
+			{
+				return this.highpassResonanceQ;
+			}
+			set
+			{
+			}
+		}
+
 		public extern float cutoffFrequency
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float highpassResonanceQ
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		[Obsolete("highpassResonaceQ is obsolete. Use highpassResonanceQ instead (UnityUpgradable).", true)]
-		public extern float highpassResonaceQ
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}

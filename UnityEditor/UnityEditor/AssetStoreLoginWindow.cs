@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetStoreLoginWindow : EditorWindow
@@ -8,20 +9,31 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle link = new GUIStyle(EditorStyles.miniLabel);
+
 			public Styles()
 			{
 				this.link.normal.textColor = new Color(0.26f, 0.51f, 0.75f, 1f);
 			}
 		}
+
 		public delegate void LoginCallback(string errorMessage);
-		private const float kBaseHeight = 110f;
+
 		private static AssetStoreLoginWindow.Styles styles;
+
 		private static GUIContent s_AssetStoreLogo;
+
+		private const float kBaseHeight = 110f;
+
 		private string m_LoginReason;
-		private string m_LoginRemoteMessage;
-		private string m_Username = string.Empty;
-		private string m_Password = string.Empty;
+
+		private string m_LoginRemoteMessage = null;
+
+		private string m_Username = "";
+
+		private string m_Password = "";
+
 		private AssetStoreLoginWindow.LoginCallback m_LoginCallback;
+
 		public static bool IsLoggedIn
 		{
 			get
@@ -29,6 +41,7 @@ namespace UnityEditor
 				return AssetStoreClient.HasActiveSessionID;
 			}
 		}
+
 		public static void Login(string loginReason, AssetStoreLoginWindow.LoginCallback callback)
 		{
 			if (AssetStoreClient.HasActiveSessionID)
@@ -38,43 +51,48 @@ namespace UnityEditor
 			if (!AssetStoreClient.RememberSession || !AssetStoreClient.HasSavedSessionID)
 			{
 				AssetStoreLoginWindow.ShowAssetStoreLoginWindow(loginReason, callback);
-				return;
 			}
-			AssetStoreClient.LoginWithRememberedSession(delegate(string errorMessage)
+			else
 			{
-				if (string.IsNullOrEmpty(errorMessage))
+				AssetStoreClient.LoginWithRememberedSession(delegate(string errorMessage)
 				{
-					callback(errorMessage);
-				}
-				else
-				{
-					AssetStoreLoginWindow.ShowAssetStoreLoginWindow(loginReason, callback);
-				}
-			});
+					if (string.IsNullOrEmpty(errorMessage))
+					{
+						callback(errorMessage);
+					}
+					else
+					{
+						AssetStoreLoginWindow.ShowAssetStoreLoginWindow(loginReason, callback);
+					}
+				});
+			}
 		}
+
 		public static void Logout()
 		{
 			AssetStoreClient.Logout();
 		}
+
 		public static void ShowAssetStoreLoginWindow(string loginReason, AssetStoreLoginWindow.LoginCallback callback)
 		{
 			AssetStoreLoginWindow windowWithRect = EditorWindow.GetWindowWithRect<AssetStoreLoginWindow>(new Rect(100f, 100f, 360f, 140f), true, "Login to Asset Store");
 			windowWithRect.position = new Rect(100f, 100f, windowWithRect.position.width, windowWithRect.position.height);
 			windowWithRect.m_Parent.window.m_DontSaveToLayout = true;
-			windowWithRect.m_Password = string.Empty;
+			windowWithRect.m_Password = "";
 			windowWithRect.m_LoginCallback = callback;
 			windowWithRect.m_LoginReason = loginReason;
 			windowWithRect.m_LoginRemoteMessage = null;
-			Analytics.Track("/AssetStore/Login");
+			UsabilityAnalytics.Track("/AssetStore/Login");
 		}
+
 		private static void LoadLogos()
 		{
-			if (AssetStoreLoginWindow.s_AssetStoreLogo != null)
+			if (AssetStoreLoginWindow.s_AssetStoreLogo == null)
 			{
-				return;
+				AssetStoreLoginWindow.s_AssetStoreLogo = new GUIContent("");
 			}
-			AssetStoreLoginWindow.s_AssetStoreLogo = new GUIContent(string.Empty);
 		}
+
 		public void OnDisable()
 		{
 			if (this.m_LoginCallback != null)
@@ -84,6 +102,7 @@ namespace UnityEditor
 			this.m_LoginCallback = null;
 			this.m_Password = null;
 		}
+
 		public void OnGUI()
 		{
 			if (AssetStoreLoginWindow.styles == null)
@@ -184,11 +203,12 @@ namespace UnityEditor
 				this.DoLogin();
 				base.Repaint();
 			}
-			if (this.m_Username == string.Empty)
+			if (this.m_Username == "")
 			{
 				EditorGUI.FocusTextInControl("username");
 			}
 		}
+
 		private void DoLogin()
 		{
 			this.m_LoginRemoteMessage = null;

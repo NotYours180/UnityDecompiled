@@ -1,83 +1,108 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ProjectBrowserColumnOneTreeViewDragging : AssetsTreeViewDragging
 	{
-		public ProjectBrowserColumnOneTreeViewDragging(TreeView treeView) : base(treeView)
+		public ProjectBrowserColumnOneTreeViewDragging(TreeViewController treeView) : base(treeView)
 		{
 		}
+
 		public override void StartDrag(TreeViewItem draggedItem, List<int> draggedItemIDs)
 		{
-			if (SavedSearchFilters.IsSavedFilter(draggedItem.id) && draggedItem.id == SavedSearchFilters.GetRootInstanceID())
+			if (SavedSearchFilters.IsSavedFilter(draggedItem.id))
 			{
-				return;
+				if (draggedItem.id == SavedSearchFilters.GetRootInstanceID())
+				{
+					return;
+				}
 			}
 			ProjectWindowUtil.StartDrag(draggedItem.id, draggedItemIDs);
 		}
+
 		public override DragAndDropVisualMode DoDrag(TreeViewItem parentItem, TreeViewItem targetItem, bool perform, TreeViewDragging.DropPosition dropPos)
 		{
+			DragAndDropVisualMode result;
 			if (targetItem == null)
 			{
-				return DragAndDropVisualMode.None;
-			}
-			object genericData = DragAndDrop.GetGenericData(ProjectWindowUtil.k_DraggingFavoriteGenericData);
-			if (genericData != null)
-			{
-				int instanceID = (int)genericData;
-				if (targetItem is SearchFilterTreeItem && parentItem is SearchFilterTreeItem)
-				{
-					bool flag = SavedSearchFilters.CanMoveSavedFilter(instanceID, parentItem.id, targetItem.id, true);
-					if (flag && perform)
-					{
-						SavedSearchFilters.MoveSavedFilter(instanceID, parentItem.id, targetItem.id, true);
-					}
-					return (!flag) ? DragAndDropVisualMode.None : DragAndDropVisualMode.Copy;
-				}
-				return DragAndDropVisualMode.None;
+				result = DragAndDropVisualMode.None;
 			}
 			else
 			{
-				if (!(targetItem is SearchFilterTreeItem) || !(parentItem is SearchFilterTreeItem))
+				object genericData = DragAndDrop.GetGenericData(ProjectWindowUtil.k_DraggingFavoriteGenericData);
+				if (genericData != null)
 				{
-					return base.DoDrag(parentItem, targetItem, perform, dropPos);
-				}
-				string a = DragAndDrop.GetGenericData(ProjectWindowUtil.k_IsFolderGenericData) as string;
-				if (a == "isFolder")
-				{
-					if (perform)
+					int num = (int)genericData;
+					if (targetItem is SearchFilterTreeItem && parentItem is SearchFilterTreeItem)
 					{
-						UnityEngine.Object[] objectReferences = DragAndDrop.objectReferences;
-						if (objectReferences.Length > 0)
+						bool flag = SavedSearchFilters.CanMoveSavedFilter(num, parentItem.id, targetItem.id, dropPos == TreeViewDragging.DropPosition.Below);
+						if (flag && perform)
 						{
-							HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-							if (hierarchyProperty.Find(objectReferences[0].GetInstanceID(), null))
+							SavedSearchFilters.MoveSavedFilter(num, parentItem.id, targetItem.id, dropPos == TreeViewDragging.DropPosition.Below);
+							this.m_TreeView.SetSelection(new int[]
 							{
-								SearchFilter searchFilter = new SearchFilter();
-								string assetPath = AssetDatabase.GetAssetPath(hierarchyProperty.instanceID);
+								num
+							}, false);
+							this.m_TreeView.NotifyListenersThatSelectionChanged();
+						}
+						result = ((!flag) ? DragAndDropVisualMode.None : DragAndDropVisualMode.Copy);
+					}
+					else
+					{
+						result = DragAndDropVisualMode.None;
+					}
+				}
+				else if (targetItem is SearchFilterTreeItem && parentItem is SearchFilterTreeItem)
+				{
+					string a = DragAndDrop.GetGenericData(ProjectWindowUtil.k_IsFolderGenericData) as string;
+					if (a == "isFolder")
+					{
+						if (perform)
+						{
+							UnityEngine.Object[] objectReferences = DragAndDrop.objectReferences;
+							if (objectReferences.Length > 0)
+							{
+								string assetPath = AssetDatabase.GetAssetPath(objectReferences[0].GetInstanceID());
 								if (!string.IsNullOrEmpty(assetPath))
 								{
+									string name = new DirectoryInfo(assetPath).Name;
+									SearchFilter searchFilter = new SearchFilter();
 									searchFilter.folders = new string[]
 									{
 										assetPath
 									};
 									bool addAsChild = targetItem == parentItem;
 									float listAreaGridSize = ProjectBrowserColumnOneTreeViewGUI.GetListAreaGridSize();
-									int activeInstanceID = SavedSearchFilters.AddSavedFilterAfterInstanceID(hierarchyProperty.name, searchFilter, listAreaGridSize, targetItem.id, addAsChild);
-									Selection.activeInstanceID = activeInstanceID;
+									int num2 = SavedSearchFilters.AddSavedFilterAfterInstanceID(name, searchFilter, listAreaGridSize, targetItem.id, addAsChild);
+									this.m_TreeView.SetSelection(new int[]
+									{
+										num2
+									}, false);
+									this.m_TreeView.NotifyListenersThatSelectionChanged();
 								}
 								else
 								{
-									Debug.Log("Could not get asset path from id " + hierarchyProperty.name);
+									Debug.Log("Could not get asset path from id " + objectReferences[0].GetInstanceID());
 								}
 							}
 						}
+						result = DragAndDropVisualMode.Copy;
 					}
-					return DragAndDropVisualMode.Copy;
+					else
+					{
+						result = DragAndDropVisualMode.None;
+					}
 				}
-				return DragAndDropVisualMode.None;
+				else
+				{
+					result = base.DoDrag(parentItem, targetItem, perform, dropPos);
+				}
 			}
+			return result;
 		}
 	}
 }

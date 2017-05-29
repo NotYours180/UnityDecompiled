@@ -3,8 +3,9 @@ using System.IO;
 using System.Linq;
 using Unity.DataContract;
 using UnityEditor;
+using UnityEditor.BuildReporting;
 using UnityEditor.Modules;
-using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class BaseIl2CppPlatformProvider : IIl2CppPlatformProvider
@@ -14,11 +15,21 @@ namespace UnityEditorInternal
 			get;
 			private set;
 		}
+
 		public virtual string libraryFolder
 		{
 			get;
 			private set;
 		}
+
+		public virtual bool developmentMode
+		{
+			get
+			{
+				return false;
+			}
+		}
+
 		public virtual bool emitNullChecks
 		{
 			get
@@ -26,6 +37,7 @@ namespace UnityEditorInternal
 				return true;
 			}
 		}
+
 		public virtual bool enableStackTraces
 		{
 			get
@@ -33,6 +45,7 @@ namespace UnityEditorInternal
 				return true;
 			}
 		}
+
 		public virtual bool enableArrayBoundsCheck
 		{
 			get
@@ -40,20 +53,31 @@ namespace UnityEditorInternal
 				return true;
 			}
 		}
-		public virtual bool compactMode
+
+		public virtual bool enableDivideByZeroCheck
 		{
 			get
 			{
 				return false;
 			}
 		}
-		public virtual bool loadSymbols
+
+		public virtual bool supportsEngineStripping
 		{
 			get
 			{
 				return false;
 			}
 		}
+
+		public virtual BuildReport buildReport
+		{
+			get
+			{
+				return null;
+			}
+		}
+
 		public virtual string[] includePaths
 		{
 			get
@@ -65,6 +89,7 @@ namespace UnityEditorInternal
 				};
 			}
 		}
+
 		public virtual string[] libraryPaths
 		{
 			get
@@ -76,6 +101,7 @@ namespace UnityEditorInternal
 				};
 			}
 		}
+
 		public virtual string nativeLibraryFileName
 		{
 			get
@@ -83,6 +109,7 @@ namespace UnityEditorInternal
 				return null;
 			}
 		}
+
 		public virtual string staticLibraryExtension
 		{
 			get
@@ -90,54 +117,81 @@ namespace UnityEditorInternal
 				return "a";
 			}
 		}
+
 		public virtual string il2CppFolder
 		{
 			get
 			{
 				Unity.DataContract.PackageInfo packageInfo = BaseIl2CppPlatformProvider.FindIl2CppPackage();
+				string result;
 				if (packageInfo == null)
 				{
-					return Path.GetFullPath(Path.Combine(EditorApplication.applicationContentsPath, (Application.platform != RuntimePlatform.OSXEditor) ? "il2cpp" : "Frameworks/il2cpp"));
+					result = Path.GetFullPath(Path.Combine(EditorApplication.applicationContentsPath, "il2cpp"));
 				}
-				return packageInfo.basePath;
+				else
+				{
+					result = packageInfo.basePath;
+				}
+				return result;
 			}
 		}
-		public virtual bool usePrecompiledHeader
+
+		public virtual string moduleStrippingInformationFolder
 		{
 			get
 			{
-				return false;
+				return Path.Combine(BuildPipeline.GetPlaybackEngineDirectory(EditorUserBuildSettings.activeBuildTarget, BuildOptions.None), "Whitelists");
 			}
 		}
+
 		public BaseIl2CppPlatformProvider(BuildTarget target, string libraryFolder)
 		{
 			this.target = target;
 			this.libraryFolder = libraryFolder;
 		}
+
 		public virtual INativeCompiler CreateNativeCompiler()
 		{
 			return null;
 		}
+
+		public virtual Il2CppNativeCodeBuilder CreateIl2CppNativeCodeBuilder()
+		{
+			return null;
+		}
+
 		protected string GetFolderInPackageOrDefault(string path)
 		{
 			Unity.DataContract.PackageInfo packageInfo = BaseIl2CppPlatformProvider.FindIl2CppPackage();
+			string result;
 			if (packageInfo == null)
 			{
-				return Path.Combine(this.libraryFolder, path);
+				result = Path.Combine(this.libraryFolder, path);
 			}
-			string text = Path.Combine(packageInfo.basePath, path);
-			return Directory.Exists(text) ? text : Path.Combine(this.libraryFolder, path);
+			else
+			{
+				string text = Path.Combine(packageInfo.basePath, path);
+				result = (Directory.Exists(text) ? text : Path.Combine(this.libraryFolder, path));
+			}
+			return result;
 		}
+
 		protected string GetFileInPackageOrDefault(string path)
 		{
 			Unity.DataContract.PackageInfo packageInfo = BaseIl2CppPlatformProvider.FindIl2CppPackage();
+			string result;
 			if (packageInfo == null)
 			{
-				return Path.Combine(this.libraryFolder, path);
+				result = Path.Combine(this.libraryFolder, path);
 			}
-			string text = Path.Combine(packageInfo.basePath, path);
-			return File.Exists(text) ? text : Path.Combine(this.libraryFolder, path);
+			else
+			{
+				string text = Path.Combine(packageInfo.basePath, path);
+				result = (File.Exists(text) ? text : Path.Combine(this.libraryFolder, path));
+			}
+			return result;
 		}
+
 		private static Unity.DataContract.PackageInfo FindIl2CppPackage()
 		{
 			return ModuleManager.packageManager.unityExtensions.FirstOrDefault((Unity.DataContract.PackageInfo e) => e.name == "IL2CPP");

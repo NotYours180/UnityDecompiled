@@ -2,6 +2,7 @@ using System;
 using UnityEditor;
 using UnityEditor.VersionControl;
 using UnityEngine;
+
 namespace UnityEditorInternal.VersionControl
 {
 	public class AssetModificationHook
@@ -17,71 +18,93 @@ namespace UnityEditorInternal.VersionControl
 			}
 			return asset;
 		}
+
+		private static Asset GetStatusForceUpdate(string from)
+		{
+			Task task = Provider.Status(from);
+			task.Wait();
+			return (task.assetList.Count <= 0) ? null : task.assetList[0];
+		}
+
 		public static AssetMoveResult OnWillMoveAsset(string from, string to)
 		{
+			AssetMoveResult result;
 			if (!Provider.enabled)
 			{
-				return AssetMoveResult.DidNotMove;
+				result = AssetMoveResult.DidNotMove;
 			}
-			Asset statusCachedIfPossible = AssetModificationHook.GetStatusCachedIfPossible(from);
-			if (statusCachedIfPossible == null || !statusCachedIfPossible.IsUnderVersionControl)
+			else
 			{
-				return AssetMoveResult.DidNotMove;
+				Asset statusCachedIfPossible = AssetModificationHook.GetStatusCachedIfPossible(from);
+				if (statusCachedIfPossible == null || !statusCachedIfPossible.IsUnderVersionControl)
+				{
+					result = AssetMoveResult.DidNotMove;
+				}
+				else if (statusCachedIfPossible.IsState(Asset.States.OutOfSync))
+				{
+					Debug.LogError("Cannot move version controlled file that is not up to date. Please get latest changes from server");
+					result = AssetMoveResult.FailedMove;
+				}
+				else if (statusCachedIfPossible.IsState(Asset.States.DeletedRemote))
+				{
+					Debug.LogError("Cannot move version controlled file that is deleted on server. Please get latest changes from server");
+					result = AssetMoveResult.FailedMove;
+				}
+				else if (statusCachedIfPossible.IsState(Asset.States.CheckedOutRemote))
+				{
+					Debug.LogError("Cannot move version controlled file that is checked out on server. Please get latest changes from server");
+					result = AssetMoveResult.FailedMove;
+				}
+				else if (statusCachedIfPossible.IsState(Asset.States.LockedRemote))
+				{
+					Debug.LogError("Cannot move version controlled file that is locked on server. Please get latest changes from server");
+					result = AssetMoveResult.FailedMove;
+				}
+				else
+				{
+					Task task = Provider.Move(from, to);
+					task.Wait();
+					result = (AssetMoveResult)((!task.success) ? 1 : task.resultCode);
+				}
 			}
-			if (statusCachedIfPossible.IsState(Asset.States.OutOfSync))
-			{
-				Debug.LogError("Cannot move version controlled file that is not up to date. Please get latest changes from server");
-				return AssetMoveResult.FailedMove;
-			}
-			if (statusCachedIfPossible.IsState(Asset.States.DeletedRemote))
-			{
-				Debug.LogError("Cannot move version controlled file that is deleted on server. Please get latest changes from server");
-				return AssetMoveResult.FailedMove;
-			}
-			if (statusCachedIfPossible.IsState(Asset.States.CheckedOutRemote))
-			{
-				Debug.LogError("Cannot move version controlled file that is checked out on server. Please get latest changes from server");
-				return AssetMoveResult.FailedMove;
-			}
-			if (statusCachedIfPossible.IsState(Asset.States.LockedRemote))
-			{
-				Debug.LogError("Cannot move version controlled file that is locked on server. Please get latest changes from server");
-				return AssetMoveResult.FailedMove;
-			}
-			Task task = Provider.Move(from, to);
-			task.Wait();
-			return (AssetMoveResult)((!task.success) ? 1 : task.resultCode);
+			return result;
 		}
+
 		public static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions option)
 		{
+			AssetDeleteResult result;
 			if (!Provider.enabled)
 			{
-				return AssetDeleteResult.DidNotDelete;
+				result = AssetDeleteResult.DidNotDelete;
 			}
-			Task task = Provider.Delete(assetPath);
-			task.SetCompletionAction(CompletionAction.UpdatePendingWindow);
-			task.Wait();
-			return (!task.success) ? AssetDeleteResult.FailedDelete : AssetDeleteResult.DidNotDelete;
-		}
-		public static bool IsOpenForEdit(string assetPath, out string message)
-		{
-			message = string.Empty;
-			if (!Provider.enabled)
+			else
 			{
-				return true;
-			}
-			if (string.IsNullOrEmpty(assetPath))
-			{
-				return true;
-			}
-			Asset asset = Provider.GetAssetByPath(assetPath);
-			if (asset == null)
-			{
-				Task task = Provider.Status(assetPath, false);
+				Task task = Provider.Delete(assetPath);
+				task.SetCompletionAction(CompletionAction.UpdatePendingWindow);
 				task.Wait();
-				asset = ((task.assetList.Count <= 0) ? null : task.assetList[0]);
+				result = ((!task.success) ? AssetDeleteResult.FailedDelete : AssetDeleteResult.DidNotDelete);
 			}
-			return asset != null && Provider.IsOpenForEdit(asset);
+			return result;
+		}
+
+		public static bool IsOpenForEdit(string assetPath, out string message, StatusQueryOptions statusOptions)
+		{
+			message = "";
+			bool result;
+			if (!Provider.enabled)
+			{
+				result = true;
+			}
+			else if (string.IsNullOrEmpty(assetPath))
+			{
+				result = true;
+			}
+			else
+			{
+				Asset asset = (statusOptions != StatusQueryOptions.UseCachedIfPossible) ? AssetModificationHook.GetStatusForceUpdate(assetPath) : AssetModificationHook.GetStatusCachedIfPossible(assetPath);
+				result = (asset != null && Provider.IsOpenForEdit(asset));
+			}
+			return result;
 		}
 	}
 }

@@ -1,42 +1,58 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal static class SpriteEditorUtility
 	{
 		public static Vector2 GetPivotValue(SpriteAlignment alignment, Vector2 customOffset)
 		{
+			Vector2 result;
 			switch (alignment)
 			{
 			case SpriteAlignment.Center:
-				return new Vector2(0.5f, 0.5f);
+				result = new Vector2(0.5f, 0.5f);
+				break;
 			case SpriteAlignment.TopLeft:
-				return new Vector2(0f, 1f);
+				result = new Vector2(0f, 1f);
+				break;
 			case SpriteAlignment.TopCenter:
-				return new Vector2(0.5f, 1f);
+				result = new Vector2(0.5f, 1f);
+				break;
 			case SpriteAlignment.TopRight:
-				return new Vector2(1f, 1f);
+				result = new Vector2(1f, 1f);
+				break;
 			case SpriteAlignment.LeftCenter:
-				return new Vector2(0f, 0.5f);
+				result = new Vector2(0f, 0.5f);
+				break;
 			case SpriteAlignment.RightCenter:
-				return new Vector2(1f, 0.5f);
+				result = new Vector2(1f, 0.5f);
+				break;
 			case SpriteAlignment.BottomLeft:
-				return new Vector2(0f, 0f);
+				result = new Vector2(0f, 0f);
+				break;
 			case SpriteAlignment.BottomCenter:
-				return new Vector2(0.5f, 0f);
+				result = new Vector2(0.5f, 0f);
+				break;
 			case SpriteAlignment.BottomRight:
-				return new Vector2(1f, 0f);
+				result = new Vector2(1f, 0f);
+				break;
 			case SpriteAlignment.Custom:
-				return customOffset;
+				result = customOffset;
+				break;
 			default:
-				return Vector2.zero;
+				result = Vector2.zero;
+				break;
 			}
+			return result;
 		}
+
 		public static Rect RoundedRect(Rect rect)
 		{
 			return new Rect((float)Mathf.RoundToInt(rect.xMin), (float)Mathf.RoundToInt(rect.yMin), (float)Mathf.RoundToInt(rect.width), (float)Mathf.RoundToInt(rect.height));
 		}
+
 		public static Rect RoundToInt(Rect r)
 		{
 			r.xMin = (float)Mathf.RoundToInt(r.xMin);
@@ -45,6 +61,7 @@ namespace UnityEditorInternal
 			r.yMax = (float)Mathf.RoundToInt(r.yMax);
 			return r;
 		}
+
 		public static Rect ClampedRect(Rect rect, Rect clamp, bool maintainSize)
 		{
 			Rect result = new Rect(rect);
@@ -96,6 +113,7 @@ namespace UnityEditorInternal
 			result.height = Mathf.Abs(result.height);
 			return result;
 		}
+
 		public static void DrawBox(Rect position)
 		{
 			Vector3[] array = new Vector3[5];
@@ -109,11 +127,13 @@ namespace UnityEditorInternal
 			SpriteEditorUtility.DrawLine(array[2], array[3]);
 			SpriteEditorUtility.DrawLine(array[3], array[0]);
 		}
+
 		public static void DrawLine(Vector3 p1, Vector3 p2)
 		{
 			GL.Vertex(p1);
 			GL.Vertex(p2);
 		}
+
 		public static void BeginLines(Color color)
 		{
 			HandleUtility.ApplyWireMaterial();
@@ -122,10 +142,41 @@ namespace UnityEditorInternal
 			GL.Begin(1);
 			GL.Color(color);
 		}
+
 		public static void EndLines()
 		{
 			GL.End();
 			GL.PopMatrix();
+		}
+
+		public static void FourIntFields(Vector2 rectSize, GUIContent label, GUIContent labelX, GUIContent labelY, GUIContent labelZ, GUIContent labelW, ref int x, ref int y, ref int z, ref int w)
+		{
+			Rect rect = GUILayoutUtility.GetRect(rectSize.x, rectSize.y);
+			Rect position = rect;
+			position.width = EditorGUIUtility.labelWidth;
+			position.height = 16f;
+			GUI.Label(position, label);
+			Rect position2 = rect;
+			position2.width -= EditorGUIUtility.labelWidth;
+			position2.height = 16f;
+			position2.x += EditorGUIUtility.labelWidth;
+			position2.width /= 2f;
+			position2.width -= 2f;
+			float labelWidth = EditorGUIUtility.labelWidth;
+			EditorGUIUtility.labelWidth = 13f;
+			GUI.SetNextControlName("FourIntFields_x");
+			x = EditorGUI.IntField(position2, labelX, x);
+			position2.x += position2.width + 5f;
+			GUI.SetNextControlName("FourIntFields_y");
+			y = EditorGUI.IntField(position2, labelY, y);
+			position2.y += 16f;
+			position2.x -= position2.width + 5f;
+			GUI.SetNextControlName("FourIntFields_z");
+			z = EditorGUI.IntField(position2, labelZ, z);
+			position2.x += position2.width + 5f;
+			GUI.SetNextControlName("FourIntFields_w");
+			w = EditorGUI.IntField(position2, labelW, w);
+			EditorGUIUtility.labelWidth = labelWidth;
 		}
 	}
 }

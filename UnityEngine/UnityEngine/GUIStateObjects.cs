@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Security;
+
 namespace UnityEngine
 {
 	internal class GUIStateObjects
 	{
 		private static Dictionary<int, object> s_StateCache = new Dictionary<int, object>();
+
 		[SecuritySafeCritical]
 		internal static object GetStateObject(Type t, int controlID)
 		{
@@ -17,14 +19,25 @@ namespace UnityEngine
 			}
 			return obj;
 		}
+
 		internal static object QueryStateObject(Type t, int controlID)
 		{
 			object obj = GUIStateObjects.s_StateCache[controlID];
+			object result;
 			if (t.IsInstanceOfType(obj))
 			{
-				return obj;
+				result = obj;
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
+		}
+
+		internal static void Tests_ClearObjects()
+		{
+			GUIStateObjects.s_StateCache.Clear();
 		}
 	}
 }

@@ -1,36 +1,43 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor.VersionControl
 {
 	public sealed class Plugin
 	{
 		private IntPtr m_thisDummy;
+
 		private string m_guid;
+
 		public static extern Plugin[] availablePlugins
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern string name
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern ConfigField[] configFields
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[WrapperlessIcall]
+
+		internal Plugin()
+		{
+		}
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
-		~Plugin()
-		{
-			this.Dispose();
-		}
 	}
 }

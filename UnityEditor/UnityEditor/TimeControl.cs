@@ -1,5 +1,7 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TimeControl
@@ -7,29 +9,58 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIContent playIcon = EditorGUIUtility.IconContent("PlayButton");
+
 			public GUIContent pauseIcon = EditorGUIUtility.IconContent("PauseButton");
+
 			public GUIStyle playButton = "TimeScrubberButton";
+
 			public GUIStyle timeScrubber = "TimeScrubber";
 		}
-		private const float kStepTime = 0.01f;
-		private const float kScrubberHeight = 21f;
-		private const float kPlayButtonWidth = 33f;
+
 		public float currentTime = float.NegativeInfinity;
-		private bool m_NextCurrentTimeSet;
-		public float startTime;
+
+		private bool m_NextCurrentTimeSet = false;
+
+		public float startTime = 0f;
+
 		public float stopTime = 1f;
-		public bool playSelection;
+
+		public bool playSelection = false;
+
 		public bool loop = true;
+
 		public float playbackSpeed = 1f;
-		private float m_DeltaTime;
-		private bool m_DeltaTimeSet;
-		private double m_LastFrameEditorTime;
-		private bool m_Playing;
-		private bool m_ResetOnPlay;
-		private float m_MouseDrag;
-		private bool m_WrapForwardDrag;
+
+		private float m_DeltaTime = 0f;
+
+		private bool m_DeltaTimeSet = false;
+
+		private double m_LastFrameEditorTime = 0.0;
+
+		private bool m_Playing = false;
+
+		private bool m_ResetOnPlay = false;
+
+		private float m_MouseDrag = 0f;
+
+		private bool m_WrapForwardDrag = false;
+
+		private const float kStepTime = 0.01f;
+
+		private const float kScrubberHeight = 21f;
+
+		private const float kPlayButtonWidth = 33f;
+
 		private static TimeControl.Styles s_Styles;
+
 		private static readonly int kScrubberIDHash = "ScrubberIDHash".GetHashCode();
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache0;
+
+		[CompilerGenerated]
+		private static EditorApplication.CallbackFunction <>f__mg$cache1;
+
 		public float nextCurrentTime
 		{
 			set
@@ -38,6 +69,7 @@ namespace UnityEditor
 				this.m_NextCurrentTimeSet = true;
 			}
 		}
+
 		public float deltaTime
 		{
 			get
@@ -50,6 +82,7 @@ namespace UnityEditor
 				this.m_DeltaTimeSet = true;
 			}
 		}
+
 		public float normalizedTime
 		{
 			get
@@ -61,6 +94,7 @@ namespace UnityEditor
 				this.currentTime = this.startTime * (1f - value) + this.stopTime * value;
 			}
 		}
+
 		public bool playing
 		{
 			get
@@ -73,7 +107,12 @@ namespace UnityEditor
 				{
 					if (value)
 					{
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.update, new EditorApplication.CallbackFunction(InspectorWindow.RepaintAllInspectors));
+						Delegate arg_37_0 = EditorApplication.update;
+						if (TimeControl.<>f__mg$cache0 == null)
+						{
+							TimeControl.<>f__mg$cache0 = new EditorApplication.CallbackFunction(InspectorWindow.RepaintAllInspectors);
+						}
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Combine(arg_37_0, TimeControl.<>f__mg$cache0);
 						this.m_LastFrameEditorTime = EditorApplication.timeSinceStartup;
 						if (this.m_ResetOnPlay)
 						{
@@ -83,12 +122,18 @@ namespace UnityEditor
 					}
 					else
 					{
-						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(EditorApplication.update, new EditorApplication.CallbackFunction(InspectorWindow.RepaintAllInspectors));
+						Delegate arg_9A_0 = EditorApplication.update;
+						if (TimeControl.<>f__mg$cache1 == null)
+						{
+							TimeControl.<>f__mg$cache1 = new EditorApplication.CallbackFunction(InspectorWindow.RepaintAllInspectors);
+						}
+						EditorApplication.update = (EditorApplication.CallbackFunction)Delegate.Remove(arg_9A_0, TimeControl.<>f__mg$cache1);
 					}
 				}
 				this.m_Playing = value;
 			}
 		}
+
 		public void DoTimeControl(Rect rect)
 		{
 			if (TimeControl.s_Styles == null)
@@ -136,12 +181,9 @@ namespace UnityEditor
 						{
 							this.currentTime -= this.stopTime - this.startTime;
 						}
-						else
+						else if (this.m_MouseDrag < 0f)
 						{
-							if (this.m_MouseDrag < 0f)
-							{
-								this.currentTime += this.stopTime - this.startTime;
-							}
+							this.currentTime += this.stopTime - this.startTime;
 						}
 						this.m_WrapForwardDrag = true;
 						this.m_MouseDrag = Mathf.Repeat(this.m_MouseDrag, rect3.width);
@@ -186,10 +228,12 @@ namespace UnityEditor
 			Handles.DrawLine(new Vector2(num, rect3.yMin), new Vector2(num, rect3.yMax));
 			Handles.DrawLine(new Vector2(num + 1f, rect3.yMin), new Vector2(num + 1f, rect3.yMax));
 		}
+
 		public void OnDisable()
 		{
 			this.playing = false;
 		}
+
 		public void Update()
 		{
 			if (!this.m_DeltaTimeSet)

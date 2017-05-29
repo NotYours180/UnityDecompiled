@@ -1,109 +1,128 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.Scripting;
+
 namespace UnityEditor.Audio
 {
 	internal sealed class AudioMixerGroupController : AudioMixerGroup
 	{
 		public extern GUID groupID
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int userColorIndex
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern AudioMixerController controller
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern AudioMixerGroupController[] children
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern AudioMixerEffectController[] effects
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool mute
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool solo
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool bypassEffects
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public AudioMixerGroupController(AudioMixer owner)
 		{
 			AudioMixerGroupController.Internal_CreateAudioMixerGroupController(this, owner);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_CreateAudioMixerGroupController(AudioMixerGroupController mono, AudioMixer owner);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void PreallocateGUIDs();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern GUID GetGUIDForVolume();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetValueForVolume(AudioMixerController controller, AudioMixerSnapshotController snapshot);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetValueForVolume(AudioMixerController controller, AudioMixerSnapshotController snapshot, float value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern GUID GetGUIDForPitch();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetValueForPitch(AudioMixerController controller, AudioMixerSnapshotController snapshot);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetValueForPitch(AudioMixerController controller, AudioMixerSnapshotController snapshot, float value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern bool HasDependentMixers();
+
 		public void InsertEffect(AudioMixerEffectController effect, int index)
 		{
 			List<AudioMixerEffectController> list = new List<AudioMixerEffectController>(this.effects);
@@ -115,26 +134,31 @@ namespace UnityEditor.Audio
 			list[index] = effect;
 			this.effects = list.ToArray();
 		}
+
 		public bool HasAttenuation()
 		{
 			AudioMixerEffectController[] effects = this.effects;
+			bool result;
 			for (int i = 0; i < effects.Length; i++)
 			{
 				AudioMixerEffectController audioMixerEffectController = effects[i];
 				if (audioMixerEffectController.IsAttenuation())
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
+
 		public void DumpHierarchy(string title, int level)
 		{
-			if (title != string.Empty)
+			if (title != "")
 			{
 				Console.WriteLine(title);
 			}
-			string str = string.Empty;
+			string str = "";
 			int num = level;
 			while (num-- > 0)
 			{
@@ -152,13 +176,15 @@ namespace UnityEditor.Audio
 			for (int j = 0; j < children.Length; j++)
 			{
 				AudioMixerGroupController audioMixerGroupController = children[j];
-				audioMixerGroupController.DumpHierarchy(string.Empty, level + 1);
+				audioMixerGroupController.DumpHierarchy("", level + 1);
 			}
 		}
+
 		public string GetDisplayString()
 		{
 			return base.name;
 		}
+
 		public override string ToString()
 		{
 			return base.name;

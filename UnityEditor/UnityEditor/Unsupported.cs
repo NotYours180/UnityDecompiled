@@ -2,44 +2,14 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	public sealed class Unsupported
 	{
-		public struct ProgressiveMesh
-		{
-			internal IntPtr opaquePtr;
-			public static void Create(Mesh src, out Unsupported.ProgressiveMesh pm)
-			{
-				pm.opaquePtr = Unsupported.ProgressiveMesh.CreateImpl(src);
-			}
-			public static void Destroy(ref Unsupported.ProgressiveMesh pm)
-			{
-				Unsupported.ProgressiveMesh.DestroyImpl(pm.opaquePtr);
-				pm.opaquePtr = IntPtr.Zero;
-			}
-			public static void CreateInitialGeometry(Unsupported.ProgressiveMesh pm, Mesh mesh)
-			{
-				Unsupported.ProgressiveMesh.CreateInitialGeometryImpl(pm.opaquePtr, mesh);
-			}
-			public static void UpdateMesh(Unsupported.ProgressiveMesh pm, int targetTriCount, Mesh mesh)
-			{
-				Unsupported.ProgressiveMesh.UpdateMeshImpl(pm.opaquePtr, targetTriCount, mesh);
-			}
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			internal static extern IntPtr CreateImpl(Mesh src);
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			internal static extern void DestroyImpl(IntPtr pmOpaque);
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			internal static extern void CreateInitialGeometryImpl(IntPtr pmOpaque, Mesh target);
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			internal static extern void UpdateMeshImpl(IntPtr pmOpaque, int targetTriCount, Mesh target);
-		}
 		private static bool s_FakeNonDeveloperBuild = EditorPrefs.GetBool("FakeNonDeveloperBuild", false);
+
 		internal static bool fakeNonDeveloperBuild
 		{
 			get
@@ -52,95 +22,123 @@ namespace UnityEditor
 				EditorPrefs.SetBool("FakeNonDeveloperBuild", value);
 			}
 		}
+
 		internal static Vector3 MakeNiceVector3(Vector3 vector)
 		{
-			return Unsupported.INTERNAL_CALL_MakeNiceVector3(ref vector);
+			Vector3 result;
+			Unsupported.INTERNAL_CALL_MakeNiceVector3(ref vector, out result);
+			return result;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Vector3 INTERNAL_CALL_MakeNiceVector3(ref Vector3 vector);
-		[WrapperlessIcall]
+		private static extern void INTERNAL_CALL_MakeNiceVector3(ref Vector3 vector, out Vector3 value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CaptureScreenshotImmediate(string filePath, int x, int y, int width, int height);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern NETVersion GetNETVersion();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetSubmenusCommands(string menuPath);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Type GetTypeFromFullName(string fullName);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetSubmenus(string menuPath);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetSubmenusIncludingSeparators(string menuPath);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PrepareObjectContextMenu(UnityEngine.Object c, int contextUserData);
+
 		public static bool IsDeveloperBuild()
 		{
 			return Unsupported.IsDeveloperBuildInternal() && !Unsupported.s_FakeNonDeveloperBuild;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool IsDeveloperBuildInternal();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsBleedingEdgeBuild();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsDestroyScriptableObject(ScriptableObject target);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsNativeCodeBuiltInReleaseMode();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetBaseUnityDeveloperFolder();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void StopPlayingImmediately();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SceneTrackerFlushDirty();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetAllowCursorHide(bool allow);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetAllowCursorLock(bool allow);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetRenderSettingsUseFogNoDirty(bool fog);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetQualitySettingsShadowDistanceTemporarily(float distance);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DeleteGameObjectSelection();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CopyGameObjectsToPasteboard();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void PasteGameObjectsFromPasteboard();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern UnityEngine.Object GetSerializedAssetInterfaceSingleton(string className);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DuplicateGameObjectsUsingPasteboard();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CopyComponentToPasteboard(Component component);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool PasteComponentFromPasteboard(GameObject go);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool PasteComponentValuesFromPasteboard(Component component);
+
 		public static void CopyStateMachineDataToPasteboard(UnityEngine.Object stateMachineObject, AnimatorController controller, int layerIndex)
 		{
 			Unsupported.CopyStateMachineDataToPasteboard(new UnityEngine.Object[]
@@ -151,41 +149,56 @@ namespace UnityEditor
 				default(Vector3)
 			}, controller, layerIndex);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CopyStateMachineDataToPasteboard(UnityEngine.Object[] stateMachineObjects, Vector3[] monoPositions, AnimatorController controller, int layerIndex);
+
 		public static void PasteToStateMachineFromPasteboard(AnimatorStateMachine sm, AnimatorController controller, int layerIndex, Vector3 position)
 		{
 			Undo.RegisterCompleteObjectUndo(sm, "Paste to StateMachine");
 			Unsupported.PasteToStateMachineFromPasteboardInternal(sm, controller, layerIndex, position);
 		}
+
 		internal static void PasteToStateMachineFromPasteboardInternal(AnimatorStateMachine sm, AnimatorController controller, int layerIndex, Vector3 position)
 		{
 			Unsupported.INTERNAL_CALL_PasteToStateMachineFromPasteboardInternal(sm, controller, layerIndex, ref position);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_PasteToStateMachineFromPasteboardInternal(AnimatorStateMachine sm, AnimatorController controller, int layerIndex, ref Vector3 position);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasStateMachineDataInPasteboard();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SmartReset(UnityEngine.Object obj);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string ResolveSymlinks(string path);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetApplicationSettingCompressAssetsOnImport(bool value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetApplicationSettingCompressAssetsOnImport();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int GetLocalIdentifierInFile(int instanceID);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool IsHiddenFile(string path);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void ClearSkinCache();
 	}
 }

@@ -1,42 +1,56 @@
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
 	public class TrackedReference
 	{
 		internal IntPtr m_Ptr;
+
 		protected TrackedReference()
 		{
 		}
-		public override bool Equals(object o)
-		{
-			return o as TrackedReference == this;
-		}
-		public override int GetHashCode()
-		{
-			return (int)this.m_Ptr;
-		}
+
 		public static bool operator ==(TrackedReference x, TrackedReference y)
 		{
+			bool result;
 			if (y == null && x == null)
 			{
-				return true;
+				result = true;
 			}
-			if (y == null)
+			else if (y == null)
 			{
-				return x.m_Ptr == IntPtr.Zero;
+				result = (x.m_Ptr == IntPtr.Zero);
 			}
-			if (x == null)
+			else if (x == null)
 			{
-				return y.m_Ptr == IntPtr.Zero;
+				result = (y.m_Ptr == IntPtr.Zero);
 			}
-			return x.m_Ptr == y.m_Ptr;
+			else
+			{
+				result = (x.m_Ptr == y.m_Ptr);
+			}
+			return result;
 		}
+
 		public static bool operator !=(TrackedReference x, TrackedReference y)
 		{
 			return !(x == y);
 		}
+
+		public override bool Equals(object o)
+		{
+			return o as TrackedReference == this;
+		}
+
+		public override int GetHashCode()
+		{
+			return (int)this.m_Ptr;
+		}
+
 		public static implicit operator bool(TrackedReference exists)
 		{
 			return exists != null;

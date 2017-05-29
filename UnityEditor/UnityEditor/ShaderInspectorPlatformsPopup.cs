@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ShaderInspectorPlatformsPopup : PopupWindowContent
@@ -8,10 +9,10 @@ namespace UnityEditor
 		private class Styles
 		{
 			public static readonly GUIStyle menuItem = "MenuItem";
+
 			public static readonly GUIStyle separator = "sv_iconselector_sep";
 		}
-		private const float kFrameWidth = 1f;
-		private const float kSeparatorHeight = 6f;
+
 		internal static readonly string[] s_PlatformModes = new string[]
 		{
 			"Current graphics device",
@@ -19,12 +20,23 @@ namespace UnityEditor
 			"All platforms",
 			"Custom:"
 		};
+
 		private static string[] s_ShaderPlatformNames;
+
 		private static int[] s_ShaderPlatformIndices;
+
+		private const float kFrameWidth = 1f;
+
+		private const float kSeparatorHeight = 6f;
+
 		private readonly Shader m_Shader;
+
 		private static int s_CurrentMode = -1;
+
 		private static int s_CurrentPlatformMask = -1;
+
 		private static int s_CurrentVariantStripping = -1;
+
 		public static int currentMode
 		{
 			get
@@ -41,13 +53,14 @@ namespace UnityEditor
 				EditorPrefs.SetInt("ShaderInspectorPlatformMode", value);
 			}
 		}
+
 		public static int currentPlatformMask
 		{
 			get
 			{
 				if (ShaderInspectorPlatformsPopup.s_CurrentPlatformMask < 0)
 				{
-					ShaderInspectorPlatformsPopup.s_CurrentPlatformMask = EditorPrefs.GetInt("ShaderInspectorPlatformMask", 32767);
+					ShaderInspectorPlatformsPopup.s_CurrentPlatformMask = EditorPrefs.GetInt("ShaderInspectorPlatformMask", 1048575);
 				}
 				return ShaderInspectorPlatformsPopup.s_CurrentPlatformMask;
 			}
@@ -57,6 +70,7 @@ namespace UnityEditor
 				EditorPrefs.SetInt("ShaderInspectorPlatformMask", value);
 			}
 		}
+
 		public static int currentVariantStripping
 		{
 			get
@@ -73,31 +87,35 @@ namespace UnityEditor
 				EditorPrefs.SetInt("ShaderInspectorVariantStripping", value);
 			}
 		}
+
 		public ShaderInspectorPlatformsPopup(Shader shader)
 		{
 			this.m_Shader = shader;
 			ShaderInspectorPlatformsPopup.InitializeShaderPlatforms();
 		}
+
 		private static void InitializeShaderPlatforms()
 		{
-			if (ShaderInspectorPlatformsPopup.s_ShaderPlatformNames != null)
+			if (ShaderInspectorPlatformsPopup.s_ShaderPlatformNames == null)
 			{
-				return;
-			}
-			int availableShaderCompilerPlatforms = ShaderUtil.GetAvailableShaderCompilerPlatforms();
-			List<string> list = new List<string>();
-			List<int> list2 = new List<int>();
-			for (int i = 0; i < 32; i++)
-			{
-				if ((availableShaderCompilerPlatforms & 1 << i) != 0)
+				int availableShaderCompilerPlatforms = ShaderUtil.GetAvailableShaderCompilerPlatforms();
+				List<string> list = new List<string>();
+				List<int> list2 = new List<int>();
+				for (int i = 0; i < 32; i++)
 				{
-					list.Add(((ShaderUtil.ShaderCompilerPlatformType)i).ToString());
-					list2.Add(i);
+					if ((availableShaderCompilerPlatforms & 1 << i) != 0)
+					{
+						List<string> arg_4D_0 = list;
+						ShaderUtil.ShaderCompilerPlatformType shaderCompilerPlatformType = (ShaderUtil.ShaderCompilerPlatformType)i;
+						arg_4D_0.Add(shaderCompilerPlatformType.ToString());
+						list2.Add(i);
+					}
 				}
+				ShaderInspectorPlatformsPopup.s_ShaderPlatformNames = list.ToArray();
+				ShaderInspectorPlatformsPopup.s_ShaderPlatformIndices = list2.ToArray();
 			}
-			ShaderInspectorPlatformsPopup.s_ShaderPlatformNames = list.ToArray();
-			ShaderInspectorPlatformsPopup.s_ShaderPlatformIndices = list2.ToArray();
 		}
+
 		public override Vector2 GetWindowSize()
 		{
 			int num = ShaderInspectorPlatformsPopup.s_PlatformModes.Length + ShaderInspectorPlatformsPopup.s_ShaderPlatformNames.Length + 2;
@@ -106,32 +124,33 @@ namespace UnityEditor
 			Vector2 result = new Vector2(210f, num2);
 			return result;
 		}
+
 		public override void OnGUI(Rect rect)
 		{
-			if (this.m_Shader == null)
+			if (!(this.m_Shader == null))
 			{
-				return;
-			}
-			if (Event.current.type == EventType.Layout)
-			{
-				return;
-			}
-			this.Draw(base.editorWindow, rect.width);
-			if (Event.current.type == EventType.MouseMove)
-			{
-				Event.current.Use();
-			}
-			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
-			{
-				base.editorWindow.Close();
-				GUIUtility.ExitGUI();
+				if (Event.current.type != EventType.Layout)
+				{
+					this.Draw(base.editorWindow, rect.width);
+					if (Event.current.type == EventType.MouseMove)
+					{
+						Event.current.Use();
+					}
+					if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+					{
+						base.editorWindow.Close();
+						GUIUtility.ExitGUI();
+					}
+				}
 			}
 		}
+
 		private void DrawSeparator(ref Rect rect)
 		{
 			GUI.Label(new Rect(rect.x + 5f, rect.y + 3f, rect.width - 10f, 3f), GUIContent.none, ShaderInspectorPlatformsPopup.Styles.separator);
 			rect.y += 6f;
 		}
+
 		private void Draw(EditorWindow caller, float listElementWidth)
 		{
 			Rect rect = new Rect(0f, 0f, listElementWidth, 16f);
@@ -156,6 +175,7 @@ namespace UnityEditor
 			this.DrawSeparator(ref rect);
 			this.DoShaderVariants(caller, ref rect);
 		}
+
 		private void DoOneMode(Rect rect, int index)
 		{
 			EditorGUI.BeginChangeCheck();
@@ -165,6 +185,7 @@ namespace UnityEditor
 				ShaderInspectorPlatformsPopup.currentMode = index;
 			}
 		}
+
 		private void DoCustomPlatformBit(Rect rect, int index)
 		{
 			EditorGUI.BeginChangeCheck();
@@ -184,6 +205,7 @@ namespace UnityEditor
 				ShaderInspectorPlatformsPopup.currentMode = 3;
 			}
 		}
+
 		private void DoShaderVariants(EditorWindow caller, ref Rect drawPos)
 		{
 			EditorGUI.BeginChangeCheck();

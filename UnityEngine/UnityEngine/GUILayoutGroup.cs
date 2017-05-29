@@ -1,26 +1,44 @@
 using System;
 using System.Collections.Generic;
+
 namespace UnityEngine
 {
 	internal class GUILayoutGroup : GUILayoutEntry
 	{
 		public List<GUILayoutEntry> entries = new List<GUILayoutEntry>();
+
 		public bool isVertical = true;
-		public bool resetCoords;
-		public float spacing;
+
+		public bool resetCoords = false;
+
+		public float spacing = 0f;
+
 		public bool sameSize = true;
-		public bool isWindow;
+
+		public bool isWindow = false;
+
 		public int windowID = -1;
-		private int cursor;
-		protected int stretchableCountX = 100;
-		protected int stretchableCountY = 100;
-		protected bool userSpecifiedWidth;
-		protected bool userSpecifiedHeight;
-		protected float childMinWidth = 100f;
-		protected float childMaxWidth = 100f;
-		protected float childMinHeight = 100f;
-		protected float childMaxHeight = 100f;
-		private RectOffset m_Margin = new RectOffset();
+
+		private int m_Cursor = 0;
+
+		protected int m_StretchableCountX = 100;
+
+		protected int m_StretchableCountY = 100;
+
+		protected bool m_UserSpecifiedWidth = false;
+
+		protected bool m_UserSpecifiedHeight = false;
+
+		protected float m_ChildMinWidth = 100f;
+
+		protected float m_ChildMaxWidth = 100f;
+
+		protected float m_ChildMinHeight = 100f;
+
+		protected float m_ChildMaxHeight = 100f;
+
+		private readonly RectOffset m_Margin = new RectOffset();
+
 		public override RectOffset margin
 		{
 			get
@@ -28,9 +46,11 @@ namespace UnityEngine
 				return this.m_Margin;
 			}
 		}
+
 		public GUILayoutGroup() : base(0f, 0f, 0f, 0f, GUIStyle.none)
 		{
 		}
+
 		public GUILayoutGroup(GUIStyle _style, GUILayoutOption[] options) : base(0f, 0f, 0f, 0f, _style)
 		{
 			if (options != null)
@@ -42,34 +62,35 @@ namespace UnityEngine
 			this.m_Margin.top = _style.margin.top;
 			this.m_Margin.bottom = _style.margin.bottom;
 		}
+
 		public override void ApplyOptions(GUILayoutOption[] options)
 		{
-			if (options == null)
+			if (options != null)
 			{
-				return;
-			}
-			base.ApplyOptions(options);
-			for (int i = 0; i < options.Length; i++)
-			{
-				GUILayoutOption gUILayoutOption = options[i];
-				switch (gUILayoutOption.type)
+				base.ApplyOptions(options);
+				for (int i = 0; i < options.Length; i++)
 				{
-				case GUILayoutOption.Type.fixedWidth:
-				case GUILayoutOption.Type.minWidth:
-				case GUILayoutOption.Type.maxWidth:
-					this.userSpecifiedHeight = true;
-					break;
-				case GUILayoutOption.Type.fixedHeight:
-				case GUILayoutOption.Type.minHeight:
-				case GUILayoutOption.Type.maxHeight:
-					this.userSpecifiedWidth = true;
-					break;
-				case GUILayoutOption.Type.spacing:
-					this.spacing = (float)((int)gUILayoutOption.value);
-					break;
+					GUILayoutOption gUILayoutOption = options[i];
+					switch (gUILayoutOption.type)
+					{
+					case GUILayoutOption.Type.fixedWidth:
+					case GUILayoutOption.Type.minWidth:
+					case GUILayoutOption.Type.maxWidth:
+						this.m_UserSpecifiedHeight = true;
+						break;
+					case GUILayoutOption.Type.fixedHeight:
+					case GUILayoutOption.Type.minHeight:
+					case GUILayoutOption.Type.maxHeight:
+						this.m_UserSpecifiedWidth = true;
+						break;
+					case GUILayoutOption.Type.spacing:
+						this.spacing = (float)((int)gUILayoutOption.value);
+						break;
+					}
 				}
 			}
 		}
+
 		protected override void ApplyStyleSettings(GUIStyle style)
 		{
 			base.ApplyStyleSettings(style);
@@ -79,21 +100,23 @@ namespace UnityEngine
 			this.m_Margin.top = margin.top;
 			this.m_Margin.bottom = margin.bottom;
 		}
+
 		public void ResetCursor()
 		{
-			this.cursor = 0;
+			this.m_Cursor = 0;
 		}
+
 		public Rect PeekNext()
 		{
-			if (this.cursor < this.entries.Count)
+			if (this.m_Cursor < this.entries.Count)
 			{
-				GUILayoutEntry gUILayoutEntry = this.entries[this.cursor];
+				GUILayoutEntry gUILayoutEntry = this.entries[this.m_Cursor];
 				return gUILayoutEntry.rect;
 			}
 			throw new ArgumentException(string.Concat(new object[]
 			{
 				"Getting control ",
-				this.cursor,
+				this.m_Cursor,
 				"'s position in a group with only ",
 				this.entries.Count,
 				" controls when doing ",
@@ -101,18 +124,19 @@ namespace UnityEngine
 				"\nAborting"
 			}));
 		}
+
 		public GUILayoutEntry GetNext()
 		{
-			if (this.cursor < this.entries.Count)
+			if (this.m_Cursor < this.entries.Count)
 			{
-				GUILayoutEntry result = this.entries[this.cursor];
-				this.cursor++;
+				GUILayoutEntry result = this.entries[this.m_Cursor];
+				this.m_Cursor++;
 				return result;
 			}
 			throw new ArgumentException(string.Concat(new object[]
 			{
 				"Getting control ",
-				this.cursor,
+				this.m_Cursor,
 				"'s position in a group with only ",
 				this.entries.Count,
 				" controls when doing ",
@@ -120,146 +144,157 @@ namespace UnityEngine
 				"\nAborting"
 			}));
 		}
+
 		public Rect GetLast()
 		{
-			if (this.cursor == 0)
+			Rect result;
+			if (this.m_Cursor == 0)
 			{
 				Debug.LogError("You cannot call GetLast immediately after beginning a group.");
-				return GUILayoutEntry.kDummyRect;
+				result = GUILayoutEntry.kDummyRect;
 			}
-			if (this.cursor <= this.entries.Count)
+			else if (this.m_Cursor <= this.entries.Count)
 			{
-				GUILayoutEntry gUILayoutEntry = this.entries[this.cursor - 1];
-				return gUILayoutEntry.rect;
+				GUILayoutEntry gUILayoutEntry = this.entries[this.m_Cursor - 1];
+				result = gUILayoutEntry.rect;
 			}
-			Debug.LogError(string.Concat(new object[]
+			else
 			{
-				"Getting control ",
-				this.cursor,
-				"'s position in a group with only ",
-				this.entries.Count,
-				" controls when doing ",
-				Event.current.type
-			}));
-			return GUILayoutEntry.kDummyRect;
+				Debug.LogError(string.Concat(new object[]
+				{
+					"Getting control ",
+					this.m_Cursor,
+					"'s position in a group with only ",
+					this.entries.Count,
+					" controls when doing ",
+					Event.current.type
+				}));
+				result = GUILayoutEntry.kDummyRect;
+			}
+			return result;
 		}
+
 		public void Add(GUILayoutEntry e)
 		{
 			this.entries.Add(e);
 		}
+
 		public override void CalcWidth()
 		{
 			if (this.entries.Count == 0)
 			{
 				this.maxWidth = (this.minWidth = (float)base.style.padding.horizontal);
-				return;
-			}
-			this.childMinWidth = 0f;
-			this.childMaxWidth = 0f;
-			int num = 0;
-			int num2 = 0;
-			this.stretchableCountX = 0;
-			bool flag = true;
-			if (this.isVertical)
-			{
-				foreach (GUILayoutEntry current in this.entries)
-				{
-					current.CalcWidth();
-					RectOffset margin = current.margin;
-					if (current.style != GUILayoutUtility.spaceStyle)
-					{
-						if (!flag)
-						{
-							num = Mathf.Min(margin.left, num);
-							num2 = Mathf.Min(margin.right, num2);
-						}
-						else
-						{
-							num = margin.left;
-							num2 = margin.right;
-							flag = false;
-						}
-						this.childMinWidth = Mathf.Max(current.minWidth + (float)margin.horizontal, this.childMinWidth);
-						this.childMaxWidth = Mathf.Max(current.maxWidth + (float)margin.horizontal, this.childMaxWidth);
-					}
-					this.stretchableCountX += current.stretchWidth;
-				}
-				this.childMinWidth -= (float)(num + num2);
-				this.childMaxWidth -= (float)(num + num2);
 			}
 			else
 			{
-				int num3 = 0;
-				foreach (GUILayoutEntry current2 in this.entries)
+				int num = 0;
+				int num2 = 0;
+				this.m_ChildMinWidth = 0f;
+				this.m_ChildMaxWidth = 0f;
+				this.m_StretchableCountX = 0;
+				bool flag = true;
+				if (this.isVertical)
 				{
-					current2.CalcWidth();
-					RectOffset margin2 = current2.margin;
-					if (current2.style != GUILayoutUtility.spaceStyle)
+					foreach (GUILayoutEntry current in this.entries)
 					{
-						int num4;
-						if (!flag)
+						current.CalcWidth();
+						RectOffset margin = current.margin;
+						if (current.style != GUILayoutUtility.spaceStyle)
 						{
-							num4 = ((num3 <= margin2.left) ? margin2.left : num3);
+							if (!flag)
+							{
+								num = Mathf.Min(margin.left, num);
+								num2 = Mathf.Min(margin.right, num2);
+							}
+							else
+							{
+								num = margin.left;
+								num2 = margin.right;
+								flag = false;
+							}
+							this.m_ChildMinWidth = Mathf.Max(current.minWidth + (float)margin.horizontal, this.m_ChildMinWidth);
+							this.m_ChildMaxWidth = Mathf.Max(current.maxWidth + (float)margin.horizontal, this.m_ChildMaxWidth);
 						}
-						else
-						{
-							num4 = 0;
-							flag = false;
-						}
-						this.childMinWidth += current2.minWidth + this.spacing + (float)num4;
-						this.childMaxWidth += current2.maxWidth + this.spacing + (float)num4;
-						num3 = margin2.right;
-						this.stretchableCountX += current2.stretchWidth;
+						this.m_StretchableCountX += current.stretchWidth;
 					}
-					else
-					{
-						this.childMinWidth += current2.minWidth;
-						this.childMaxWidth += current2.maxWidth;
-						this.stretchableCountX += current2.stretchWidth;
-					}
-				}
-				this.childMinWidth -= this.spacing;
-				this.childMaxWidth -= this.spacing;
-				if (this.entries.Count != 0)
-				{
-					num = this.entries[0].margin.left;
-					num2 = num3;
+					this.m_ChildMinWidth -= (float)(num + num2);
+					this.m_ChildMaxWidth -= (float)(num + num2);
 				}
 				else
 				{
-					num2 = (num = 0);
+					int num3 = 0;
+					foreach (GUILayoutEntry current2 in this.entries)
+					{
+						current2.CalcWidth();
+						RectOffset margin2 = current2.margin;
+						if (current2.style != GUILayoutUtility.spaceStyle)
+						{
+							int num4;
+							if (!flag)
+							{
+								num4 = ((num3 <= margin2.left) ? margin2.left : num3);
+							}
+							else
+							{
+								num4 = 0;
+								flag = false;
+							}
+							this.m_ChildMinWidth += current2.minWidth + this.spacing + (float)num4;
+							this.m_ChildMaxWidth += current2.maxWidth + this.spacing + (float)num4;
+							num3 = margin2.right;
+							this.m_StretchableCountX += current2.stretchWidth;
+						}
+						else
+						{
+							this.m_ChildMinWidth += current2.minWidth;
+							this.m_ChildMaxWidth += current2.maxWidth;
+							this.m_StretchableCountX += current2.stretchWidth;
+						}
+					}
+					this.m_ChildMinWidth -= this.spacing;
+					this.m_ChildMaxWidth -= this.spacing;
+					if (this.entries.Count != 0)
+					{
+						num = this.entries[0].margin.left;
+						num2 = num3;
+					}
+					else
+					{
+						num2 = (num = 0);
+					}
+				}
+				float num5;
+				float num6;
+				if (base.style != GUIStyle.none || this.m_UserSpecifiedWidth)
+				{
+					num5 = (float)Mathf.Max(base.style.padding.left, num);
+					num6 = (float)Mathf.Max(base.style.padding.right, num2);
+				}
+				else
+				{
+					this.m_Margin.left = num;
+					this.m_Margin.right = num2;
+					num6 = (num5 = 0f);
+				}
+				this.minWidth = Mathf.Max(this.minWidth, this.m_ChildMinWidth + num5 + num6);
+				if (this.maxWidth == 0f)
+				{
+					this.stretchWidth += this.m_StretchableCountX + ((!base.style.stretchWidth) ? 0 : 1);
+					this.maxWidth = this.m_ChildMaxWidth + num5 + num6;
+				}
+				else
+				{
+					this.stretchWidth = 0;
+				}
+				this.maxWidth = Mathf.Max(this.maxWidth, this.minWidth);
+				if (base.style.fixedWidth != 0f)
+				{
+					this.maxWidth = (this.minWidth = base.style.fixedWidth);
+					this.stretchWidth = 0;
 				}
 			}
-			float num5;
-			float num6;
-			if (base.style != GUIStyle.none || this.userSpecifiedWidth)
-			{
-				num5 = (float)Mathf.Max(base.style.padding.left, num);
-				num6 = (float)Mathf.Max(base.style.padding.right, num2);
-			}
-			else
-			{
-				this.m_Margin.left = num;
-				this.m_Margin.right = num2;
-				num6 = (num5 = 0f);
-			}
-			this.minWidth = Mathf.Max(this.minWidth, this.childMinWidth + num5 + num6);
-			if (this.maxWidth == 0f)
-			{
-				this.stretchWidth += this.stretchableCountX + ((!base.style.stretchWidth) ? 0 : 1);
-				this.maxWidth = this.childMaxWidth + num5 + num6;
-			}
-			else
-			{
-				this.stretchWidth = 0;
-			}
-			this.maxWidth = Mathf.Max(this.maxWidth, this.minWidth);
-			if (base.style.fixedWidth != 0f)
-			{
-				this.maxWidth = (this.minWidth = base.style.fixedWidth);
-				this.stretchWidth = 0;
-			}
 		}
+
 		public override void SetHorizontal(float x, float width)
 		{
 			base.SetHorizontal(x, width);
@@ -320,14 +355,17 @@ namespace UnityEngine
 				}
 				float num7 = width - this.spacing * (float)(this.entries.Count - 1);
 				float t = 0f;
-				if (this.childMinWidth != this.childMaxWidth)
+				if (this.m_ChildMinWidth != this.m_ChildMaxWidth)
 				{
-					t = Mathf.Clamp((num7 - this.childMinWidth) / (this.childMaxWidth - this.childMinWidth), 0f, 1f);
+					t = Mathf.Clamp((num7 - this.m_ChildMinWidth) / (this.m_ChildMaxWidth - this.m_ChildMinWidth), 0f, 1f);
 				}
 				float num8 = 0f;
-				if (num7 > this.childMaxWidth && this.stretchableCountX > 0)
+				if (num7 > this.m_ChildMaxWidth)
 				{
-					num8 = (num7 - this.childMaxWidth) / (float)this.stretchableCountX;
+					if (this.m_StretchableCountX > 0)
+					{
+						num8 = (num7 - this.m_ChildMaxWidth) / (float)this.m_StretchableCountX;
+					}
 				}
 				int num9 = 0;
 				bool flag = true;
@@ -352,179 +390,183 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public override void CalcHeight()
 		{
 			if (this.entries.Count == 0)
 			{
 				this.maxHeight = (this.minHeight = (float)base.style.padding.vertical);
-				return;
 			}
-			this.childMinHeight = (this.childMaxHeight = 0f);
-			int num = 0;
-			int num2 = 0;
-			this.stretchableCountY = 0;
-			if (this.isVertical)
+			else
 			{
-				int num3 = 0;
-				bool flag = true;
-				foreach (GUILayoutEntry current in this.entries)
+				int num = 0;
+				int num2 = 0;
+				this.m_ChildMinHeight = 0f;
+				this.m_ChildMaxHeight = 0f;
+				this.m_StretchableCountY = 0;
+				if (this.isVertical)
 				{
-					current.CalcHeight();
-					RectOffset margin = current.margin;
-					if (current.style != GUILayoutUtility.spaceStyle)
+					int num3 = 0;
+					bool flag = true;
+					foreach (GUILayoutEntry current in this.entries)
 					{
-						int num4;
-						if (!flag)
+						current.CalcHeight();
+						RectOffset margin = current.margin;
+						if (current.style != GUILayoutUtility.spaceStyle)
 						{
-							num4 = Mathf.Max(num3, margin.top);
+							int num4;
+							if (!flag)
+							{
+								num4 = Mathf.Max(num3, margin.top);
+							}
+							else
+							{
+								num4 = 0;
+								flag = false;
+							}
+							this.m_ChildMinHeight += current.minHeight + this.spacing + (float)num4;
+							this.m_ChildMaxHeight += current.maxHeight + this.spacing + (float)num4;
+							num3 = margin.bottom;
+							this.m_StretchableCountY += current.stretchHeight;
 						}
 						else
 						{
-							num4 = 0;
-							flag = false;
+							this.m_ChildMinHeight += current.minHeight;
+							this.m_ChildMaxHeight += current.maxHeight;
+							this.m_StretchableCountY += current.stretchHeight;
 						}
-						this.childMinHeight += current.minHeight + this.spacing + (float)num4;
-						this.childMaxHeight += current.maxHeight + this.spacing + (float)num4;
-						num3 = margin.bottom;
-						this.stretchableCountY += current.stretchHeight;
+					}
+					this.m_ChildMinHeight -= this.spacing;
+					this.m_ChildMaxHeight -= this.spacing;
+					if (this.entries.Count != 0)
+					{
+						num = this.entries[0].margin.top;
+						num2 = num3;
 					}
 					else
 					{
-						this.childMinHeight += current.minHeight;
-						this.childMaxHeight += current.maxHeight;
-						this.stretchableCountY += current.stretchHeight;
+						num = (num2 = 0);
 					}
-				}
-				this.childMinHeight -= this.spacing;
-				this.childMaxHeight -= this.spacing;
-				if (this.entries.Count != 0)
-				{
-					num = this.entries[0].margin.top;
-					num2 = num3;
 				}
 				else
 				{
-					num = (num2 = 0);
-				}
-			}
-			else
-			{
-				bool flag2 = true;
-				foreach (GUILayoutEntry current2 in this.entries)
-				{
-					current2.CalcHeight();
-					RectOffset margin2 = current2.margin;
-					if (current2.style != GUILayoutUtility.spaceStyle)
+					bool flag2 = true;
+					foreach (GUILayoutEntry current2 in this.entries)
 					{
-						if (!flag2)
+						current2.CalcHeight();
+						RectOffset margin2 = current2.margin;
+						if (current2.style != GUILayoutUtility.spaceStyle)
 						{
-							num = Mathf.Min(margin2.top, num);
-							num2 = Mathf.Min(margin2.bottom, num2);
+							if (!flag2)
+							{
+								num = Mathf.Min(margin2.top, num);
+								num2 = Mathf.Min(margin2.bottom, num2);
+							}
+							else
+							{
+								num = margin2.top;
+								num2 = margin2.bottom;
+								flag2 = false;
+							}
+							this.m_ChildMinHeight = Mathf.Max(current2.minHeight, this.m_ChildMinHeight);
+							this.m_ChildMaxHeight = Mathf.Max(current2.maxHeight, this.m_ChildMaxHeight);
 						}
-						else
-						{
-							num = margin2.top;
-							num2 = margin2.bottom;
-							flag2 = false;
-						}
-						this.childMinHeight = Mathf.Max(current2.minHeight, this.childMinHeight);
-						this.childMaxHeight = Mathf.Max(current2.maxHeight, this.childMaxHeight);
+						this.m_StretchableCountY += current2.stretchHeight;
 					}
-					this.stretchableCountY += current2.stretchHeight;
 				}
-			}
-			float num5;
-			float num6;
-			if (base.style != GUIStyle.none || this.userSpecifiedHeight)
-			{
-				num5 = (float)Mathf.Max(base.style.padding.top, num);
-				num6 = (float)Mathf.Max(base.style.padding.bottom, num2);
-			}
-			else
-			{
-				this.m_Margin.top = num;
-				this.m_Margin.bottom = num2;
-				num6 = (num5 = 0f);
-			}
-			this.minHeight = Mathf.Max(this.minHeight, this.childMinHeight + num5 + num6);
-			if (this.maxHeight == 0f)
-			{
-				this.stretchHeight += this.stretchableCountY + ((!base.style.stretchHeight) ? 0 : 1);
-				this.maxHeight = this.childMaxHeight + num5 + num6;
-			}
-			else
-			{
-				this.stretchHeight = 0;
-			}
-			this.maxHeight = Mathf.Max(this.maxHeight, this.minHeight);
-			if (base.style.fixedHeight != 0f)
-			{
-				this.maxHeight = (this.minHeight = base.style.fixedHeight);
-				this.stretchHeight = 0;
+				float num5;
+				float num6;
+				if (base.style != GUIStyle.none || this.m_UserSpecifiedHeight)
+				{
+					num5 = (float)Mathf.Max(base.style.padding.top, num);
+					num6 = (float)Mathf.Max(base.style.padding.bottom, num2);
+				}
+				else
+				{
+					this.m_Margin.top = num;
+					this.m_Margin.bottom = num2;
+					num6 = (num5 = 0f);
+				}
+				this.minHeight = Mathf.Max(this.minHeight, this.m_ChildMinHeight + num5 + num6);
+				if (this.maxHeight == 0f)
+				{
+					this.stretchHeight += this.m_StretchableCountY + ((!base.style.stretchHeight) ? 0 : 1);
+					this.maxHeight = this.m_ChildMaxHeight + num5 + num6;
+				}
+				else
+				{
+					this.stretchHeight = 0;
+				}
+				this.maxHeight = Mathf.Max(this.maxHeight, this.minHeight);
+				if (base.style.fixedHeight != 0f)
+				{
+					this.maxHeight = (this.minHeight = base.style.fixedHeight);
+					this.stretchHeight = 0;
+				}
 			}
 		}
+
 		public override void SetVertical(float y, float height)
 		{
 			base.SetVertical(y, height);
-			if (this.entries.Count == 0)
+			if (this.entries.Count != 0)
 			{
-				return;
-			}
-			RectOffset padding = base.style.padding;
-			if (this.resetCoords)
-			{
-				y = 0f;
-			}
-			if (this.isVertical)
-			{
-				if (base.style != GUIStyle.none)
+				RectOffset padding = base.style.padding;
+				if (this.resetCoords)
 				{
-					float num = (float)padding.top;
-					float num2 = (float)padding.bottom;
-					if (this.entries.Count != 0)
+					y = 0f;
+				}
+				if (this.isVertical)
+				{
+					if (base.style != GUIStyle.none)
 					{
-						num = Mathf.Max(num, (float)this.entries[0].margin.top);
-						num2 = Mathf.Max(num2, (float)this.entries[this.entries.Count - 1].margin.bottom);
-					}
-					y += num;
-					height -= num2 + num;
-				}
-				float num3 = height - this.spacing * (float)(this.entries.Count - 1);
-				float t = 0f;
-				if (this.childMinHeight != this.childMaxHeight)
-				{
-					t = Mathf.Clamp((num3 - this.childMinHeight) / (this.childMaxHeight - this.childMinHeight), 0f, 1f);
-				}
-				float num4 = 0f;
-				if (num3 > this.childMaxHeight && this.stretchableCountY > 0)
-				{
-					num4 = (num3 - this.childMaxHeight) / (float)this.stretchableCountY;
-				}
-				int num5 = 0;
-				bool flag = true;
-				foreach (GUILayoutEntry current in this.entries)
-				{
-					float num6 = Mathf.Lerp(current.minHeight, current.maxHeight, t);
-					num6 += num4 * (float)current.stretchHeight;
-					if (current.style != GUILayoutUtility.spaceStyle)
-					{
-						int num7 = current.margin.top;
-						if (flag)
+						float num = (float)padding.top;
+						float num2 = (float)padding.bottom;
+						if (this.entries.Count != 0)
 						{
-							num7 = 0;
-							flag = false;
+							num = Mathf.Max(num, (float)this.entries[0].margin.top);
+							num2 = Mathf.Max(num2, (float)this.entries[this.entries.Count - 1].margin.bottom);
 						}
-						int num8 = (num5 <= num7) ? num7 : num5;
-						y += (float)num8;
-						num5 = current.margin.bottom;
+						y += num;
+						height -= num2 + num;
 					}
-					current.SetVertical(Mathf.Round(y), Mathf.Round(num6));
-					y += num6 + this.spacing;
+					float num3 = height - this.spacing * (float)(this.entries.Count - 1);
+					float t = 0f;
+					if (this.m_ChildMinHeight != this.m_ChildMaxHeight)
+					{
+						t = Mathf.Clamp((num3 - this.m_ChildMinHeight) / (this.m_ChildMaxHeight - this.m_ChildMinHeight), 0f, 1f);
+					}
+					float num4 = 0f;
+					if (num3 > this.m_ChildMaxHeight)
+					{
+						if (this.m_StretchableCountY > 0)
+						{
+							num4 = (num3 - this.m_ChildMaxHeight) / (float)this.m_StretchableCountY;
+						}
+					}
+					int num5 = 0;
+					bool flag = true;
+					foreach (GUILayoutEntry current in this.entries)
+					{
+						float num6 = Mathf.Lerp(current.minHeight, current.maxHeight, t);
+						num6 += num4 * (float)current.stretchHeight;
+						if (current.style != GUILayoutUtility.spaceStyle)
+						{
+							int num7 = current.margin.top;
+							if (flag)
+							{
+								num7 = 0;
+								flag = false;
+							}
+							int num8 = (num5 <= num7) ? num7 : num5;
+							y += (float)num8;
+							num5 = current.margin.bottom;
+						}
+						current.SetVertical(Mathf.Round(y), Mathf.Round(num6));
+						y += num6 + this.spacing;
+					}
 				}
-			}
-			else
-			{
-				if (base.style != GUIStyle.none)
+				else if (base.style != GUIStyle.none)
 				{
 					foreach (GUILayoutEntry current2 in this.entries)
 					{
@@ -559,10 +601,11 @@ namespace UnityEngine
 				}
 			}
 		}
+
 		public override string ToString()
 		{
-			string text = string.Empty;
-			string text2 = string.Empty;
+			string text = "";
+			string text2 = "";
 			for (int i = 0; i < GUILayoutEntry.indent; i++)
 			{
 				text2 += " ";
@@ -573,7 +616,7 @@ namespace UnityEngine
 				text3,
 				base.ToString(),
 				" Margins: ",
-				this.childMinHeight,
+				this.m_ChildMinHeight,
 				" {\n"
 			});
 			GUILayoutEntry.indent += 4;

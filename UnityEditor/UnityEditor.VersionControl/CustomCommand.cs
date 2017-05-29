@@ -1,30 +1,43 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor.VersionControl
 {
 	internal sealed class CustomCommand
 	{
 		private IntPtr m_thisDummy;
+
+		[ThreadAndSerializationSafe]
 		public extern string name
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		[ThreadAndSerializationSafe]
 		public extern string label
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		[ThreadAndSerializationSafe]
 		public extern CommandContext context
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[WrapperlessIcall]
+
+		internal CustomCommand()
+		{
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern Task StartTask();
 	}

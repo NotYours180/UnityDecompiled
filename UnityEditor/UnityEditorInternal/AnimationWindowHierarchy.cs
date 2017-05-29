@@ -1,47 +1,77 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+
 namespace UnityEditorInternal
 {
 	internal class AnimationWindowHierarchy
 	{
-		private TreeView m_TreeView;
-		public AnimationWindowState state
-		{
-			get;
-			set;
-		}
+		private AnimationWindowState m_State;
+
+		private TreeViewController m_TreeView;
+
 		public AnimationWindowHierarchy(AnimationWindowState state, EditorWindow owner, Rect position)
 		{
-			this.state = state;
+			this.m_State = state;
 			this.Init(owner, position);
 		}
-		public void OnGUI(Rect position, EditorWindow owner)
+
+		public Vector2 GetContentSize()
+		{
+			return this.m_TreeView.GetContentSize();
+		}
+
+		public Rect GetTotalRect()
+		{
+			return this.m_TreeView.GetTotalRect();
+		}
+
+		public void OnGUI(Rect position)
 		{
 			this.m_TreeView.OnEvent();
 			this.m_TreeView.OnGUI(position, GUIUtility.GetControlID(FocusType.Keyboard));
 		}
+
 		public void Init(EditorWindow owner, Rect rect)
 		{
-			if (this.state.m_hierarchyState == null)
+			if (this.m_State.hierarchyState == null)
 			{
-				this.state.m_hierarchyState = new AnimationWindowHierarchyState();
+				this.m_State.hierarchyState = new AnimationWindowHierarchyState();
 			}
-			this.m_TreeView = new TreeView(owner, this.state.m_hierarchyState);
-			this.state.m_HierarchyData = new AnimationWindowHierarchyDataSource(this.m_TreeView, this.state);
-			this.m_TreeView.Init(rect, this.state.m_HierarchyData, new AnimationWindowHierarchyGUI(this.m_TreeView, this.state), new AnimationWindowHierarchyDragging());
+			this.m_TreeView = new TreeViewController(owner, this.m_State.hierarchyState);
+			this.m_State.hierarchyData = new AnimationWindowHierarchyDataSource(this.m_TreeView, this.m_State);
+			this.m_TreeView.Init(rect, this.m_State.hierarchyData, new AnimationWindowHierarchyGUI(this.m_TreeView, this.m_State), null);
 			this.m_TreeView.deselectOnUnhandledMouseDown = true;
-			TreeView expr_92 = this.m_TreeView;
-			expr_92.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_92.selectionChangedCallback, new Action<int[]>(this.state.OnHierarchySelectionChanged));
+			TreeViewController expr_8F = this.m_TreeView;
+			expr_8F.selectionChangedCallback = (Action<int[]>)Delegate.Combine(expr_8F.selectionChangedCallback, new Action<int[]>(this.m_State.OnHierarchySelectionChanged));
 			this.m_TreeView.ReloadData();
 		}
+
 		internal virtual bool IsRenamingNodeAllowed(TreeViewItem node)
 		{
 			return true;
 		}
+
 		public bool IsIDVisible(int id)
 		{
-			return this.m_TreeView != null && this.m_TreeView.IsVisible(id);
+			bool result;
+			if (this.m_TreeView == null)
+			{
+				result = false;
+			}
+			else
+			{
+				IList<TreeViewItem> rows = this.m_TreeView.data.GetRows();
+				result = (TreeViewController.GetIndexOfID(rows, id) >= 0);
+			}
+			return result;
+		}
+
+		public void EndNameEditing(bool acceptChanges)
+		{
+			this.m_TreeView.EndNameEditing(acceptChanges);
 		}
 	}
 }

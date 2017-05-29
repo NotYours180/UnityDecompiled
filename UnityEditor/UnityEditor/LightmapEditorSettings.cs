@@ -1,73 +1,178 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	public sealed class LightmapEditorSettings
 	{
+		public enum GIBakeBackend
+		{
+			Radiosity,
+			PathTracer
+		}
+
+		public enum PathTracerSampling
+		{
+			Auto,
+			Fixed
+		}
+
+		public enum PathTracerFilterMode
+		{
+			None,
+			Auto,
+			Advanced
+		}
+
+		public enum PathTracerFilter
+		{
+			Gaussian,
+			ATrous
+		}
+
+		public static extern LightmapEditorSettings.GIBakeBackend giBakeBackend
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern LightmapEditorSettings.PathTracerSampling giPathTracerSampling
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern LightmapEditorSettings.PathTracerFilter giPathTracerFilter
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern int maxAtlasWidth
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern int maxAtlasHeight
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public static extern float resolution
+
+		public static extern float realtimeResolution
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern float bakeResolution
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern bool textureCompression
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public static extern ReflectionCubemapCompression reflectionCubemapCompression
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern bool enableAmbientOcclusion
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern float aoMaxDistance
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public static extern float aoExponentIndirect
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern float aoExponentDirect
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public static extern int padding
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("LightmapEditorSettings.aoContrast has been deprecated.", false)]
 		public static float aoContrast
 		{
@@ -79,6 +184,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.aoAmount has been deprecated.", false)]
 		public static float aoAmount
 		{
@@ -90,6 +196,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.lockAtlas has been deprecated.", false)]
 		public static bool lockAtlas
 		{
@@ -101,6 +208,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.skyLightColor has been deprecated.", false)]
 		public static Color skyLightColor
 		{
@@ -112,6 +220,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.skyLightIntensity has been deprecated.", false)]
 		public static float skyLightIntensity
 		{
@@ -123,6 +232,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.quality has been deprecated.", false)]
 		public static LightmapBakeQuality quality
 		{
@@ -134,6 +244,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.bounceBoost has been deprecated.", false)]
 		public static float bounceBoost
 		{
@@ -145,6 +256,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.finalGatherRays has been deprecated.", false)]
 		public static int finalGatherRays
 		{
@@ -156,6 +268,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.finalGatherContrastThreshold has been deprecated.", false)]
 		public static float finalGatherContrastThreshold
 		{
@@ -167,6 +280,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.finalGatherGradientThreshold has been deprecated.", false)]
 		public static float finalGatherGradientThreshold
 		{
@@ -178,6 +292,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.finalGatherInterpolationPoints has been deprecated.", false)]
 		public static int finalGatherInterpolationPoints
 		{
@@ -189,6 +304,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.lastUsedResolution has been deprecated.", false)]
 		public static float lastUsedResolution
 		{
@@ -200,6 +316,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.bounces has been deprecated.", false)]
 		public static int bounces
 		{
@@ -211,6 +328,7 @@ namespace UnityEditor
 			{
 			}
 		}
+
 		[Obsolete("LightmapEditorSettings.bounceIntensity has been deprecated.", false)]
 		public static float bounceIntensity
 		{
@@ -222,37 +340,77 @@ namespace UnityEditor
 			{
 			}
 		}
-		[WrapperlessIcall]
+
+		[Obsolete("resolution is now called realtimeResolution (UnityUpgradable) -> realtimeResolution", false)]
+		public static float resolution
+		{
+			get
+			{
+				return LightmapEditorSettings.realtimeResolution;
+			}
+			set
+			{
+				LightmapEditorSettings.realtimeResolution = value;
+			}
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void Reset();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool IsLightmappedOrDynamicLightmappedForRendering(Renderer renderer);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasZeroAreaMesh(Renderer renderer);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasClampedResolution(Renderer renderer);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetSystemResolution(Renderer renderer, out int width, out int height);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetTerrainSystemResolution(Terrain terrain, out int width, out int height, out int numChunksInX, out int numChunksInY);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetInstanceResolution(Renderer renderer, out int width, out int height);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetInputSystemHash(Renderer renderer, out Hash128 inputSystemHash);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetInstanceHash(Renderer renderer, out Hash128 instanceHash);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool GetPVRInstanceHash(int instanceID, out Hash128 instanceHash);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool GetPVRAtlasHash(int instanceID, out Hash128 atlasHash);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool GetPVRAtlasInstanceOffset(int instanceID, out int atlasInstanceOffset);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool GetGeometryHash(Renderer renderer, out Hash128 geometryHash);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void AnalyzeLighting(out LightingStats enabled, out LightingStats active, out LightingStats inactive);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern UnityEngine.Object GetLightmapSettings();
 	}

@@ -1,15 +1,32 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	internal sealed class ColliderUtil
 	{
-		[WrapperlessIcall]
+		public static Vector3 GetCapsuleExtents(CapsuleCollider cc)
+		{
+			Vector3 result;
+			ColliderUtil.INTERNAL_CALL_GetCapsuleExtents(cc, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Vector3 GetCapsuleExtents(CapsuleCollider cc);
-		[WrapperlessIcall]
+		private static extern void INTERNAL_CALL_GetCapsuleExtents(CapsuleCollider cc, out Vector3 value);
+
+		public static Matrix4x4 CalculateCapsuleTransform(CapsuleCollider cc)
+		{
+			Matrix4x4 result;
+			ColliderUtil.INTERNAL_CALL_CalculateCapsuleTransform(cc, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Matrix4x4 CalculateCapsuleTransform(CapsuleCollider cc);
+		private static extern void INTERNAL_CALL_CalculateCapsuleTransform(CapsuleCollider cc, out Matrix4x4 value);
 	}
 }

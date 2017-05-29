@@ -1,15 +1,19 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEditor.Audio;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal static class AudioMixerColorCodes
 	{
 		private struct ItemData
 		{
-			public AudioMixerGroupController group;
+			public AudioMixerGroupController[] groups;
+
 			public int index;
 		}
+
 		private static Color[] darkSkinColors = new Color[]
 		{
 			new Color(0.5f, 0.5f, 0.5f, 0.2f),
@@ -22,6 +26,7 @@ namespace UnityEditor
 			new Color(0f, 0.745098054f, 0.784313738f),
 			new Color(0.5411765f, 0.7529412f, 0.003921569f)
 		};
+
 		private static Color[] lightSkinColors = new Color[]
 		{
 			new Color(0.5f, 0.5f, 0.5f, 0.2f),
@@ -34,6 +39,7 @@ namespace UnityEditor
 			new Color(0f, 0.709803939f, 0.7254902f),
 			new Color(0.447058827f, 0.6627451f, 0.09411765f)
 		};
+
 		private static string[] colorNames = new string[]
 		{
 			"No Color",
@@ -46,45 +52,76 @@ namespace UnityEditor
 			"Cyan",
 			"Green"
 		};
+
+		[CompilerGenerated]
+		private static GenericMenu.MenuFunction2 <>f__mg$cache0;
+
 		private static string[] GetColorNames()
 		{
 			return AudioMixerColorCodes.colorNames;
 		}
+
 		private static Color[] GetColors()
 		{
+			Color[] result;
 			if (EditorGUIUtility.isProSkin)
 			{
-				return AudioMixerColorCodes.darkSkinColors;
+				result = AudioMixerColorCodes.darkSkinColors;
 			}
-			return AudioMixerColorCodes.lightSkinColors;
+			else
+			{
+				result = AudioMixerColorCodes.lightSkinColors;
+			}
+			return result;
 		}
-		public static void AddColorItemsToGenericMenu(GenericMenu menu, AudioMixerGroupController group)
+
+		public static void AddColorItemsToGenericMenu(GenericMenu menu, AudioMixerGroupController[] groups)
 		{
 			Color[] colors = AudioMixerColorCodes.GetColors();
 			string[] array = AudioMixerColorCodes.GetColorNames();
 			for (int i = 0; i < colors.Length; i++)
 			{
-				menu.AddItem(new GUIContent(array[i]), i == group.userColorIndex, new GenericMenu.MenuFunction2(AudioMixerColorCodes.ItemCallback), new AudioMixerColorCodes.ItemData
+				bool flag = groups.Length == 1 && i == groups[0].userColorIndex;
+				GUIContent arg_73_1 = new GUIContent(array[i]);
+				bool arg_73_2 = flag;
+				if (AudioMixerColorCodes.<>f__mg$cache0 == null)
 				{
-					group = group,
+					AudioMixerColorCodes.<>f__mg$cache0 = new GenericMenu.MenuFunction2(AudioMixerColorCodes.ItemCallback);
+				}
+				menu.AddItem(arg_73_1, arg_73_2, AudioMixerColorCodes.<>f__mg$cache0, new AudioMixerColorCodes.ItemData
+				{
+					groups = groups,
 					index = i
 				});
 			}
 		}
+
 		private static void ItemCallback(object data)
 		{
 			AudioMixerColorCodes.ItemData itemData = (AudioMixerColorCodes.ItemData)data;
-			itemData.group.userColorIndex = itemData.index;
+			Undo.RecordObjects(itemData.groups, "Change Group(s) Color");
+			AudioMixerGroupController[] groups = itemData.groups;
+			for (int i = 0; i < groups.Length; i++)
+			{
+				AudioMixerGroupController audioMixerGroupController = groups[i];
+				audioMixerGroupController.userColorIndex = itemData.index;
+			}
 		}
+
 		public static Color GetColor(int index)
 		{
 			Color[] colors = AudioMixerColorCodes.GetColors();
+			Color result;
 			if (index >= 0 && index < colors.Length)
 			{
-				return colors[index];
+				result = colors[index];
 			}
-			Debug.LogError("Invalid color code index: " + index);
-			return Color.white;
+			else
+			{
+				Debug.LogError("Invalid color code index: " + index);
+				result = Color.white;
+			}
+			return result;
 		}
 	}
 }

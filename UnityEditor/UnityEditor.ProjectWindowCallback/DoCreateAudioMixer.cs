@@ -1,6 +1,7 @@
 using System;
 using UnityEditor.Audio;
 using UnityEditorInternal;
+
 namespace UnityEditor.ProjectWindowCallback
 {
 	internal class DoCreateAudioMixer : EndNameEditAction
@@ -8,13 +9,16 @@ namespace UnityEditor.ProjectWindowCallback
 		public override void Action(int instanceId, string pathName, string resourceFile)
 		{
 			AudioMixerController audioMixerController = AudioMixerController.CreateMixerControllerAtPath(pathName);
-			int instanceID;
-			if (!string.IsNullOrEmpty(resourceFile) && int.TryParse(resourceFile, out instanceID))
+			if (!string.IsNullOrEmpty(resourceFile))
 			{
-				AudioMixerGroupController audioMixerGroupController = InternalEditorUtility.GetObjectFromInstanceID(instanceID) as AudioMixerGroupController;
-				if (audioMixerGroupController != null)
+				int instanceID;
+				if (int.TryParse(resourceFile, out instanceID))
 				{
-					audioMixerController.outputAudioMixerGroup = audioMixerGroupController;
+					AudioMixerGroupController audioMixerGroupController = InternalEditorUtility.GetObjectFromInstanceID(instanceID) as AudioMixerGroupController;
+					if (audioMixerGroupController != null)
+					{
+						audioMixerController.outputAudioMixerGroup = audioMixerGroupController;
+					}
 				}
 			}
 			ProjectWindowUtil.ShowCreatedAsset(audioMixerController);

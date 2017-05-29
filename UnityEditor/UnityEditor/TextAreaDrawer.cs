@@ -1,18 +1,21 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomPropertyDrawer(typeof(TextAreaAttribute))]
 	internal sealed class TextAreaDrawer : PropertyDrawer
 	{
 		private const int kLineHeight = 13;
+
 		private Vector2 m_ScrollPosition = default(Vector2);
+
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			if (property.propertyType == SerializedPropertyType.String)
 			{
 				label = EditorGUI.BeginProperty(position, label, property);
-				Rect labelPosition = position;
+				Rect labelPosition = EditorGUI.IndentedRect(position);
 				labelPosition.height = 16f;
 				position.yMin += labelPosition.height;
 				EditorGUI.HandlePrefixLabel(position, labelPosition, label);
@@ -29,6 +32,7 @@ namespace UnityEditor
 				EditorGUI.LabelField(position, label.text, "Use TextAreaDrawer with string.");
 			}
 		}
+
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
 			TextAreaAttribute textAreaAttribute = base.attribute as TextAreaAttribute;

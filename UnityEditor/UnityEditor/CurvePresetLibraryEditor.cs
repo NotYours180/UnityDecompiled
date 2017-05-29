@@ -1,24 +1,28 @@
 using System;
 using System.IO;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(CurvePresetLibrary))]
 	internal class CurvePresetLibraryEditor : Editor
 	{
 		private GenericPresetLibraryInspector<CurvePresetLibrary> m_GenericPresetLibraryInspector;
+
 		private CurveLibraryType m_CurveLibraryType;
+
 		public void OnEnable()
 		{
-			string assetPath = AssetDatabase.GetAssetPath(this.target.GetInstanceID());
+			string assetPath = AssetDatabase.GetAssetPath(base.target.GetInstanceID());
 			this.m_CurveLibraryType = this.GetCurveLibraryTypeFromExtension(Path.GetExtension(assetPath).TrimStart(new char[]
 			{
 				'.'
 			}));
-			this.m_GenericPresetLibraryInspector = new GenericPresetLibraryInspector<CurvePresetLibrary>(this.target, this.GetHeader(), new Action<string>(this.OnEditButtonClicked));
+			this.m_GenericPresetLibraryInspector = new GenericPresetLibraryInspector<CurvePresetLibrary>(base.target, this.GetHeader(), new Action<string>(this.OnEditButtonClicked));
 			this.m_GenericPresetLibraryInspector.presetSize = new Vector2(72f, 20f);
 			this.m_GenericPresetLibraryInspector.lineSpacing = 5f;
 		}
+
 		public void OnDestroy()
 		{
 			if (this.m_GenericPresetLibraryInspector != null)
@@ -26,6 +30,7 @@ namespace UnityEditor
 				this.m_GenericPresetLibraryInspector.OnDestroy();
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			string basePrefText = CurvePresetsContentsForPopupWindow.GetBasePrefText(this.m_CurveLibraryType);
@@ -35,6 +40,7 @@ namespace UnityEditor
 				this.m_GenericPresetLibraryInspector.OnInspectorGUI();
 			}
 		}
+
 		private void OnEditButtonClicked(string libraryPath)
 		{
 			Rect curveRanges = this.GetCurveRanges();
@@ -51,46 +57,70 @@ namespace UnityEditor
 			CurveEditorWindow.instance.Show(GUIView.current, curveEditorSettings);
 			CurveEditorWindow.instance.currentPresetLibrary = libraryPath;
 		}
+
 		private string GetHeader()
 		{
 			CurveLibraryType curveLibraryType = this.m_CurveLibraryType;
-			if (curveLibraryType == CurveLibraryType.Unbounded)
-			{
-				return "Curve Preset Library";
-			}
+			string result;
 			if (curveLibraryType != CurveLibraryType.NormalizedZeroToOne)
 			{
-				return "Curve Preset Library ?";
+				if (curveLibraryType != CurveLibraryType.Unbounded)
+				{
+					result = "Curve Preset Library ?";
+				}
+				else
+				{
+					result = "Curve Preset Library";
+				}
 			}
-			return "Curve Preset Library (Normalized 0 - 1)";
+			else
+			{
+				result = "Curve Preset Library (Normalized 0 - 1)";
+			}
+			return result;
 		}
+
 		private Rect GetCurveRanges()
 		{
 			CurveLibraryType curveLibraryType = this.m_CurveLibraryType;
-			if (curveLibraryType == CurveLibraryType.Unbounded)
-			{
-				return default(Rect);
-			}
+			Rect result;
 			if (curveLibraryType != CurveLibraryType.NormalizedZeroToOne)
 			{
-				return default(Rect);
+				if (curveLibraryType != CurveLibraryType.Unbounded)
+				{
+					result = default(Rect);
+				}
+				else
+				{
+					result = default(Rect);
+				}
 			}
-			return new Rect(0f, 0f, 1f, 1f);
+			else
+			{
+				result = new Rect(0f, 0f, 1f, 1f);
+			}
+			return result;
 		}
+
 		private CurveLibraryType GetCurveLibraryTypeFromExtension(string extension)
 		{
 			string curveLibraryExtension = PresetLibraryLocations.GetCurveLibraryExtension(true);
 			string curveLibraryExtension2 = PresetLibraryLocations.GetCurveLibraryExtension(false);
+			CurveLibraryType result;
 			if (extension.Equals(curveLibraryExtension, StringComparison.OrdinalIgnoreCase))
 			{
-				return CurveLibraryType.NormalizedZeroToOne;
+				result = CurveLibraryType.NormalizedZeroToOne;
 			}
-			if (extension.Equals(curveLibraryExtension2, StringComparison.OrdinalIgnoreCase))
+			else if (extension.Equals(curveLibraryExtension2, StringComparison.OrdinalIgnoreCase))
 			{
-				return CurveLibraryType.Unbounded;
+				result = CurveLibraryType.Unbounded;
 			}
-			Debug.LogError("Extension not recognized!");
-			return CurveLibraryType.NormalizedZeroToOne;
+			else
+			{
+				Debug.LogError("Extension not recognized!");
+				result = CurveLibraryType.NormalizedZeroToOne;
+			}
+			return result;
 		}
 	}
 }

@@ -1,13 +1,17 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal abstract class AssetImporterInspector : Editor
 	{
-		private ulong m_AssetTimeStamp;
-		private bool m_MightHaveModified;
+		private ulong m_AssetTimeStamp = 0uL;
+
+		private bool m_MightHaveModified = false;
+
 		private Editor m_AssetEditor;
+
 		internal virtual Editor assetEditor
 		{
 			get
@@ -19,13 +23,15 @@ namespace UnityEditor
 				this.m_AssetEditor = value;
 			}
 		}
+
 		internal override string targetTitle
 		{
 			get
 			{
-				return this.assetEditor.targetTitle + " Import Settings";
+				return string.Format("{0} Import Settings", (!(this.assetEditor == null)) ? this.assetEditor.targetTitle : string.Empty);
 			}
 		}
+
 		internal override int referenceTargetIndex
 		{
 			get
@@ -35,20 +41,30 @@ namespace UnityEditor
 			set
 			{
 				base.referenceTargetIndex = value;
-				this.assetEditor.referenceTargetIndex = value;
+				if (this.assetEditor != null)
+				{
+					this.assetEditor.referenceTargetIndex = value;
+				}
 			}
 		}
+
 		internal override IPreviewable preview
 		{
 			get
 			{
+				IPreviewable result;
 				if (this.useAssetDrawPreview && this.assetEditor != null)
 				{
-					return this.assetEditor;
+					result = this.assetEditor;
 				}
-				return base.preview;
+				else
+				{
+					result = base.preview;
+				}
+				return result;
 			}
 		}
+
 		protected virtual bool useAssetDrawPreview
 		{
 			get
@@ -56,6 +72,7 @@ namespace UnityEditor
 				return true;
 			}
 		}
+
 		internal virtual bool showImportedObject
 		{
 			get
@@ -63,10 +80,15 @@ namespace UnityEditor
 				return true;
 			}
 		}
+
 		internal override void OnHeaderIconGUI(Rect iconRect)
 		{
-			this.assetEditor.OnHeaderIconGUI(iconRect);
+			if (this.assetEditor != null)
+			{
+				this.assetEditor.OnHeaderIconGUI(iconRect);
+			}
 		}
+
 		internal override SerializedObject GetSerializedObjectInternal()
 		{
 			if (this.m_SerializedObject == null)
@@ -79,9 +101,10 @@ namespace UnityEditor
 			}
 			return this.m_SerializedObject;
 		}
+
 		public virtual void OnDisable()
 		{
-			AssetImporter assetImporter = this.target as AssetImporter;
+			AssetImporter assetImporter = base.target as AssetImporter;
 			if (Unsupported.IsDestroyScriptableObject(this) && this.m_MightHaveModified && assetImporter != null && !InternalEditorUtility.ignoreInspectorChanges && this.HasModified() && !this.AssetWasUpdated())
 			{
 				string message = "Unapplied import settings for '" + assetImporter.assetPath + "'";
@@ -102,11 +125,13 @@ namespace UnityEditor
 				this.m_SerializedObject = null;
 			}
 		}
+
 		internal virtual void Awake()
 		{
 			this.ResetTimeStamp();
 			this.ResetValues();
 		}
+
 		private string[] GetAssetPaths()
 		{
 			UnityEngine.Object[] targets = base.targets;
@@ -118,36 +143,42 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		internal virtual void ResetValues()
 		{
 			base.serializedObject.SetIsDifferentCacheDirty();
 			base.serializedObject.Update();
 		}
+
 		internal virtual bool HasModified()
 		{
 			return base.serializedObject.hasModifiedProperties;
 		}
+
 		internal virtual void Apply()
 		{
 			base.serializedObject.ApplyModifiedPropertiesWithoutUndo();
 		}
+
 		internal bool AssetWasUpdated()
 		{
-			AssetImporter assetImporter = this.target as AssetImporter;
+			AssetImporter assetImporter = base.target as AssetImporter;
 			if (this.m_AssetTimeStamp == 0uL)
 			{
 				this.ResetTimeStamp();
 			}
 			return assetImporter != null && this.m_AssetTimeStamp != assetImporter.assetTimeStamp;
 		}
+
 		internal void ResetTimeStamp()
 		{
-			AssetImporter assetImporter = this.target as AssetImporter;
+			AssetImporter assetImporter = base.target as AssetImporter;
 			if (assetImporter != null)
 			{
 				this.m_AssetTimeStamp = assetImporter.assetTimeStamp;
 			}
 		}
+
 		internal void ApplyAndImport()
 		{
 			this.Apply();
@@ -155,6 +186,7 @@ namespace UnityEditor
 			AssetImporterInspector.ImportAssets(this.GetAssetPaths());
 			this.ResetValues();
 		}
+
 		private static void ImportAssets(string[] paths)
 		{
 			for (int i = 0; i < paths.Length; i++)
@@ -176,10 +208,12 @@ namespace UnityEditor
 				AssetDatabase.StopAssetEditing();
 			}
 		}
+
 		protected void RevertButton()
 		{
 			this.RevertButton("Revert");
 		}
+
 		protected void RevertButton(string buttonText)
 		{
 			if (GUILayout.Button(buttonText, new GUILayoutOption[0]))
@@ -193,27 +227,38 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		protected bool ApplyButton()
 		{
 			return this.ApplyButton("Apply");
 		}
+
 		protected bool ApplyButton(string buttonText)
 		{
+			bool result;
 			if (GUILayout.Button(buttonText, new GUILayoutOption[0]))
 			{
 				this.ApplyAndImport();
-				return true;
+				result = true;
 			}
-			return false;
-		}
-		protected virtual bool ApplyRevertGUIButtons()
-		{
-			EditorGUI.BeginDisabledGroup(!this.HasModified());
-			this.RevertButton();
-			bool result = this.ApplyButton();
-			EditorGUI.EndDisabledGroup();
+			else
+			{
+				result = false;
+			}
 			return result;
 		}
+
+		protected virtual bool ApplyRevertGUIButtons()
+		{
+			bool result;
+			using (new EditorGUI.DisabledScope(!this.HasModified()))
+			{
+				this.RevertButton();
+				result = this.ApplyButton();
+			}
+			return result;
+		}
+
 		protected void ApplyRevertGUI()
 		{
 			this.m_MightHaveModified = true;

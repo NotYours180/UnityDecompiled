@@ -2,20 +2,26 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SimpleProfiler
 	{
 		private static Stack<string> m_Names = new Stack<string>();
+
 		private static Stack<float> m_StartTime = new Stack<float>();
+
 		private static Dictionary<string, float> m_Timers = new Dictionary<string, float>();
+
 		private static Dictionary<string, int> m_Calls = new Dictionary<string, int>();
+
 		[Conditional("SIMPLE_PROFILER")]
 		public static void Begin(string label)
 		{
 			SimpleProfiler.m_Names.Push(label);
 			SimpleProfiler.m_StartTime.Push(Time.realtimeSinceStartup);
 		}
+
 		[Conditional("SIMPLE_PROFILER")]
 		public static void End()
 		{
@@ -24,11 +30,8 @@ namespace UnityEditor
 			if (SimpleProfiler.m_Timers.ContainsKey(text))
 			{
 				Dictionary<string, float> timers;
-				Dictionary<string, float> expr_31 = timers = SimpleProfiler.m_Timers;
 				string key;
-				string expr_34 = key = text;
-				float num2 = timers[key];
-				expr_31[expr_34] = num2 + num;
+				(timers = SimpleProfiler.m_Timers)[key = text] = timers[key] + num;
 			}
 			else
 			{
@@ -37,17 +40,15 @@ namespace UnityEditor
 			if (SimpleProfiler.m_Calls.ContainsKey(text))
 			{
 				Dictionary<string, int> calls;
-				Dictionary<string, int> expr_6E = calls = SimpleProfiler.m_Calls;
-				string key;
-				string expr_72 = key = text;
-				int num3 = calls[key];
-				expr_6E[expr_72] = num3 + 1;
+				string key2;
+				(calls = SimpleProfiler.m_Calls)[key2 = text] = calls[key2] + 1;
 			}
 			else
 			{
 				SimpleProfiler.m_Calls[text] = 1;
 			}
 		}
+
 		[Conditional("SIMPLE_PROFILER")]
 		public static void PrintTimes()
 		{

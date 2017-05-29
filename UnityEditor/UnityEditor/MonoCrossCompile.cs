@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MonoCrossCompile
@@ -12,14 +13,23 @@ namespace UnityEditor
 		private class JobCompileAOT
 		{
 			private BuildTarget m_target;
+
 			private string m_crossCompilerAbsolutePath;
+
 			private string m_assembliesAbsoluteDirectory;
+
 			private CrossCompileOptions m_crossCompileOptions;
+
 			public string m_input;
+
 			public string m_output;
+
 			public string m_additionalOptions;
+
 			public ManualResetEvent m_doneEvent = new ManualResetEvent(false);
-			public Exception m_Exception;
+
+			public Exception m_Exception = null;
+
 			public JobCompileAOT(BuildTarget target, string crossCompilerAbsolutePath, string assembliesAbsoluteDirectory, CrossCompileOptions crossCompileOptions, string input, string output, string additionalOptions)
 			{
 				this.m_target = target;
@@ -30,6 +40,7 @@ namespace UnityEditor
 				this.m_output = output;
 				this.m_additionalOptions = additionalOptions;
 			}
+
 			public void ThreadPoolCallback(object threadContext)
 			{
 				try
@@ -43,11 +54,14 @@ namespace UnityEditor
 				this.m_doneEvent.Set();
 			}
 		}
-		public static string ArtifactsPath;
+
+		public static string ArtifactsPath = null;
+
 		public static void CrossCompileAOTDirectory(BuildTarget buildTarget, CrossCompileOptions crossCompileOptions, string sourceAssembliesFolder, string targetCrossCompiledASMFolder, string additionalOptions)
 		{
-			MonoCrossCompile.CrossCompileAOTDirectory(buildTarget, crossCompileOptions, sourceAssembliesFolder, targetCrossCompiledASMFolder, string.Empty, additionalOptions);
+			MonoCrossCompile.CrossCompileAOTDirectory(buildTarget, crossCompileOptions, sourceAssembliesFolder, targetCrossCompiledASMFolder, "", additionalOptions);
 		}
+
 		public static void CrossCompileAOTDirectory(BuildTarget buildTarget, CrossCompileOptions crossCompileOptions, string sourceAssembliesFolder, string targetCrossCompiledASMFolder, string pathExtension, string additionalOptions)
 		{
 			string text = BuildPipeline.GetBuildToolsDirectory(buildTarget);
@@ -77,10 +91,12 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public static bool CrossCompileAOTDirectoryParallel(BuildTarget buildTarget, CrossCompileOptions crossCompileOptions, string sourceAssembliesFolder, string targetCrossCompiledASMFolder, string additionalOptions)
 		{
-			return MonoCrossCompile.CrossCompileAOTDirectoryParallel(buildTarget, crossCompileOptions, sourceAssembliesFolder, targetCrossCompiledASMFolder, string.Empty, additionalOptions);
+			return MonoCrossCompile.CrossCompileAOTDirectoryParallel(buildTarget, crossCompileOptions, sourceAssembliesFolder, targetCrossCompiledASMFolder, "", additionalOptions);
 		}
+
 		public static bool CrossCompileAOTDirectoryParallel(BuildTarget buildTarget, CrossCompileOptions crossCompileOptions, string sourceAssembliesFolder, string targetCrossCompiledASMFolder, string pathExtension, string additionalOptions)
 		{
 			string text = BuildPipeline.GetBuildToolsDirectory(buildTarget);
@@ -94,28 +110,36 @@ namespace UnityEditor
 			}
 			return MonoCrossCompile.CrossCompileAOTDirectoryParallel(text, buildTarget, crossCompileOptions, sourceAssembliesFolder, targetCrossCompiledASMFolder, additionalOptions);
 		}
+
 		private static bool WaitForBuildOfFile(List<ManualResetEvent> events, ref long timeout)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
 			int num2 = WaitHandle.WaitAny(events.ToArray(), (int)timeout);
 			long num3 = DateTime.Now.Ticks / 10000L;
+			bool result;
 			if (num2 == 258)
 			{
-				return false;
+				result = false;
 			}
-			events.RemoveAt(num2);
-			timeout -= num3 - num;
-			if (timeout < 0L)
+			else
 			{
-				timeout = 0L;
+				events.RemoveAt(num2);
+				timeout -= num3 - num;
+				if (timeout < 0L)
+				{
+					timeout = 0L;
+				}
+				result = true;
 			}
-			return true;
+			return result;
 		}
+
 		public static void DisplayAOTProgressBar(int totalFiles, int filesFinished)
 		{
 			string info = string.Format("AOT cross compile ({0}/{1})", (filesFinished + 1).ToString(), totalFiles.ToString());
 			EditorUtility.DisplayProgressBar("Building Player", info, 0.95f);
 		}
+
 		public static bool CrossCompileAOTDirectoryParallel(string crossCompilerPath, BuildTarget buildTarget, CrossCompileOptions crossCompileOptions, string sourceAssembliesFolder, string targetCrossCompiledASMFolder, string additionalOptions)
 		{
 			sourceAssembliesFolder = Path.Combine(Directory.GetCurrentDirectory(), sourceAssembliesFolder);
@@ -126,10 +150,9 @@ namespace UnityEditor
 			List<MonoCrossCompile.JobCompileAOT> list = new List<MonoCrossCompile.JobCompileAOT>();
 			List<ManualResetEvent> list2 = new List<ManualResetEvent>();
 			bool flag = true;
-			List<string> list3 = new List<string>(
-				from path in Directory.GetFiles(sourceAssembliesFolder)
-				where Path.GetExtension(path) == ".dll"
-				select path);
+			List<string> list3 = new List<string>(from path in Directory.GetFiles(sourceAssembliesFolder)
+			where Path.GetExtension(path) == ".dll"
+			select path);
 			int count = list3.Count;
 			int num3 = 0;
 			MonoCrossCompile.DisplayAOTProgressBar(count, num3);
@@ -177,14 +200,16 @@ namespace UnityEditor
 			}
 			return flag;
 		}
+
 		private static bool IsDebugableAssembly(string fname)
 		{
 			fname = Path.GetFileName(fname);
 			return fname.StartsWith("Assembly", StringComparison.OrdinalIgnoreCase);
 		}
+
 		private static void CrossCompileAOT(BuildTarget target, string crossCompilerAbsolutePath, string assembliesAbsoluteDirectory, CrossCompileOptions crossCompileOptions, string input, string output, string additionalOptions)
 		{
-			string text = string.Empty;
+			string text = "";
 			if (!MonoCrossCompile.IsDebugableAssembly(input))
 			{
 				crossCompileOptions &= ~CrossCompileOptions.Debugging;
@@ -210,12 +235,9 @@ namespace UnityEditor
 			{
 				text += "soft-debug,";
 			}
-			else
+			else if (!flag3)
 			{
-				if (!flag3)
-				{
-					text += "nodebug,";
-				}
+				text += "nodebug,";
 			}
 			if (target != BuildTarget.iOS)
 			{

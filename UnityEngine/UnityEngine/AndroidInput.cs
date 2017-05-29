@@ -1,38 +1,52 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public sealed class AndroidInput
 	{
 		public static extern int touchCountSecondary
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern bool secondaryTouchEnabled
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern int secondaryTouchWidth
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern int secondaryTouchHeight
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		private AndroidInput()
 		{
 		}
-		[WrapperlessIcall]
+
+		public static Touch GetSecondaryTouch(int index)
+		{
+			Touch result;
+			AndroidInput.INTERNAL_CALL_GetSecondaryTouch(index, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Touch GetSecondaryTouch(int index);
+		private static extern void INTERNAL_CALL_GetSecondaryTouch(int index, out Touch value);
 	}
 }

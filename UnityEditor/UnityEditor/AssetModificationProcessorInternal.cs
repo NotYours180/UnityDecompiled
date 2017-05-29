@@ -5,6 +5,7 @@ using UnityEditor.VersionControl;
 using UnityEditorInternal;
 using UnityEditorInternal.VersionControl;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetModificationProcessorInternal
@@ -14,8 +15,11 @@ namespace UnityEditor
 			Binary,
 			Text
 		}
-		private static IEnumerable<Type> assetModificationProcessors;
-		internal static MethodInfo[] isOpenForEditMethods;
+
+		private static IEnumerable<Type> assetModificationProcessors = null;
+
+		internal static MethodInfo[] isOpenForEditMethods = null;
+
 		private static IEnumerable<Type> AssetModificationProcessors
 		{
 			get
@@ -30,9 +34,11 @@ namespace UnityEditor
 				return AssetModificationProcessorInternal.assetModificationProcessors;
 			}
 		}
+
 		private static bool CheckArgumentTypes(Type[] types, MethodInfo method)
 		{
 			ParameterInfo[] parameters = method.GetParameters();
+			bool result;
 			if (types.Length != parameters.Length)
 			{
 				Debug.LogWarning(string.Concat(new string[]
@@ -46,36 +52,43 @@ namespace UnityEditor
 					".",
 					method.Name
 				}));
-				return false;
+				result = false;
 			}
-			int num = 0;
-			for (int i = 0; i < types.Length; i++)
+			else
 			{
-				Type type = types[i];
-				ParameterInfo parameterInfo = parameters[num];
-				if (type != parameterInfo.ParameterType)
+				int num = 0;
+				for (int i = 0; i < types.Length; i++)
 				{
-					Debug.LogWarning(string.Concat(new object[]
+					Type type = types[i];
+					ParameterInfo parameterInfo = parameters[num];
+					if (type != parameterInfo.ParameterType)
 					{
-						"Parameter type mismatch at parameter ",
-						num,
-						". Expected: ",
-						type.ToString(),
-						" Got: ",
-						parameterInfo.ParameterType.ToString(),
-						" in ",
-						method.DeclaringType.ToString(),
-						".",
-						method.Name
-					}));
-					return false;
+						Debug.LogWarning(string.Concat(new object[]
+						{
+							"Parameter type mismatch at parameter ",
+							num,
+							". Expected: ",
+							type.ToString(),
+							" Got: ",
+							parameterInfo.ParameterType.ToString(),
+							" in ",
+							method.DeclaringType.ToString(),
+							".",
+							method.Name
+						}));
+						result = false;
+						return result;
+					}
+					num++;
 				}
-				num++;
+				result = true;
 			}
-			return true;
+			return result;
 		}
+
 		private static bool CheckArgumentTypesAndReturnType(Type[] types, MethodInfo method, Type returnType)
 		{
+			bool result;
 			if (returnType != method.ReturnType)
 			{
 				Debug.LogWarning(string.Concat(new string[]
@@ -89,10 +102,15 @@ namespace UnityEditor
 					".",
 					method.Name
 				}));
-				return false;
+				result = false;
 			}
-			return AssetModificationProcessorInternal.CheckArgumentTypes(types, method);
+			else
+			{
+				result = AssetModificationProcessorInternal.CheckArgumentTypes(types, method);
+			}
+			return result;
 		}
+
 		private static bool CheckArguments(object[] args, MethodInfo method)
 		{
 			Type[] array = new Type[args.Length];
@@ -102,6 +120,7 @@ namespace UnityEditor
 			}
 			return AssetModificationProcessorInternal.CheckArgumentTypes(array, method);
 		}
+
 		private static bool CheckArgumentsAndReturnType(object[] args, MethodInfo method, Type returnType)
 		{
 			Type[] array = new Type[args.Length];
@@ -111,6 +130,7 @@ namespace UnityEditor
 			}
 			return AssetModificationProcessorInternal.CheckArgumentTypesAndReturnType(array, method, returnType);
 		}
+
 		private static void OnWillCreateAsset(string path)
 		{
 			foreach (Type current in AssetModificationProcessorInternal.AssetModificationProcessors)
@@ -129,19 +149,24 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static void FileModeChanged(string[] assets, UnityEditor.VersionControl.FileMode mode)
 		{
-			if (Provider.enabled && Provider.PromptAndCheckoutIfNeeded(assets, string.Empty))
+			if (Provider.enabled)
 			{
-				Provider.SetFileMode(assets, mode);
+				if (Provider.PromptAndCheckoutIfNeeded(assets, ""))
+				{
+					Provider.SetFileMode(assets, mode);
+				}
 			}
 		}
-		private static void OnWillSaveAssets(string[] assets, out string[] assetsThatShouldBeSaved, out string[] assetsThatShouldBeReverted, int explicitlySaveScene)
+
+		private static void OnWillSaveAssets(string[] assets, out string[] assetsThatShouldBeSaved, out string[] assetsThatShouldBeReverted, int explicitlySaveAsset)
 		{
 			assetsThatShouldBeReverted = new string[0];
 			assetsThatShouldBeSaved = assets;
 			bool flag = assets.Length > 0 && EditorPrefs.GetBool("VerifySavingAssets", false) && InternalEditorUtility.isHumanControllingUs;
-			if (explicitlySaveScene != 0 && assets.Length == 1 && assets[0].EndsWith(".unity"))
+			if (explicitlySaveAsset != 0 && assets.Length == 1 && (assets[0].EndsWith(".unity") || assets[0].EndsWith(".prefab")))
 			{
 				flag = false;
 			}
@@ -172,93 +197,108 @@ namespace UnityEditor
 					}
 				}
 			}
-			if (assetsThatShouldBeSaved == null)
+			if (assetsThatShouldBeSaved != null)
 			{
-				return;
-			}
-			List<string> list = new List<string>();
-			string[] array3 = assetsThatShouldBeSaved;
-			for (int i = 0; i < array3.Length; i++)
-			{
-				string text = array3[i];
-				if (!AssetDatabase.IsOpenForEdit(text))
+				List<string> list = new List<string>();
+				string[] array3 = assetsThatShouldBeSaved;
+				for (int i = 0; i < array3.Length; i++)
 				{
-					list.Add(text);
+					string text = array3[i];
+					if (!AssetDatabase.IsOpenForEdit(text, StatusQueryOptions.ForceUpdate))
+					{
+						list.Add(text);
+					}
+				}
+				assets = list.ToArray();
+				if (assets.Length != 0 && !Provider.PromptAndCheckoutIfNeeded(assets, ""))
+				{
+					Debug.LogError("Could not check out the following files in version control before saving: " + string.Join(", ", assets));
+					assetsThatShouldBeSaved = new string[0];
 				}
 			}
-			assets = list.ToArray();
-			if (assets.Length != 0 && !Provider.PromptAndCheckoutIfNeeded(assets, string.Empty))
-			{
-				Debug.LogError("Could not checkout the following files in version control before saving: " + string.Join(", ", assets));
-				assetsThatShouldBeSaved = new string[0];
-				return;
-			}
 		}
+
 		private static void RequireTeamLicense()
 		{
-			if (!InternalEditorUtility.HasPro())
+			if (!InternalEditorUtility.HasTeamLicense())
 			{
-				throw new MethodAccessException("Requires Pro license");
+				throw new MethodAccessException("Requires team license");
 			}
 		}
+
 		private static AssetMoveResult OnWillMoveAsset(string fromPath, string toPath, string[] newPaths, string[] NewMetaPaths)
 		{
 			AssetMoveResult assetMoveResult = AssetMoveResult.DidNotMove;
-			if (!InternalEditorUtility.HasPro())
+			AssetMoveResult result;
+			if (!InternalEditorUtility.HasTeamLicense())
 			{
-				return assetMoveResult;
+				result = assetMoveResult;
 			}
-			assetMoveResult = AssetModificationHook.OnWillMoveAsset(fromPath, toPath);
-			foreach (Type current in AssetModificationProcessorInternal.AssetModificationProcessors)
+			else
 			{
-				MethodInfo method = current.GetMethod("OnWillMoveAsset", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-				if (method != null)
+				assetMoveResult = AssetModificationHook.OnWillMoveAsset(fromPath, toPath);
+				foreach (Type current in AssetModificationProcessorInternal.AssetModificationProcessors)
 				{
-					AssetModificationProcessorInternal.RequireTeamLicense();
-					object[] array = new object[]
+					MethodInfo method = current.GetMethod("OnWillMoveAsset", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+					if (method != null)
 					{
-						fromPath,
-						toPath
-					};
-					if (AssetModificationProcessorInternal.CheckArgumentsAndReturnType(array, method, assetMoveResult.GetType()))
-					{
-						assetMoveResult |= (AssetMoveResult)((int)method.Invoke(null, array));
+						AssetModificationProcessorInternal.RequireTeamLicense();
+						object[] array = new object[]
+						{
+							fromPath,
+							toPath
+						};
+						if (AssetModificationProcessorInternal.CheckArgumentsAndReturnType(array, method, assetMoveResult.GetType()))
+						{
+							assetMoveResult |= (AssetMoveResult)method.Invoke(null, array);
+						}
 					}
 				}
+				result = assetMoveResult;
 			}
-			return assetMoveResult;
+			return result;
 		}
+
 		private static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions options)
 		{
 			AssetDeleteResult assetDeleteResult = AssetDeleteResult.DidNotDelete;
-			if (!InternalEditorUtility.HasPro())
+			AssetDeleteResult result;
+			if (!InternalEditorUtility.HasTeamLicense())
 			{
-				return assetDeleteResult;
+				result = assetDeleteResult;
 			}
-			foreach (Type current in AssetModificationProcessorInternal.AssetModificationProcessors)
+			else
 			{
-				MethodInfo method = current.GetMethod("OnWillDeleteAsset", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-				if (method != null)
+				foreach (Type current in AssetModificationProcessorInternal.AssetModificationProcessors)
 				{
-					AssetModificationProcessorInternal.RequireTeamLicense();
-					object[] array = new object[]
+					MethodInfo method = current.GetMethod("OnWillDeleteAsset", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+					if (method != null)
 					{
-						assetPath,
-						options
-					};
-					if (AssetModificationProcessorInternal.CheckArgumentsAndReturnType(array, method, assetDeleteResult.GetType()))
-					{
-						assetDeleteResult |= (AssetDeleteResult)((int)method.Invoke(null, array));
+						AssetModificationProcessorInternal.RequireTeamLicense();
+						object[] array = new object[]
+						{
+							assetPath,
+							options
+						};
+						if (AssetModificationProcessorInternal.CheckArgumentsAndReturnType(array, method, assetDeleteResult.GetType()))
+						{
+							assetDeleteResult |= (AssetDeleteResult)method.Invoke(null, array);
+						}
 					}
 				}
+				if (assetDeleteResult != AssetDeleteResult.DidNotDelete)
+				{
+					result = assetDeleteResult;
+				}
+				else
+				{
+					assetDeleteResult = AssetModificationHook.OnWillDeleteAsset(assetPath, options);
+					result = assetDeleteResult;
+				}
 			}
-			if (assetDeleteResult != AssetDeleteResult.DidNotDelete)
-			{
-				return assetDeleteResult;
-			}
-			assetDeleteResult = AssetModificationHook.OnWillDeleteAsset(assetPath, options);
-			return assetDeleteResult;
+			return result;
 		}
+
 		internal static MethodInfo[] GetIsOpenForEditMethods()
 		{
 			if (AssetModificationProcessorInternal.isOpenForEditMethods == null)
@@ -270,12 +310,12 @@ namespace UnityEditor
 					if (method != null)
 					{
 						AssetModificationProcessorInternal.RequireTeamLicense();
-						string empty = string.Empty;
+						string text = "";
 						bool flag = false;
 						Type[] types = new Type[]
 						{
-							empty.GetType(),
-							empty.GetType().MakeByRefType()
+							text.GetType(),
+							text.GetType().MakeByRefType()
 						};
 						if (AssetModificationProcessorInternal.CheckArgumentTypesAndReturnType(types, method, flag.GetType()))
 						{
@@ -287,31 +327,39 @@ namespace UnityEditor
 			}
 			return AssetModificationProcessorInternal.isOpenForEditMethods;
 		}
-		internal static bool IsOpenForEdit(string assetPath, out string message)
+
+		internal static bool IsOpenForEdit(string assetPath, out string message, StatusQueryOptions statusOptions)
 		{
-			message = string.Empty;
+			message = "";
+			bool result;
 			if (string.IsNullOrEmpty(assetPath))
 			{
-				return true;
+				result = true;
 			}
-			bool result = AssetModificationHook.IsOpenForEdit(assetPath, out message);
-			MethodInfo[] array = AssetModificationProcessorInternal.GetIsOpenForEditMethods();
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				MethodInfo methodInfo = array[i];
-				object[] array2 = new object[]
+				bool flag = AssetModificationHook.IsOpenForEdit(assetPath, out message, statusOptions);
+				MethodInfo[] array = AssetModificationProcessorInternal.GetIsOpenForEditMethods();
+				for (int i = 0; i < array.Length; i++)
 				{
-					assetPath,
-					message
-				};
-				if (!(bool)methodInfo.Invoke(null, array2))
-				{
-					message = (array2[1] as string);
-					return false;
+					MethodInfo methodInfo = array[i];
+					object[] array2 = new object[]
+					{
+						assetPath,
+						message
+					};
+					if (!(bool)methodInfo.Invoke(null, array2))
+					{
+						message = (array2[1] as string);
+						result = false;
+						return result;
+					}
 				}
+				result = flag;
 			}
 			return result;
 		}
+
 		internal static void OnStatusUpdated()
 		{
 			WindowPending.OnStatusUpdated();

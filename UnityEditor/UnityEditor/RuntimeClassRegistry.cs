@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Audio;
+
 namespace UnityEditor
 {
 	internal class RuntimeClassRegistry
@@ -10,21 +10,40 @@ namespace UnityEditor
 		internal class MethodDescription
 		{
 			public string assembly;
+
 			public string fullTypeName;
+
 			public string methodName;
 		}
+
 		protected BuildTarget buildTarget;
+
 		protected Dictionary<int, string> nativeClasses = new Dictionary<int, string>();
+
 		protected HashSet<string> monoClasses = new HashSet<string>();
+
 		protected HashSet<string> monoBaseClasses = new HashSet<string>();
+
 		protected Dictionary<string, string[]> m_UsedTypesPerUserAssembly = new Dictionary<string, string[]>();
+
+		protected Dictionary<int, List<string>> classScenes = new Dictionary<int, List<string>>();
+
+		protected UnityType objectUnityType = null;
+
 		protected Dictionary<int, string> allNativeClasses = new Dictionary<int, string>();
-		protected Dictionary<string, string> retentionLevel = new Dictionary<string, string>();
-		protected Dictionary<string, string> functionalityGroups = new Dictionary<string, string>();
-		protected Dictionary<string, HashSet<string>> groupNativeDependencies = new Dictionary<string, HashSet<string>>();
-		protected Dictionary<string, HashSet<string>> groupManagedDependencies = new Dictionary<string, HashSet<string>>();
+
 		internal List<RuntimeClassRegistry.MethodDescription> m_MethodsToPreserve = new List<RuntimeClassRegistry.MethodDescription>();
+
 		internal List<string> m_UserAssemblies = new List<string>();
+
+		protected Dictionary<string, string> retentionLevel = new Dictionary<string, string>();
+
+		protected Dictionary<string, string> functionalityGroups = new Dictionary<string, string>();
+
+		protected Dictionary<string, HashSet<string>> groupNativeDependencies = new Dictionary<string, HashSet<string>>();
+
+		protected Dictionary<string, HashSet<string>> groupManagedDependencies = new Dictionary<string, HashSet<string>>();
+
 		public Dictionary<string, string[]> UsedTypePerUserAssembly
 		{
 			get
@@ -32,30 +51,49 @@ namespace UnityEditor
 				return this.m_UsedTypesPerUserAssembly;
 			}
 		}
+
+		public List<string> GetScenesForClass(int ID)
+		{
+			List<string> result;
+			if (!this.classScenes.ContainsKey(ID))
+			{
+				result = null;
+			}
+			else
+			{
+				result = this.classScenes[ID];
+			}
+			return result;
+		}
+
 		public void AddNativeClassID(int ID)
 		{
-			string text = BaseObjectTools.ClassIDToString(ID);
-			if (text.Length > 0)
+			string name = UnityType.FindTypeByPersistentTypeID(ID).name;
+			if (name.Length > 0)
 			{
-				this.allNativeClasses[ID] = text;
-				if (!this.functionalityGroups.ContainsValue(text))
+				this.allNativeClasses[ID] = name;
+				if (!this.functionalityGroups.ContainsValue(name))
 				{
-					this.nativeClasses[ID] = text;
+					this.nativeClasses[ID] = name;
 				}
 			}
 		}
+
 		public void SetUsedTypesInUserAssembly(string[] typeNames, string assemblyName)
 		{
 			this.m_UsedTypesPerUserAssembly[assemblyName] = typeNames;
 		}
-		public bool IsUGUIUsed()
+
+		public bool IsDLLUsed(string dll)
 		{
-			return this.m_UsedTypesPerUserAssembly.ContainsKey("UnityEngine.UI.dll");
+			return this.m_UsedTypesPerUserAssembly == null || Array.IndexOf<string>(CodeStrippingUtils.UserAssemblies, dll) != -1 || this.m_UsedTypesPerUserAssembly.ContainsKey(dll);
 		}
+
 		public void AddMonoClass(string className)
 		{
 			this.monoClasses.Add(className);
 		}
+
 		public void AddMonoClasses(List<string> classes)
 		{
 			foreach (string current in classes)
@@ -63,18 +101,25 @@ namespace UnityEditor
 				this.AddMonoClass(current);
 			}
 		}
+
 		protected void AddManagedBaseClass(string className)
 		{
 			this.monoBaseClasses.Add(className);
 		}
+
 		protected void AddNativeClassFromName(string className)
 		{
-			int num = BaseObjectTools.StringToClassID(className);
-			if (num != -1 && !BaseObjectTools.IsBaseObject(num))
+			if (this.objectUnityType == null)
 			{
-				this.nativeClasses[num] = className;
+				this.objectUnityType = UnityType.FindTypeByName("Object");
+			}
+			UnityType unityType = UnityType.FindTypeByName(className);
+			if (unityType != null && unityType.persistentTypeID != this.objectUnityType.persistentTypeID)
+			{
+				this.nativeClasses[unityType.persistentTypeID] = className;
 			}
 		}
+
 		protected void SynchronizeMonoToNativeClasses()
 		{
 			foreach (string current in this.monoClasses)
@@ -82,6 +127,7 @@ namespace UnityEditor
 				this.AddNativeClassFromName(current);
 			}
 		}
+
 		protected void SynchronizeNativeToMonoClasses()
 		{
 			foreach (string current in this.nativeClasses.Values)
@@ -89,6 +135,7 @@ namespace UnityEditor
 				this.AddMonoClass(current);
 			}
 		}
+
 		public void SynchronizeClasses()
 		{
 			this.SynchronizeMonoToNativeClasses();
@@ -96,6 +143,85 @@ namespace UnityEditor
 			this.InjectFunctionalityGroupDependencies();
 			this.SynchronizeMonoToNativeClasses();
 		}
+
+		public List<string> GetAllNativeClassesAsString()
+		{
+			return new List<string>(this.nativeClasses.Values);
+		}
+
+		public List<string> GetAllNativeClassesIncludingManagersAsString()
+		{
+			return new List<string>(this.allNativeClasses.Values);
+		}
+
+		public List<string> GetAllManagedClassesAsString()
+		{
+			return new List<string>(this.monoClasses);
+		}
+
+		public List<string> GetAllManagedBaseClassesAsString()
+		{
+			return new List<string>(this.monoBaseClasses);
+		}
+
+		public static RuntimeClassRegistry Create()
+		{
+			return new RuntimeClassRegistry();
+		}
+
+		public void Initialize(int[] nativeClassIDs, BuildTarget buildTarget)
+		{
+			this.buildTarget = buildTarget;
+			this.InitRuntimeClassRegistry();
+			for (int i = 0; i < nativeClassIDs.Length; i++)
+			{
+				int iD = nativeClassIDs[i];
+				this.AddNativeClassID(iD);
+			}
+		}
+
+		public void SetSceneClasses(int[] nativeClassIDs, string scene)
+		{
+			for (int i = 0; i < nativeClassIDs.Length; i++)
+			{
+				int num = nativeClassIDs[i];
+				this.AddNativeClassID(num);
+				if (!this.classScenes.ContainsKey(num))
+				{
+					this.classScenes[num] = new List<string>();
+				}
+				this.classScenes[num].Add(scene);
+			}
+		}
+
+		internal void AddMethodToPreserve(string assembly, string @namespace, string klassName, string methodName)
+		{
+			this.m_MethodsToPreserve.Add(new RuntimeClassRegistry.MethodDescription
+			{
+				assembly = assembly,
+				fullTypeName = @namespace + ((@namespace.Length <= 0) ? "" : ".") + klassName,
+				methodName = methodName
+			});
+		}
+
+		internal List<RuntimeClassRegistry.MethodDescription> GetMethodsToPreserve()
+		{
+			return this.m_MethodsToPreserve;
+		}
+
+		internal void AddUserAssembly(string assembly)
+		{
+			if (!this.m_UserAssemblies.Contains(assembly))
+			{
+				this.m_UserAssemblies.Add(assembly);
+			}
+		}
+
+		internal string[] GetUserAssemblies()
+		{
+			return this.m_UserAssemblies.ToArray();
+		}
+
 		protected void InjectFunctionalityGroupDependencies()
 		{
 			HashSet<string> hashSet = new HashSet<string>();
@@ -121,63 +247,40 @@ namespace UnityEditor
 				}
 			}
 		}
-		public List<string> GetAllNativeClassesAsString()
-		{
-			return new List<string>(this.nativeClasses.Values);
-		}
-		public List<string> GetAllNativeClassesIncludingManagersAsString()
-		{
-			return new List<string>(this.allNativeClasses.Values);
-		}
-		public List<string> GetAllManagedClassesAsString()
-		{
-			return new List<string>(this.monoClasses);
-		}
-		public List<string> GetAllManagedBaseClassesAsString()
-		{
-			return new List<string>(this.monoBaseClasses);
-		}
-		public static RuntimeClassRegistry Create()
-		{
-			return new RuntimeClassRegistry();
-		}
-		public void Initialize(int[] nativeClassIDs, BuildTarget buildTarget)
-		{
-			this.buildTarget = buildTarget;
-			this.InitRuntimeClassRegistry();
-			for (int i = 0; i < nativeClassIDs.Length; i++)
-			{
-				int iD = nativeClassIDs[i];
-				this.AddNativeClassID(iD);
-			}
-		}
+
 		protected void AddFunctionalityGroup(string groupName, string managerClassName)
 		{
 			this.functionalityGroups.Add(groupName, managerClassName);
 			this.groupManagedDependencies[groupName] = new HashSet<string>();
 			this.groupNativeDependencies[groupName] = new HashSet<string>();
 		}
+
 		protected void AddNativeDependenciesForFunctionalityGroup(string groupName, string depClassName)
 		{
 			this.groupNativeDependencies[groupName].Add(depClassName);
 		}
+
 		protected void AddManagedDependenciesForFunctionalityGroup(string groupName, Type depClass)
 		{
 			this.AddManagedDependenciesForFunctionalityGroup(groupName, this.ResolveTypeName(depClass));
 		}
+
 		protected void AddManagedDependenciesForFunctionalityGroup(string groupName, string depClassName)
 		{
 			this.AddManagedDependenciesForFunctionalityGroup(groupName, depClassName, null);
 		}
+
 		protected string ResolveTypeName(Type type)
 		{
 			string fullName = type.FullName;
 			return fullName.Substring(fullName.LastIndexOf(".") + 1).Replace("+", "/");
 		}
+
 		protected void AddManagedDependenciesForFunctionalityGroup(string groupName, Type depClass, string retain)
 		{
 			this.AddManagedDependenciesForFunctionalityGroup(groupName, this.ResolveTypeName(depClass), retain);
 		}
+
 		protected void AddManagedDependenciesForFunctionalityGroup(string groupName, string depClassName, string retain)
 		{
 			this.groupManagedDependencies[groupName].Add(depClassName);
@@ -186,18 +289,26 @@ namespace UnityEditor
 				this.SetRetentionLevel(depClassName, retain);
 			}
 		}
+
 		protected void SetRetentionLevel(string className, string level)
 		{
 			this.retentionLevel[className] = level;
 		}
+
 		public string GetRetentionLevel(string className)
 		{
+			string result;
 			if (this.retentionLevel.ContainsKey(className))
 			{
-				return this.retentionLevel[className];
+				result = this.retentionLevel[className];
 			}
-			return "fields";
+			else
+			{
+				result = "fields";
+			}
+			return result;
 		}
+
 		protected void InitRuntimeClassRegistry()
 		{
 			BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(this.buildTarget);
@@ -217,6 +328,7 @@ namespace UnityEditor
 			this.AddNativeDependenciesForFunctionalityGroup("Runtime", "TimeManager");
 			this.AddNativeDependenciesForFunctionalityGroup("Runtime", "Cubemap");
 			this.AddNativeDependenciesForFunctionalityGroup("Runtime", "Texture3D");
+			this.AddNativeDependenciesForFunctionalityGroup("Runtime", "Texture2DArray");
 			this.AddNativeDependenciesForFunctionalityGroup("Runtime", "LODGroup");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(GameObject), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Transform), "all");
@@ -228,8 +340,10 @@ namespace UnityEditor
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(LayerMask));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(SerializeField));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(WaitForSeconds));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(WaitForSecondsRealtime));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(WaitForFixedUpdate));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(WaitForEndOfFrame));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AssetBundle), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AssetBundleRequest));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Event), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(HideInInspector));
@@ -238,6 +352,7 @@ namespace UnityEditor
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Font), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(GUIStyle));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(GUISkin), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(GUITargetAttribute), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(GUI), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(TextGenerator), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(SendMouseEvents), "all");
@@ -260,8 +375,8 @@ namespace UnityEditor
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(BoneWeight));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Particle));
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(SliderState), "all");
-			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(GUI.ScrollViewState), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(GUIScrollGroup), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(ScrollViewState), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(TextEditor), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(ClassLibraryInitializer), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AssetBundleCreateRequest), "all");
@@ -273,6 +388,13 @@ namespace UnityEditor
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Canvas), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(RectTransform), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AssemblyIsEditorAssembly), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Camera), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(CullingGroup), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(StateMachineBehaviour), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "Networking.DownloadHandler", "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "Experimental.Director.Playable", "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "Experimental.Director.ScriptPlayable", "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "Experimental.Director.GenericMixerPlayable", "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(SharedBetweenAnimatorsAttribute), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AnimatorStateInfo), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AnimatorTransitionInfo), "all");
@@ -284,6 +406,7 @@ namespace UnityEditor
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(UILineInfo), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AudioClip), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AudioMixer), "all");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(AudioSettings), "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "iPhone", "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "AndroidJNI", "all");
 			this.AddManagedDependenciesForFunctionalityGroup("Runtime", "AndroidJNIHelper", "all");
@@ -308,30 +431,29 @@ namespace UnityEditor
 			{
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "SamsungTV", "all");
 			}
-			if (buildTargetGroup == BuildTargetGroup.iOS)
+			if (buildTargetGroup == BuildTargetGroup.iPhone)
 			{
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "iPhoneKeyboard");
 			}
-			if (buildTargetGroup == BuildTargetGroup.iOS || (buildTargetGroup == BuildTargetGroup.Standalone && (this.buildTarget == BuildTarget.StandaloneOSXIntel || this.buildTarget == BuildTarget.StandaloneOSXIntel64 || this.buildTarget == BuildTarget.StandaloneOSXUniversal)))
+			if (buildTargetGroup == BuildTargetGroup.iPhone || (buildTargetGroup == BuildTargetGroup.Standalone && (this.buildTarget == BuildTarget.StandaloneOSXIntel || this.buildTarget == BuildTarget.StandaloneOSXIntel64 || this.buildTarget == BuildTarget.StandaloneOSXUniversal)))
 			{
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "SocialPlatforms.GameCenter.GameCenterPlatform", "all");
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "SocialPlatforms.GameCenter.GcLeaderboard", "all");
 			}
-			if (buildTargetGroup == BuildTargetGroup.iOS || buildTargetGroup == BuildTargetGroup.Android || buildTargetGroup == BuildTargetGroup.BlackBerry || buildTargetGroup == BuildTargetGroup.WP8 || buildTargetGroup == BuildTargetGroup.Metro || buildTargetGroup == BuildTargetGroup.Tizen)
+			if (buildTargetGroup == BuildTargetGroup.iPhone || buildTargetGroup == BuildTargetGroup.Android || buildTargetGroup == BuildTargetGroup.WP8 || buildTargetGroup == BuildTargetGroup.WSA || buildTargetGroup == BuildTargetGroup.Tizen)
 			{
 				this.AddManagedDependenciesForFunctionalityGroup("Runtime", "TouchScreenKeyboard");
 			}
-			this.AddFunctionalityGroup("Networking", "NetworkManager");
-			this.AddNativeDependenciesForFunctionalityGroup("Networking", "NetworkManager");
-			this.AddNativeDependenciesForFunctionalityGroup("Networking", "NetworkView");
-			this.AddManagedDependenciesForFunctionalityGroup("Networking", typeof(Network));
-			this.AddManagedDependenciesForFunctionalityGroup("Networking", typeof(NetworkMessageInfo));
-			this.AddManagedDependenciesForFunctionalityGroup("Networking", typeof(RPC));
-			this.AddManagedDependenciesForFunctionalityGroup("Networking", typeof(HostData));
-			this.AddManagedDependenciesForFunctionalityGroup("Networking", typeof(BitStream));
-			this.AddManagedDependenciesForFunctionalityGroup("Networking", typeof(NetworkPlayer));
-			this.AddManagedDependenciesForFunctionalityGroup("Networking", typeof(NetworkViewID));
-			this.AddManagedDependenciesForFunctionalityGroup("Networking", typeof(Ping), "all");
+			this.AddNativeDependenciesForFunctionalityGroup("Runtime", "NetworkManager");
+			this.AddNativeDependenciesForFunctionalityGroup("Runtime", "NetworkView");
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Network));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(NetworkMessageInfo));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(RPC));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(HostData));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(BitStream));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(NetworkPlayer));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(NetworkViewID));
+			this.AddManagedDependenciesForFunctionalityGroup("Runtime", typeof(Ping), "all");
 			this.AddFunctionalityGroup("Physics", "PhysicsManager");
 			this.AddNativeDependenciesForFunctionalityGroup("Physics", "PhysicsManager");
 			this.AddNativeDependenciesForFunctionalityGroup("Physics", "Rigidbody");
@@ -376,30 +498,6 @@ namespace UnityEditor
 				string className = array[i];
 				this.AddManagedBaseClass(className);
 			}
-		}
-		internal void AddMethodToPreserve(string assembly, string @namespace, string klassName, string methodName)
-		{
-			this.m_MethodsToPreserve.Add(new RuntimeClassRegistry.MethodDescription
-			{
-				assembly = assembly,
-				fullTypeName = @namespace + ((@namespace.Length <= 0) ? string.Empty : ".") + klassName,
-				methodName = methodName
-			});
-		}
-		internal List<RuntimeClassRegistry.MethodDescription> GetMethodsToPreserve()
-		{
-			return this.m_MethodsToPreserve;
-		}
-		internal void AddUserAssembly(string assembly)
-		{
-			if (!this.m_UserAssemblies.Contains(assembly))
-			{
-				this.m_UserAssemblies.Add(assembly);
-			}
-		}
-		internal string[] GetUserAssemblies()
-		{
-			return this.m_UserAssemblies.ToArray();
 		}
 	}
 }

@@ -1,82 +1,162 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class EditorStyles
 	{
 		internal GUIStyle m_Label;
+
 		private GUIStyle m_MiniLabel;
+
 		private GUIStyle m_LargeLabel;
+
 		private GUIStyle m_BoldLabel;
+
 		private GUIStyle m_MiniBoldLabel;
-		private GUIStyle m_WordWrappedLabel;
+
+		private GUIStyle m_CenteredGreyMiniLabel;
+
 		private GUIStyle m_WordWrappedMiniLabel;
+
+		private GUIStyle m_WordWrappedLabel;
+
+		private GUIStyle m_LinkLabel;
+
 		private GUIStyle m_WhiteLabel;
+
 		private GUIStyle m_WhiteMiniLabel;
+
 		private GUIStyle m_WhiteLargeLabel;
+
 		private GUIStyle m_WhiteBoldLabel;
+
 		private GUIStyle m_RadioButton;
+
 		private GUIStyle m_MiniButton;
+
 		private GUIStyle m_MiniButtonLeft;
+
 		private GUIStyle m_MiniButtonMid;
+
 		private GUIStyle m_MiniButtonRight;
+
 		internal GUIStyle m_TextField;
+
 		internal GUIStyle m_TextArea;
+
 		private GUIStyle m_MiniTextField;
+
 		private GUIStyle m_NumberField;
+
 		private GUIStyle m_Popup;
+
 		private GUIStyle m_ObjectField;
+
 		private GUIStyle m_ObjectFieldThumb;
+
 		private GUIStyle m_ObjectFieldMiniThumb;
+
 		private GUIStyle m_ColorField;
+
 		private GUIStyle m_LayerMaskField;
+
 		private GUIStyle m_Toggle;
+
 		private GUIStyle m_ToggleMixed;
+
 		private GUIStyle m_Foldout;
+
 		private GUIStyle m_FoldoutPreDrop;
+
 		private GUIStyle m_ToggleGroup;
+
 		private GUIStyle m_TextFieldDropDown;
+
 		private GUIStyle m_TextFieldDropDownText;
+
 		internal Font m_StandardFont;
+
 		internal Font m_BoldFont;
+
 		internal Font m_MiniFont;
+
 		internal Font m_MiniBoldFont;
+
 		private GUIStyle m_Toolbar;
+
 		private GUIStyle m_ToolbarButton;
+
 		private GUIStyle m_ToolbarPopup;
+
 		private GUIStyle m_ToolbarDropDown;
+
 		private GUIStyle m_ToolbarTextField;
+
 		private GUIStyle m_InspectorDefaultMargins;
+
 		private GUIStyle m_InspectorFullWidthMargins;
+
 		private GUIStyle m_HelpBox;
+
 		private GUIStyle m_ToolbarSearchField;
+
 		private GUIStyle m_ToolbarSearchFieldPopup;
+
 		private GUIStyle m_ToolbarSearchFieldCancelButton;
+
 		private GUIStyle m_ToolbarSearchFieldCancelButtonEmpty;
+
 		private GUIStyle m_ColorPickerBox;
+
 		private GUIStyle m_InspectorBig;
+
 		private GUIStyle m_InspectorTitlebar;
+
 		private GUIStyle m_InspectorTitlebarText;
+
 		private GUIStyle m_FoldoutSelected;
+
+		private GUIStyle m_IconButton;
+
 		private GUIStyle m_Tooltip;
+
 		private GUIStyle m_NotificationText;
+
 		private GUIStyle m_NotificationBackground;
+
 		private GUIStyle m_AssetLabel;
+
 		private GUIStyle m_AssetLabelPartial;
+
 		private GUIStyle m_AssetLabelIcon;
+
 		private GUIStyle m_SearchField;
+
 		private GUIStyle m_SearchFieldCancelButton;
+
 		private GUIStyle m_SearchFieldCancelButtonEmpty;
+
 		private GUIStyle m_SelectionRect;
+
 		private GUIStyle m_MinMaxHorizontalSliderThumb;
+
 		private GUIStyle m_DropDownList;
+
 		private GUIStyle m_ProgressBarBar;
+
 		private GUIStyle m_ProgressBarText;
+
 		private GUIStyle m_ProgressBarBack;
+
 		private Vector2 m_KnobSize = new Vector2(40f, 40f);
+
 		private Vector2 m_MiniKnobSize = new Vector2(29f, 29f);
+
 		internal static EditorStyles s_Current;
+
 		private static EditorStyles[] s_CachedStyles = new EditorStyles[2];
+
 		public static GUIStyle label
 		{
 			get
@@ -84,6 +164,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_Label;
 			}
 		}
+
 		public static GUIStyle miniLabel
 		{
 			get
@@ -91,6 +172,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniLabel;
 			}
 		}
+
 		public static GUIStyle largeLabel
 		{
 			get
@@ -98,6 +180,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_LargeLabel;
 			}
 		}
+
 		public static GUIStyle boldLabel
 		{
 			get
@@ -105,6 +188,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_BoldLabel;
 			}
 		}
+
 		public static GUIStyle miniBoldLabel
 		{
 			get
@@ -112,13 +196,15 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniBoldLabel;
 			}
 		}
-		public static GUIStyle wordWrappedLabel
+
+		public static GUIStyle centeredGreyMiniLabel
 		{
 			get
 			{
-				return EditorStyles.s_Current.m_WordWrappedLabel;
+				return EditorStyles.s_Current.m_CenteredGreyMiniLabel;
 			}
 		}
+
 		public static GUIStyle wordWrappedMiniLabel
 		{
 			get
@@ -126,6 +212,23 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_WordWrappedMiniLabel;
 			}
 		}
+
+		public static GUIStyle wordWrappedLabel
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_WordWrappedLabel;
+			}
+		}
+
+		internal static GUIStyle linkLabel
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_LinkLabel;
+			}
+		}
+
 		public static GUIStyle whiteLabel
 		{
 			get
@@ -133,6 +236,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_WhiteLabel;
 			}
 		}
+
 		public static GUIStyle whiteMiniLabel
 		{
 			get
@@ -140,6 +244,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_WhiteMiniLabel;
 			}
 		}
+
 		public static GUIStyle whiteLargeLabel
 		{
 			get
@@ -147,6 +252,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_WhiteLargeLabel;
 			}
 		}
+
 		public static GUIStyle whiteBoldLabel
 		{
 			get
@@ -154,6 +260,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_WhiteBoldLabel;
 			}
 		}
+
 		public static GUIStyle radioButton
 		{
 			get
@@ -161,6 +268,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_RadioButton;
 			}
 		}
+
 		public static GUIStyle miniButton
 		{
 			get
@@ -168,6 +276,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniButton;
 			}
 		}
+
 		public static GUIStyle miniButtonLeft
 		{
 			get
@@ -175,6 +284,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniButtonLeft;
 			}
 		}
+
 		public static GUIStyle miniButtonMid
 		{
 			get
@@ -182,6 +292,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniButtonMid;
 			}
 		}
+
 		public static GUIStyle miniButtonRight
 		{
 			get
@@ -189,6 +300,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniButtonRight;
 			}
 		}
+
 		public static GUIStyle textField
 		{
 			get
@@ -196,6 +308,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_TextField;
 			}
 		}
+
 		public static GUIStyle textArea
 		{
 			get
@@ -203,6 +316,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_TextArea;
 			}
 		}
+
 		public static GUIStyle miniTextField
 		{
 			get
@@ -210,6 +324,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniTextField;
 			}
 		}
+
 		public static GUIStyle numberField
 		{
 			get
@@ -217,6 +332,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_NumberField;
 			}
 		}
+
 		public static GUIStyle popup
 		{
 			get
@@ -224,6 +340,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_Popup;
 			}
 		}
+
 		[Obsolete("structHeadingLabel is deprecated, use EditorStyles.label instead.")]
 		public static GUIStyle structHeadingLabel
 		{
@@ -232,6 +349,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_Label;
 			}
 		}
+
 		public static GUIStyle objectField
 		{
 			get
@@ -239,6 +357,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ObjectField;
 			}
 		}
+
 		public static GUIStyle objectFieldThumb
 		{
 			get
@@ -246,6 +365,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ObjectFieldThumb;
 			}
 		}
+
 		public static GUIStyle objectFieldMiniThumb
 		{
 			get
@@ -253,6 +373,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ObjectFieldMiniThumb;
 			}
 		}
+
 		public static GUIStyle colorField
 		{
 			get
@@ -260,6 +381,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ColorField;
 			}
 		}
+
 		public static GUIStyle layerMaskField
 		{
 			get
@@ -267,6 +389,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_LayerMaskField;
 			}
 		}
+
 		public static GUIStyle toggle
 		{
 			get
@@ -274,6 +397,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_Toggle;
 			}
 		}
+
 		internal static GUIStyle toggleMixed
 		{
 			get
@@ -281,6 +405,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToggleMixed;
 			}
 		}
+
 		public static GUIStyle foldout
 		{
 			get
@@ -288,6 +413,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_Foldout;
 			}
 		}
+
 		public static GUIStyle foldoutPreDrop
 		{
 			get
@@ -295,6 +421,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_FoldoutPreDrop;
 			}
 		}
+
 		public static GUIStyle toggleGroup
 		{
 			get
@@ -302,6 +429,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToggleGroup;
 			}
 		}
+
 		internal static GUIStyle textFieldDropDown
 		{
 			get
@@ -309,6 +437,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_TextFieldDropDown;
 			}
 		}
+
 		internal static GUIStyle textFieldDropDownText
 		{
 			get
@@ -316,6 +445,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_TextFieldDropDownText;
 			}
 		}
+
 		public static Font standardFont
 		{
 			get
@@ -323,6 +453,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_StandardFont;
 			}
 		}
+
 		public static Font boldFont
 		{
 			get
@@ -330,6 +461,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_BoldFont;
 			}
 		}
+
 		public static Font miniFont
 		{
 			get
@@ -337,6 +469,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniFont;
 			}
 		}
+
 		public static Font miniBoldFont
 		{
 			get
@@ -344,6 +477,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniBoldFont;
 			}
 		}
+
 		public static GUIStyle toolbar
 		{
 			get
@@ -351,6 +485,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_Toolbar;
 			}
 		}
+
 		public static GUIStyle toolbarButton
 		{
 			get
@@ -358,6 +493,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToolbarButton;
 			}
 		}
+
 		public static GUIStyle toolbarPopup
 		{
 			get
@@ -365,6 +501,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToolbarPopup;
 			}
 		}
+
 		public static GUIStyle toolbarDropDown
 		{
 			get
@@ -372,6 +509,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToolbarDropDown;
 			}
 		}
+
 		public static GUIStyle toolbarTextField
 		{
 			get
@@ -379,6 +517,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToolbarTextField;
 			}
 		}
+
 		public static GUIStyle inspectorDefaultMargins
 		{
 			get
@@ -386,6 +525,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_InspectorDefaultMargins;
 			}
 		}
+
 		public static GUIStyle inspectorFullWidthMargins
 		{
 			get
@@ -393,6 +533,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_InspectorFullWidthMargins;
 			}
 		}
+
 		public static GUIStyle helpBox
 		{
 			get
@@ -400,6 +541,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_HelpBox;
 			}
 		}
+
 		internal static GUIStyle toolbarSearchField
 		{
 			get
@@ -407,6 +549,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToolbarSearchField;
 			}
 		}
+
 		internal static GUIStyle toolbarSearchFieldPopup
 		{
 			get
@@ -414,6 +557,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToolbarSearchFieldPopup;
 			}
 		}
+
 		internal static GUIStyle toolbarSearchFieldCancelButton
 		{
 			get
@@ -421,6 +565,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToolbarSearchFieldCancelButton;
 			}
 		}
+
 		internal static GUIStyle toolbarSearchFieldCancelButtonEmpty
 		{
 			get
@@ -428,6 +573,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ToolbarSearchFieldCancelButtonEmpty;
 			}
 		}
+
 		internal static GUIStyle colorPickerBox
 		{
 			get
@@ -435,6 +581,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ColorPickerBox;
 			}
 		}
+
 		internal static GUIStyle inspectorBig
 		{
 			get
@@ -442,6 +589,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_InspectorBig;
 			}
 		}
+
 		internal static GUIStyle inspectorTitlebar
 		{
 			get
@@ -449,6 +597,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_InspectorTitlebar;
 			}
 		}
+
 		internal static GUIStyle inspectorTitlebarText
 		{
 			get
@@ -456,6 +605,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_InspectorTitlebarText;
 			}
 		}
+
 		internal static GUIStyle foldoutSelected
 		{
 			get
@@ -463,6 +613,15 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_FoldoutSelected;
 			}
 		}
+
+		internal static GUIStyle iconButton
+		{
+			get
+			{
+				return EditorStyles.s_Current.m_IconButton;
+			}
+		}
+
 		internal static GUIStyle tooltip
 		{
 			get
@@ -470,6 +629,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_Tooltip;
 			}
 		}
+
 		internal static GUIStyle notificationText
 		{
 			get
@@ -477,6 +637,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_NotificationText;
 			}
 		}
+
 		internal static GUIStyle notificationBackground
 		{
 			get
@@ -484,6 +645,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_NotificationBackground;
 			}
 		}
+
 		internal static GUIStyle assetLabel
 		{
 			get
@@ -491,6 +653,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_AssetLabel;
 			}
 		}
+
 		internal static GUIStyle assetLabelPartial
 		{
 			get
@@ -498,6 +661,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_AssetLabelPartial;
 			}
 		}
+
 		internal static GUIStyle assetLabelIcon
 		{
 			get
@@ -505,6 +669,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_AssetLabelIcon;
 			}
 		}
+
 		internal static GUIStyle searchField
 		{
 			get
@@ -512,6 +677,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_SearchField;
 			}
 		}
+
 		internal static GUIStyle searchFieldCancelButton
 		{
 			get
@@ -519,6 +685,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_SearchFieldCancelButton;
 			}
 		}
+
 		internal static GUIStyle searchFieldCancelButtonEmpty
 		{
 			get
@@ -526,6 +693,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_SearchFieldCancelButtonEmpty;
 			}
 		}
+
 		internal static GUIStyle selectionRect
 		{
 			get
@@ -533,6 +701,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_SelectionRect;
 			}
 		}
+
 		internal static GUIStyle minMaxHorizontalSliderThumb
 		{
 			get
@@ -540,6 +709,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MinMaxHorizontalSliderThumb;
 			}
 		}
+
 		internal static GUIStyle dropDownList
 		{
 			get
@@ -547,6 +717,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_DropDownList;
 			}
 		}
+
 		internal static GUIStyle progressBarBack
 		{
 			get
@@ -554,6 +725,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ProgressBarBack;
 			}
 		}
+
 		internal static GUIStyle progressBarBar
 		{
 			get
@@ -561,6 +733,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ProgressBarBar;
 			}
 		}
+
 		internal static GUIStyle progressBarText
 		{
 			get
@@ -568,6 +741,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_ProgressBarText;
 			}
 		}
+
 		internal static Vector2 knobSize
 		{
 			get
@@ -575,6 +749,7 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_KnobSize;
 			}
 		}
+
 		internal static Vector2 miniKnobSize
 		{
 			get
@@ -582,25 +757,27 @@ namespace UnityEditor
 				return EditorStyles.s_Current.m_MiniKnobSize;
 			}
 		}
+
 		internal static void UpdateSkinCache()
 		{
 			EditorStyles.UpdateSkinCache(EditorGUIUtility.skinIndex);
 		}
+
 		internal static void UpdateSkinCache(int skinIndex)
 		{
-			if (GUIUtility.s_SkinMode == 0)
+			if (GUIUtility.s_SkinMode != 0)
 			{
-				return;
+				if (EditorStyles.s_CachedStyles[skinIndex] == null)
+				{
+					EditorStyles.s_CachedStyles[skinIndex] = new EditorStyles();
+					EditorStyles.s_CachedStyles[skinIndex].InitSharedStyles();
+				}
+				EditorStyles.s_Current = EditorStyles.s_CachedStyles[skinIndex];
+				EditorGUIUtility.s_FontIsBold = -1;
+				EditorGUIUtility.SetBoldDefaultFont(false);
 			}
-			if (EditorStyles.s_CachedStyles[skinIndex] == null)
-			{
-				EditorStyles.s_CachedStyles[skinIndex] = new EditorStyles();
-				EditorStyles.s_CachedStyles[skinIndex].InitSharedStyles();
-			}
-			EditorStyles.s_Current = EditorStyles.s_CachedStyles[skinIndex];
-			EditorGUIUtility.s_FontIsBold = -1;
-			EditorGUIUtility.SetBoldDefaultFont(false);
 		}
+
 		private void InitSharedStyles()
 		{
 			this.m_ColorPickerBox = this.GetStyle("ColorPickerBox");
@@ -665,15 +842,23 @@ namespace UnityEditor
 			this.m_ColorField = this.GetStyle("ColorField");
 			this.m_Foldout = this.GetStyle("Foldout");
 			this.m_FoldoutSelected = GUIStyle.none;
+			this.m_IconButton = this.GetStyle("IconButton");
 			this.m_TextFieldDropDown = this.GetStyle("TextFieldDropDown");
 			this.m_TextFieldDropDownText = this.GetStyle("TextFieldDropDownText");
+			this.m_LinkLabel = new GUIStyle(this.m_Label);
+			this.m_LinkLabel.normal.textColor = new Color(0.25f, 0.5f, 0.9f, 1f);
+			this.m_LinkLabel.stretchWidth = false;
 			this.m_TextArea = new GUIStyle(this.m_TextField);
 			this.m_TextArea.wordWrap = true;
 			this.m_InspectorDefaultMargins = new GUIStyle();
 			this.m_InspectorDefaultMargins.padding = new RectOffset(14, 4, 0, 0);
 			this.m_InspectorFullWidthMargins = new GUIStyle();
 			this.m_InspectorFullWidthMargins.padding = new RectOffset(5, 4, 0, 0);
+			this.m_CenteredGreyMiniLabel = new GUIStyle(this.m_MiniLabel);
+			this.m_CenteredGreyMiniLabel.alignment = TextAnchor.MiddleCenter;
+			this.m_CenteredGreyMiniLabel.normal.textColor = Color.grey;
 		}
+
 		private GUIStyle GetStyle(string styleName)
 		{
 			GUIStyle gUIStyle = GUI.skin.FindStyle(styleName);

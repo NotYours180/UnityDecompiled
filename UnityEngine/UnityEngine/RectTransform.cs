@@ -1,9 +1,15 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[NativeClass("UI::RectTransform")]
 	public sealed class RectTransform : Transform
 	{
+		public delegate void ReapplyDrivenProperties(RectTransform driven);
+
 		public enum Edge
 		{
 			Left,
@@ -11,25 +17,39 @@ namespace UnityEngine
 			Top,
 			Bottom
 		}
+
 		public enum Axis
 		{
 			Horizontal,
 			Vertical
 		}
-		public delegate void ReapplyDrivenProperties(RectTransform driven);
+
 		public static event RectTransform.ReapplyDrivenProperties reapplyDrivenProperties
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				RectTransform.reapplyDrivenProperties = (RectTransform.ReapplyDrivenProperties)Delegate.Combine(RectTransform.reapplyDrivenProperties, value);
+				RectTransform.ReapplyDrivenProperties reapplyDrivenProperties = RectTransform.reapplyDrivenProperties;
+				RectTransform.ReapplyDrivenProperties reapplyDrivenProperties2;
+				do
+				{
+					reapplyDrivenProperties2 = reapplyDrivenProperties;
+					reapplyDrivenProperties = Interlocked.CompareExchange<RectTransform.ReapplyDrivenProperties>(ref RectTransform.reapplyDrivenProperties, (RectTransform.ReapplyDrivenProperties)Delegate.Combine(reapplyDrivenProperties2, value), reapplyDrivenProperties);
+				}
+				while (reapplyDrivenProperties != reapplyDrivenProperties2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				RectTransform.reapplyDrivenProperties = (RectTransform.ReapplyDrivenProperties)Delegate.Remove(RectTransform.reapplyDrivenProperties, value);
+				RectTransform.ReapplyDrivenProperties reapplyDrivenProperties = RectTransform.reapplyDrivenProperties;
+				RectTransform.ReapplyDrivenProperties reapplyDrivenProperties2;
+				do
+				{
+					reapplyDrivenProperties2 = reapplyDrivenProperties;
+					reapplyDrivenProperties = Interlocked.CompareExchange<RectTransform.ReapplyDrivenProperties>(ref RectTransform.reapplyDrivenProperties, (RectTransform.ReapplyDrivenProperties)Delegate.Remove(reapplyDrivenProperties2, value), reapplyDrivenProperties);
+				}
+				while (reapplyDrivenProperties != reapplyDrivenProperties2);
 			}
 		}
+
 		public Rect rect
 		{
 			get
@@ -39,6 +59,7 @@ namespace UnityEngine
 				return result;
 			}
 		}
+
 		public Vector2 anchorMin
 		{
 			get
@@ -52,6 +73,7 @@ namespace UnityEngine
 				this.INTERNAL_set_anchorMin(ref value);
 			}
 		}
+
 		public Vector2 anchorMax
 		{
 			get
@@ -65,6 +87,7 @@ namespace UnityEngine
 				this.INTERNAL_set_anchorMax(ref value);
 			}
 		}
+
 		public Vector3 anchoredPosition3D
 		{
 			get
@@ -80,6 +103,7 @@ namespace UnityEngine
 				base.localPosition = localPosition;
 			}
 		}
+
 		public Vector2 anchoredPosition
 		{
 			get
@@ -93,6 +117,7 @@ namespace UnityEngine
 				this.INTERNAL_set_anchoredPosition(ref value);
 			}
 		}
+
 		public Vector2 sizeDelta
 		{
 			get
@@ -106,6 +131,7 @@ namespace UnityEngine
 				this.INTERNAL_set_sizeDelta(ref value);
 			}
 		}
+
 		public Vector2 pivot
 		{
 			get
@@ -119,24 +145,27 @@ namespace UnityEngine
 				this.INTERNAL_set_pivot(ref value);
 			}
 		}
+
 		internal extern Object drivenByObject
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal extern DrivenTransformProperties drivenProperties
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Vector2 offsetMin
 		{
 			get
@@ -150,6 +179,7 @@ namespace UnityEngine
 				this.anchoredPosition += Vector2.Scale(vector, Vector2.one - this.pivot);
 			}
 		}
+
 		public Vector2 offsetMax
 		{
 			get
@@ -163,39 +193,52 @@ namespace UnityEngine
 				this.anchoredPosition += Vector2.Scale(vector, this.pivot);
 			}
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_rect(out Rect value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_anchorMin(out Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_anchorMin(ref Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_anchorMax(out Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_anchorMax(ref Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_anchoredPosition(out Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_anchoredPosition(ref Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_sizeDelta(out Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_sizeDelta(ref Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_pivot(out Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_pivot(ref Vector2 value);
+
+		[RequiredByNativeCode]
 		internal static void SendReapplyDrivenProperties(RectTransform driven)
 		{
 			if (RectTransform.reapplyDrivenProperties != null)
@@ -203,37 +246,44 @@ namespace UnityEngine
 				RectTransform.reapplyDrivenProperties(driven);
 			}
 		}
+
 		public void GetLocalCorners(Vector3[] fourCornersArray)
 		{
 			if (fourCornersArray == null || fourCornersArray.Length < 4)
 			{
 				Debug.LogError("Calling GetLocalCorners with an array that is null or has less than 4 elements.");
-				return;
 			}
-			Rect rect = this.rect;
-			float x = rect.x;
-			float y = rect.y;
-			float xMax = rect.xMax;
-			float yMax = rect.yMax;
-			fourCornersArray[0] = new Vector3(x, y, 0f);
-			fourCornersArray[1] = new Vector3(x, yMax, 0f);
-			fourCornersArray[2] = new Vector3(xMax, yMax, 0f);
-			fourCornersArray[3] = new Vector3(xMax, y, 0f);
+			else
+			{
+				Rect rect = this.rect;
+				float x = rect.x;
+				float y = rect.y;
+				float xMax = rect.xMax;
+				float yMax = rect.yMax;
+				fourCornersArray[0] = new Vector3(x, y, 0f);
+				fourCornersArray[1] = new Vector3(x, yMax, 0f);
+				fourCornersArray[2] = new Vector3(xMax, yMax, 0f);
+				fourCornersArray[3] = new Vector3(xMax, y, 0f);
+			}
 		}
+
 		public void GetWorldCorners(Vector3[] fourCornersArray)
 		{
 			if (fourCornersArray == null || fourCornersArray.Length < 4)
 			{
 				Debug.LogError("Calling GetWorldCorners with an array that is null or has less than 4 elements.");
-				return;
 			}
-			this.GetLocalCorners(fourCornersArray);
-			Transform transform = base.transform;
-			for (int i = 0; i < 4; i++)
+			else
 			{
-				fourCornersArray[i] = transform.TransformPoint(fourCornersArray[i]);
+				this.GetLocalCorners(fourCornersArray);
+				Transform transform = base.transform;
+				for (int i = 0; i < 4; i++)
+				{
+					fourCornersArray[i] = transform.TransformPoint(fourCornersArray[i]);
+				}
 			}
 		}
+
 		internal Rect GetRectInParentSpace()
 		{
 			Rect rect = this.rect;
@@ -251,6 +301,7 @@ namespace UnityEngine
 			rect.y += a.y;
 			return rect;
 		}
+
 		public void SetInsetAndSizeFromParentEdge(RectTransform.Edge edge, float inset, float size)
 		{
 			int index = (edge != RectTransform.Edge.Top && edge != RectTransform.Edge.Bottom) ? 0 : 1;
@@ -269,20 +320,27 @@ namespace UnityEngine
 			anchoredPosition[index] = ((!flag) ? (inset + size * this.pivot[index]) : (-inset - size * (1f - this.pivot[index])));
 			this.anchoredPosition = anchoredPosition;
 		}
+
 		public void SetSizeWithCurrentAnchors(RectTransform.Axis axis, float size)
 		{
 			Vector2 sizeDelta = this.sizeDelta;
 			sizeDelta[(int)axis] = size - this.GetParentSize()[(int)axis] * (this.anchorMax[(int)axis] - this.anchorMin[(int)axis]);
 			this.sizeDelta = sizeDelta;
 		}
+
 		private Vector2 GetParentSize()
 		{
 			RectTransform rectTransform = base.parent as RectTransform;
+			Vector2 result;
 			if (!rectTransform)
 			{
-				return Vector2.zero;
+				result = Vector2.zero;
 			}
-			return rectTransform.rect.size;
+			else
+			{
+				result = rectTransform.rect.size;
+			}
+			return result;
 		}
 	}
 }

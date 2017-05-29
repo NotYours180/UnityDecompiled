@@ -2,105 +2,189 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngineInternal;
+
 namespace UnityEditor.Animations
 {
 	public sealed class AnimatorState : UnityEngine.Object
 	{
 		private PushUndoIfNeeded undoHandler = new PushUndoIfNeeded(true);
+
 		public extern int nameHash
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern Motion motion
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float speed
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern float cycleOffset
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern bool mirror
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool iKOnFeet
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool writeDefaultValues
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern string tag
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern string speedParameter
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern string cycleOffsetParameter
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern string mirrorParameter
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern bool speedParameterActive
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern bool cycleOffsetParameterActive
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern bool mirrorParameterActive
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern AnimatorStateTransition[] transitions
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern StateMachineBehaviour[] behaviours
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal bool pushUndo
 		{
 			set
 			{
-				this.undoHandler.m_PushUndo = value;
+				this.undoHandler.pushUndo = value;
 			}
 		}
+
 		[Obsolete("uniqueName does not exist anymore. Consider using .name instead.", true)]
 		public string uniqueName
 		{
 			get
 			{
-				return string.Empty;
+				return "";
 			}
 		}
+
 		[Obsolete("uniqueNameHash does not exist anymore.", true)]
 		public int uniqueNameHash
 		{
@@ -109,28 +193,43 @@ namespace UnityEditor.Animations
 				return -1;
 			}
 		}
+
 		public AnimatorState()
 		{
 			AnimatorState.Internal_Create(this);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create(AnimatorState mono);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern void AddBehaviour(int instanceID);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern void RemoveBehaviour(int index);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern ScriptableObject Internal_AddStateMachineBehaviourWithType(Type stateMachineBehaviourType);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern MonoScript GetBehaviourMonoScript(int index);
+
 		[TypeInferenceRule(TypeInferenceRules.TypeReferencedByFirstArgument)]
 		public StateMachineBehaviour AddStateMachineBehaviour(Type stateMachineBehaviourType)
 		{
 			return (StateMachineBehaviour)this.Internal_AddStateMachineBehaviourWithType(stateMachineBehaviourType);
 		}
+
 		public T AddStateMachineBehaviour<T>() where T : StateMachineBehaviour
 		{
 			return this.AddStateMachineBehaviour(typeof(T)) as T;
 		}
+
 		public void AddTransition(AnimatorStateTransition transition)
 		{
 			this.undoHandler.DoUndo(this, "Transition added");
@@ -138,6 +237,7 @@ namespace UnityEditor.Animations
 			ArrayUtility.Add<AnimatorStateTransition>(ref transitions, transition);
 			this.transitions = transitions;
 		}
+
 		public void RemoveTransition(AnimatorStateTransition transition)
 		{
 			this.undoHandler.DoUndo(this, "Transition removed");
@@ -149,86 +249,104 @@ namespace UnityEditor.Animations
 				Undo.DestroyObjectImmediate(transition);
 			}
 		}
-		private AnimatorStateTransition AddTransition()
+
+		private AnimatorStateTransition CreateTransition(bool setDefaultExitTime)
 		{
 			AnimatorStateTransition animatorStateTransition = new AnimatorStateTransition();
 			animatorStateTransition.hasExitTime = false;
-			if (AssetDatabase.GetAssetPath(this) != string.Empty)
+			animatorStateTransition.hasFixedDuration = true;
+			if (AssetDatabase.GetAssetPath(this) != "")
 			{
 				AssetDatabase.AddObjectToAsset(animatorStateTransition, AssetDatabase.GetAssetPath(this));
 			}
 			animatorStateTransition.hideFlags = HideFlags.HideInHierarchy;
-			this.AddTransition(animatorStateTransition);
+			if (setDefaultExitTime)
+			{
+				this.SetDefaultTransitionExitTime(ref animatorStateTransition);
+			}
 			return animatorStateTransition;
 		}
-		public AnimatorStateTransition AddTransition(AnimatorState destinationState)
-		{
-			AnimatorStateTransition animatorStateTransition = this.AddTransition();
-			animatorStateTransition.destinationState = destinationState;
-			return animatorStateTransition;
-		}
-		public AnimatorStateTransition AddTransition(AnimatorStateMachine destinationStateMachine)
-		{
-			AnimatorStateTransition animatorStateTransition = this.AddTransition();
-			animatorStateTransition.destinationStateMachine = destinationStateMachine;
-			return animatorStateTransition;
-		}
+
 		private void SetDefaultTransitionExitTime(ref AnimatorStateTransition newTransition)
 		{
 			newTransition.hasExitTime = true;
 			if (this.motion != null && this.motion.averageDuration > 0f)
 			{
 				float num = 0.25f / this.motion.averageDuration;
-				newTransition.duration = num;
+				newTransition.duration = 0.25f;
 				newTransition.exitTime = 1f - num;
 			}
+			else
+			{
+				newTransition.duration = 0.25f;
+				newTransition.exitTime = 0.75f;
+			}
 		}
+
+		public AnimatorStateTransition AddTransition(AnimatorState destinationState)
+		{
+			AnimatorStateTransition animatorStateTransition = this.CreateTransition(false);
+			animatorStateTransition.destinationState = destinationState;
+			this.AddTransition(animatorStateTransition);
+			return animatorStateTransition;
+		}
+
+		public AnimatorStateTransition AddTransition(AnimatorStateMachine destinationStateMachine)
+		{
+			AnimatorStateTransition animatorStateTransition = this.CreateTransition(false);
+			animatorStateTransition.destinationStateMachine = destinationStateMachine;
+			this.AddTransition(animatorStateTransition);
+			return animatorStateTransition;
+		}
+
 		public AnimatorStateTransition AddTransition(AnimatorState destinationState, bool defaultExitTime)
 		{
-			AnimatorStateTransition result = this.AddTransition(destinationState);
-			if (defaultExitTime)
-			{
-				this.SetDefaultTransitionExitTime(ref result);
-			}
-			return result;
+			AnimatorStateTransition animatorStateTransition = this.CreateTransition(defaultExitTime);
+			animatorStateTransition.destinationState = destinationState;
+			this.AddTransition(animatorStateTransition);
+			return animatorStateTransition;
 		}
+
 		public AnimatorStateTransition AddTransition(AnimatorStateMachine destinationStateMachine, bool defaultExitTime)
 		{
-			AnimatorStateTransition result = this.AddTransition(destinationStateMachine);
-			if (defaultExitTime)
+			AnimatorStateTransition animatorStateTransition = this.CreateTransition(defaultExitTime);
+			animatorStateTransition.destinationStateMachine = destinationStateMachine;
+			this.AddTransition(animatorStateTransition);
+			return animatorStateTransition;
+		}
+
+		public AnimatorStateTransition AddExitTransition()
+		{
+			return this.AddExitTransition(false);
+		}
+
+		public AnimatorStateTransition AddExitTransition(bool defaultExitTime)
+		{
+			AnimatorStateTransition animatorStateTransition = this.CreateTransition(defaultExitTime);
+			animatorStateTransition.isExit = true;
+			this.AddTransition(animatorStateTransition);
+			return animatorStateTransition;
+		}
+
+		internal AnimatorStateMachine FindParent(AnimatorStateMachine root)
+		{
+			AnimatorStateMachine result;
+			if (root.HasState(this, false))
 			{
-				this.SetDefaultTransitionExitTime(ref result);
+				result = root;
+			}
+			else
+			{
+				result = root.stateMachinesRecursive.Find((ChildAnimatorStateMachine sm) => sm.stateMachine.HasState(this, false)).stateMachine;
 			}
 			return result;
 		}
-		public AnimatorStateTransition AddExitTransition()
-		{
-			AnimatorStateTransition animatorStateTransition = this.AddTransition();
-			animatorStateTransition.isExit = true;
-			return animatorStateTransition;
-		}
-		public AnimatorStateTransition AddExitTransition(bool defaultExitTime)
-		{
-			AnimatorStateTransition animatorStateTransition = this.AddTransition();
-			animatorStateTransition.isExit = true;
-			if (defaultExitTime)
-			{
-				this.SetDefaultTransitionExitTime(ref animatorStateTransition);
-			}
-			return animatorStateTransition;
-		}
-		internal AnimatorStateMachine FindParent(AnimatorStateMachine root)
-		{
-			if (root.HasState(this, false))
-			{
-				return root;
-			}
-			return root.stateMachinesRecursive.Find((ChildAnimatorStateMachine sm) => sm.stateMachine.HasState(this, false)).stateMachine;
-		}
+
 		internal AnimatorStateTransition FindTransition(AnimatorState destinationState)
 		{
 			return new List<AnimatorStateTransition>(this.transitions).Find((AnimatorStateTransition t) => t.destinationState == destinationState);
 		}
+
 		[Obsolete("GetMotion() is obsolete. Use motion", true)]
 		public Motion GetMotion()
 		{

@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetSaveDialog : EditorWindow
@@ -8,31 +10,48 @@ namespace UnityEditor
 		private class Styles
 		{
 			public GUIStyle selected = "ServerUpdateChangesetOn";
+
 			public GUIStyle box = "OL Box";
+
 			public GUIStyle button = "LargeButton";
-			public GUIContent saveSelected = EditorGUIUtility.TextContent("SaveAssetDialog.SaveSelected");
-			public GUIContent saveAll = EditorGUIUtility.TextContent("SaveAssetDialog.SaveAll");
-			public GUIContent dontSave = EditorGUIUtility.TextContent("SaveAssetDialog.DontSave");
-			public GUIContent close = EditorGUIUtility.TextContent("SaveAssetDialog.Close");
+
+			public GUIContent saveSelected = EditorGUIUtility.TextContent("Save Selected");
+
+			public GUIContent saveAll = EditorGUIUtility.TextContent("Save All");
+
+			public GUIContent dontSave = EditorGUIUtility.TextContent("Don't Save");
+
+			public GUIContent close = EditorGUIUtility.TextContent("Close");
+
 			public float buttonWidth;
+
 			public Styles()
 			{
 				this.buttonWidth = Mathf.Max(Mathf.Max(this.button.CalcSize(this.saveSelected).x, this.button.CalcSize(this.saveAll).x), this.button.CalcSize(this.dontSave).x);
 			}
 		}
-		private static AssetSaveDialog.Styles s_Styles;
+
+		private static AssetSaveDialog.Styles s_Styles = null;
+
 		private List<string> m_Assets;
+
 		private List<string> m_AssetsToSave;
+
 		private ListViewState m_LV = new ListViewState();
+
 		private int m_InitialSelectedItem = -1;
+
 		private bool[] m_SelectedItems;
+
 		private List<GUIContent> m_Content;
+
 		private void SetAssets(string[] assets)
 		{
 			this.m_Assets = new List<string>(assets);
 			this.RebuildLists(true);
 			this.m_AssetsToSave = new List<string>();
 		}
+
 		public static void ShowWindow(string[] inAssets, out string[] assetsThatShouldBeSaved)
 		{
 			int num = 0;
@@ -48,33 +67,36 @@ namespace UnityEditor
 			if (num2 == 0)
 			{
 				assetsThatShouldBeSaved = inAssets;
-				return;
 			}
-			string[] array = new string[num2];
-			string[] array2 = new string[num];
-			num2 = 0;
-			num = 0;
-			for (int j = 0; j < inAssets.Length; j++)
+			else
 			{
-				string text2 = inAssets[j];
-				if (text2.EndsWith("meta"))
+				string[] array = new string[num2];
+				string[] array2 = new string[num];
+				num2 = 0;
+				num = 0;
+				for (int j = 0; j < inAssets.Length; j++)
 				{
-					array2[num++] = text2;
+					string text2 = inAssets[j];
+					if (text2.EndsWith("meta"))
+					{
+						array2[num++] = text2;
+					}
+					else
+					{
+						array[num2++] = text2;
+					}
 				}
-				else
-				{
-					array[num2++] = text2;
-				}
+				AssetSaveDialog windowDontShow = EditorWindow.GetWindowDontShow<AssetSaveDialog>();
+				windowDontShow.titleContent = EditorGUIUtility.TextContent("Save Assets");
+				windowDontShow.SetAssets(array);
+				windowDontShow.ShowUtility();
+				windowDontShow.ShowModal();
+				assetsThatShouldBeSaved = new string[windowDontShow.m_AssetsToSave.Count + num];
+				windowDontShow.m_AssetsToSave.CopyTo(assetsThatShouldBeSaved, 0);
+				array2.CopyTo(assetsThatShouldBeSaved, windowDontShow.m_AssetsToSave.Count);
 			}
-			AssetSaveDialog windowDontShow = EditorWindow.GetWindowDontShow<AssetSaveDialog>();
-			windowDontShow.title = EditorGUIUtility.TextContent("SaveAssetDialog.Title").text;
-			windowDontShow.SetAssets(array);
-			windowDontShow.ShowUtility();
-			windowDontShow.ShowModal();
-			assetsThatShouldBeSaved = new string[windowDontShow.m_AssetsToSave.Count + num];
-			windowDontShow.m_AssetsToSave.CopyTo(assetsThatShouldBeSaved, 0);
-			array2.CopyTo(assetsThatShouldBeSaved, windowDontShow.m_AssetsToSave.Count);
 		}
+
 		public static GUIContent GetContentForAsset(string path)
 		{
 			Texture cachedIcon = AssetDatabase.GetCachedIcon(path);
@@ -88,9 +110,7 @@ namespace UnityEditor
 			}
 			return new GUIContent(path, cachedIcon);
 		}
-		private void HandleKeyboard()
-		{
-		}
+
 		private void OnGUI()
 		{
 			if (AssetSaveDialog.s_Styles == null)
@@ -99,7 +119,6 @@ namespace UnityEditor
 				base.minSize = new Vector2(500f, 300f);
 				base.position = new Rect(base.position.x, base.position.y, base.minSize.x, base.minSize.y);
 			}
-			this.HandleKeyboard();
 			GUILayout.Space(10f);
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Space(10f);
@@ -111,27 +130,40 @@ namespace UnityEditor
 			GUILayout.Space(10f);
 			int row = this.m_LV.row;
 			int num = 0;
-			foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.m_LV, AssetSaveDialog.s_Styles.box, new GUILayoutOption[0]))
+			IEnumerator enumerator = ListViewGUILayout.ListView(this.m_LV, AssetSaveDialog.s_Styles.box, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				if (this.m_SelectedItems[listViewElement.row] && Event.current.type == EventType.Repaint)
+				while (enumerator.MoveNext())
 				{
-					Rect position = listViewElement.position;
-					position.x += 1f;
-					position.y += 1f;
-					position.width -= 1f;
-					position.height -= 1f;
-					AssetSaveDialog.s_Styles.selected.Draw(position, false, false, false, false);
+					ListViewElement listViewElement = (ListViewElement)enumerator.Current;
+					if (this.m_SelectedItems[listViewElement.row] && Event.current.type == EventType.Repaint)
+					{
+						Rect position = listViewElement.position;
+						position.x += 1f;
+						position.y += 1f;
+						position.width -= 1f;
+						position.height -= 1f;
+						AssetSaveDialog.s_Styles.selected.Draw(position, false, false, false, false);
+					}
+					GUILayout.Label(this.m_Content[listViewElement.row], new GUILayoutOption[0]);
+					if (ListViewGUILayout.HasMouseUp(listViewElement.position))
+					{
+						Event.current.command = true;
+						Event.current.control = true;
+						ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.m_InitialSelectedItem, ref this.m_SelectedItems);
+					}
+					if (this.m_SelectedItems[listViewElement.row])
+					{
+						num++;
+					}
 				}
-				GUILayout.Label(this.m_Content[listViewElement.row], new GUILayoutOption[0]);
-				if (ListViewGUILayout.HasMouseUp(listViewElement.position))
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
 				{
-					Event.current.command = true;
-					Event.current.control = true;
-					ListViewGUILayout.MultiSelection(row, listViewElement.row, ref this.m_InitialSelectedItem, ref this.m_SelectedItems);
-				}
-				if (this.m_SelectedItems[listViewElement.row])
-				{
-					num++;
+					disposable.Dispose();
 				}
 			}
 			GUILayout.Space(10f);
@@ -172,16 +204,19 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUILayout.Space(10f);
 		}
+
 		private void Cancel()
 		{
 			base.Close();
 			GUIUtility.ExitGUI();
 		}
+
 		private void CloseWindow()
 		{
 			base.Close();
 			GUIUtility.ExitGUI();
 		}
+
 		private void SaveSelectedAssets()
 		{
 			List<string> list = new List<string>();
@@ -199,6 +234,7 @@ namespace UnityEditor
 			this.m_Assets = list;
 			this.RebuildLists(false);
 		}
+
 		private void IgnoreSelectedAssets()
 		{
 			List<string> list = new List<string>();
@@ -216,6 +252,7 @@ namespace UnityEditor
 				this.CloseWindow();
 			}
 		}
+
 		private void RebuildLists(bool selected)
 		{
 			this.m_LV.totalRows = this.m_Assets.Count;

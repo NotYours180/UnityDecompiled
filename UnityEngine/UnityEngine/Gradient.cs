@@ -1,30 +1,46 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[RequiredByNativeCode]
 	[StructLayout(LayoutKind.Sequential)]
 	public sealed class Gradient
 	{
 		internal IntPtr m_Ptr;
+
 		public extern GradientColorKey[] colorKeys
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern GradientAlphaKey[] alphaKeys
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern GradientMode mode
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		internal Color constantColor
 		{
 			get
@@ -38,30 +54,46 @@ namespace UnityEngine
 				this.INTERNAL_set_constantColor(ref value);
 			}
 		}
+
+		[RequiredByNativeCode]
 		public Gradient()
 		{
 			this.Init();
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Init();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Cleanup();
+
 		~Gradient()
 		{
 			this.Cleanup();
 		}
-		[WrapperlessIcall]
+
+		public Color Evaluate(float time)
+		{
+			Color result;
+			Gradient.INTERNAL_CALL_Evaluate(this, time, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern Color Evaluate(float time);
-		[WrapperlessIcall]
+		private static extern void INTERNAL_CALL_Evaluate(Gradient self, float time, out Color value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_constantColor(out Color value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_constantColor(ref Color value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetKeys(GradientColorKey[] colorKeys, GradientAlphaKey[] alphaKeys);
 	}

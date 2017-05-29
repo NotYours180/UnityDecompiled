@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	public enum SerializedPropertyType
@@ -21,6 +22,7 @@ namespace UnityEditor
 		AnimationCurve,
 		Bounds,
 		Gradient,
-		Quaternion
+		Quaternion,
+		ExposedReference
 	}
 }

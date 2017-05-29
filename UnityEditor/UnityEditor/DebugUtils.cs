@@ -1,45 +1,54 @@
 using System;
 using System.Collections.Generic;
+
 namespace UnityEditor
 {
 	internal class DebugUtils
 	{
 		internal static string ListToString<T>(IEnumerable<T> list)
 		{
+			string result;
 			if (list == null)
 			{
-				return "[null list]";
+				result = "[null list]";
 			}
-			string text = "[";
-			int num = 0;
-			foreach (T current in list)
+			else
 			{
-				if (num != 0)
+				string text = "[";
+				int num = 0;
+				foreach (T current in list)
 				{
-					text += ", ";
+					if (num != 0)
+					{
+						text += ", ";
+					}
+					if (current != null)
+					{
+						text += current.ToString();
+					}
+					else
+					{
+						text += "'null'";
+					}
+					num++;
 				}
-				if (current != null)
+				text += "]";
+				if (num == 0)
 				{
-					text += current.ToString();
+					result = "[empty list]";
 				}
 				else
 				{
-					text += "'null'";
+					result = string.Concat(new object[]
+					{
+						"(",
+						num,
+						") ",
+						text
+					});
 				}
-				num++;
 			}
-			text += "]";
-			if (num == 0)
-			{
-				return "[empty list]";
-			}
-			return string.Concat(new object[]
-			{
-				"(",
-				num,
-				") ",
-				text
-			});
+			return result;
 		}
 	}
 }

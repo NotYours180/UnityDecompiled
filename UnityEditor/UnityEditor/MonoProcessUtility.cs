@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using UnityEditor.Utils;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class MonoProcessUtility
@@ -18,6 +20,7 @@ namespace UnityEditor
 				"\n"
 			});
 		}
+
 		public static void RunMonoProcess(Process process, string name, string resultingFile)
 		{
 			MonoProcessRunner monoProcessRunner = new MonoProcessRunner();
@@ -56,26 +59,20 @@ namespace UnityEditor
 				throw new UnityException(text);
 			}
 		}
-		public static string GetMonoExec(BuildTarget buildTarget)
-		{
-			string monoBinDirectory = BuildPipeline.GetMonoBinDirectory(buildTarget);
-			if (Application.platform == RuntimePlatform.OSXEditor)
-			{
-				return Path.Combine(monoBinDirectory, "mono");
-			}
-			return Path.Combine(monoBinDirectory, "mono.exe");
-		}
-		public static string GetMonoPath(BuildTarget buildTarget)
-		{
-			string monoLibDirectory = BuildPipeline.GetMonoLibDirectory(buildTarget);
-			return monoLibDirectory + Path.PathSeparator + ".";
-		}
-		public static Process PrepareMonoProcess(BuildTarget target, string workDir)
+
+		public static Process PrepareMonoProcess(string workDir)
 		{
 			Process process = new Process();
-			process.StartInfo.FileName = MonoProcessUtility.GetMonoExec(target);
+			string text = (Application.platform != RuntimePlatform.WindowsEditor) ? "mono" : "mono.exe";
+			process.StartInfo.FileName = Paths.Combine(new string[]
+			{
+				MonoInstallationFinder.GetMonoInstallation(),
+				"bin",
+				text
+			});
 			process.StartInfo.EnvironmentVariables["_WAPI_PROCESS_HANDLE_OFFSET"] = "5";
-			process.StartInfo.EnvironmentVariables["MONO_PATH"] = MonoProcessUtility.GetMonoPath(target);
+			string profile = BuildPipeline.CompatibilityProfileToClassLibFolder(ApiCompatibilityLevel.NET_2_0);
+			process.StartInfo.EnvironmentVariables["MONO_PATH"] = MonoInstallationFinder.GetProfileDirectory(profile);
 			process.StartInfo.UseShellExecute = false;
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.RedirectStandardError = true;

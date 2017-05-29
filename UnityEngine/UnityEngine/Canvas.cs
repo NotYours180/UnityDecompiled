@@ -1,47 +1,68 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[NativeClass("UI::Canvas"), RequireComponent(typeof(RectTransform))]
 	public sealed class Canvas : Behaviour
 	{
 		public delegate void WillRenderCanvases();
+
 		public static event Canvas.WillRenderCanvases willRenderCanvases
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				Canvas.willRenderCanvases = (Canvas.WillRenderCanvases)Delegate.Combine(Canvas.willRenderCanvases, value);
+				Canvas.WillRenderCanvases willRenderCanvases = Canvas.willRenderCanvases;
+				Canvas.WillRenderCanvases willRenderCanvases2;
+				do
+				{
+					willRenderCanvases2 = willRenderCanvases;
+					willRenderCanvases = Interlocked.CompareExchange<Canvas.WillRenderCanvases>(ref Canvas.willRenderCanvases, (Canvas.WillRenderCanvases)Delegate.Combine(willRenderCanvases2, value), willRenderCanvases);
+				}
+				while (willRenderCanvases != willRenderCanvases2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				Canvas.willRenderCanvases = (Canvas.WillRenderCanvases)Delegate.Remove(Canvas.willRenderCanvases, value);
+				Canvas.WillRenderCanvases willRenderCanvases = Canvas.willRenderCanvases;
+				Canvas.WillRenderCanvases willRenderCanvases2;
+				do
+				{
+					willRenderCanvases2 = willRenderCanvases;
+					willRenderCanvases = Interlocked.CompareExchange<Canvas.WillRenderCanvases>(ref Canvas.willRenderCanvases, (Canvas.WillRenderCanvases)Delegate.Remove(willRenderCanvases2, value), willRenderCanvases);
+				}
+				while (willRenderCanvases != willRenderCanvases2);
 			}
 		}
+
 		public extern RenderMode renderMode
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool isRootCanvas
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern Camera worldCamera
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public Rect pixelRect
 		{
 			get
@@ -51,102 +72,176 @@ namespace UnityEngine
 				return result;
 			}
 		}
+
 		public extern float scaleFactor
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float referencePixelsPerUnit
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool overridePixelPerfect
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool pixelPerfect
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float planeDistance
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int renderOrder
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern bool overrideSorting
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int sortingOrder
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern int targetDisplay
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		[Obsolete("Setting normalizedSize via a int is not supported. Please use normalizedSortingGridSize")]
+		public extern int sortingGridNormalizedSize
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern float normalizedSortingGridSize
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern int sortingLayerID
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern int cachedSortingLayerValue
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern AdditionalCanvasShaderChannels additionalShaderChannels
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern string sortingLayerName
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		[WrapperlessIcall]
+
+		public extern Canvas rootCanvas
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_pixelRect(out Rect value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Material GetDefaultCanvasMaterial();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern Material GetETC1SupportedCanvasMaterial();
+
+		[Obsolete("Shared default material now used for text and general UI elements, call Canvas.GetDefaultCanvasMaterial()"), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern Material GetDefaultCanvasTextMaterial();
+
+		[RequiredByNativeCode]
 		private static void SendWillRenderCanvases()
 		{
 			if (Canvas.willRenderCanvases != null)
@@ -154,6 +249,7 @@ namespace UnityEngine
 				Canvas.willRenderCanvases();
 			}
 		}
+
 		public static void ForceUpdateCanvases()
 		{
 			Canvas.SendWillRenderCanvases();

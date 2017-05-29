@@ -1,12 +1,14 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(ProceduralTexture))]
 	internal class ProceduralTextureInspector : TextureInspector
 	{
-		private bool m_MightHaveModified;
+		private bool m_MightHaveModified = false;
+
 		protected override void OnDisable()
 		{
 			base.OnDisable();
@@ -50,6 +52,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.OnInspectorGUI();
@@ -74,12 +77,13 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		public override void OnPreviewGUI(Rect r, GUIStyle background)
 		{
 			base.OnPreviewGUI(r, background);
-			if (this.target)
+			if (base.target)
 			{
-				ProceduralMaterial proceduralMaterial = (this.target as ProceduralTexture).GetProceduralMaterial();
+				ProceduralMaterial proceduralMaterial = (base.target as ProceduralTexture).GetProceduralMaterial();
 				if (proceduralMaterial && ProceduralMaterialInspector.ShowIsGenerating(proceduralMaterial) && r.width > 50f)
 				{
 					EditorGUI.DropShadowLabel(new Rect(r.x, r.y, r.width, 20f), "Generating...");

@@ -1,100 +1,280 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public sealed class CanvasRenderer : Component
 	{
 		public delegate void OnRequestRebuild();
+
 		public static event CanvasRenderer.OnRequestRebuild onRequestRebuild
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			add
 			{
-				CanvasRenderer.onRequestRebuild = (CanvasRenderer.OnRequestRebuild)Delegate.Combine(CanvasRenderer.onRequestRebuild, value);
+				CanvasRenderer.OnRequestRebuild onRequestRebuild = CanvasRenderer.onRequestRebuild;
+				CanvasRenderer.OnRequestRebuild onRequestRebuild2;
+				do
+				{
+					onRequestRebuild2 = onRequestRebuild;
+					onRequestRebuild = Interlocked.CompareExchange<CanvasRenderer.OnRequestRebuild>(ref CanvasRenderer.onRequestRebuild, (CanvasRenderer.OnRequestRebuild)Delegate.Combine(onRequestRebuild2, value), onRequestRebuild);
+				}
+				while (onRequestRebuild != onRequestRebuild2);
 			}
-			[MethodImpl(MethodImplOptions.Synchronized)]
 			remove
 			{
-				CanvasRenderer.onRequestRebuild = (CanvasRenderer.OnRequestRebuild)Delegate.Remove(CanvasRenderer.onRequestRebuild, value);
+				CanvasRenderer.OnRequestRebuild onRequestRebuild = CanvasRenderer.onRequestRebuild;
+				CanvasRenderer.OnRequestRebuild onRequestRebuild2;
+				do
+				{
+					onRequestRebuild2 = onRequestRebuild;
+					onRequestRebuild = Interlocked.CompareExchange<CanvasRenderer.OnRequestRebuild>(ref CanvasRenderer.onRequestRebuild, (CanvasRenderer.OnRequestRebuild)Delegate.Remove(onRequestRebuild2, value), onRequestRebuild);
+				}
+				while (onRequestRebuild != onRequestRebuild2);
 			}
 		}
+
+		[Obsolete("isMask is no longer supported. See EnableClipping for vertex clipping configuration")]
 		public extern bool isMask
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
+		public extern bool hasRectClipping
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern bool hasPopInstruction
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern int materialCount
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public extern int popMaterialCount
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern int relativeDepth
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		public extern bool cull
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
 		public extern int absoluteDepth
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		public extern bool hasMoved
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		public void SetColor(Color color)
 		{
 			CanvasRenderer.INTERNAL_CALL_SetColor(this, ref color);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_SetColor(CanvasRenderer self, ref Color color);
-		[WrapperlessIcall]
+
+		public Color GetColor()
+		{
+			Color result;
+			CanvasRenderer.INTERNAL_CALL_GetColor(this, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern Color GetColor();
-		[WrapperlessIcall]
+		private static extern void INTERNAL_CALL_GetColor(CanvasRenderer self, out Color value);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern float GetAlpha();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void SetAlpha(float alpha);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern void SetMaterial(Material material, Texture texture);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern Material GetMaterial();
+
+		[Obsolete("UI System now uses meshes. Generate a mesh and use 'SetMesh' instead")]
 		public void SetVertices(List<UIVertex> vertices)
 		{
-			if (vertices.Count > 65535)
-			{
-				Debug.LogWarning(UnityString.Format("Number of vertices set exceeds {0}, rendering of this element will be skipped", new object[]
-				{
-					65535
-				}), this);
-				vertices.Clear();
-			}
-			this.SetVerticesInternal(vertices);
+			this.SetVertices(vertices.ToArray(), vertices.Count);
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void SetVerticesInternal(object vertices);
+
+		[Obsolete("UI System now uses meshes. Generate a mesh and use 'SetMesh' instead")]
 		public void SetVertices(UIVertex[] vertices, int size)
 		{
-			if (size > 65535)
+			Mesh mesh = new Mesh();
+			List<Vector3> list = new List<Vector3>();
+			List<Color32> list2 = new List<Color32>();
+			List<Vector2> list3 = new List<Vector2>();
+			List<Vector2> list4 = new List<Vector2>();
+			List<Vector3> list5 = new List<Vector3>();
+			List<Vector4> list6 = new List<Vector4>();
+			List<int> list7 = new List<int>();
+			for (int i = 0; i < size; i += 4)
 			{
-				Debug.LogWarning(UnityString.Format("Number of vertices set exceeds {0}, rendering of this element will be skipped", new object[]
+				for (int j = 0; j < 4; j++)
 				{
-					65535
-				}), this);
-				size = 0;
+					list.Add(vertices[i + j].position);
+					list2.Add(vertices[i + j].color);
+					list3.Add(vertices[i + j].uv0);
+					list4.Add(vertices[i + j].uv1);
+					list5.Add(vertices[i + j].normal);
+					list6.Add(vertices[i + j].tangent);
+				}
+				list7.Add(i);
+				list7.Add(i + 1);
+				list7.Add(i + 2);
+				list7.Add(i + 2);
+				list7.Add(i + 3);
+				list7.Add(i);
 			}
-			this.SetVerticesInternalArray(vertices, size);
+			mesh.SetVertices(list);
+			mesh.SetColors(list2);
+			mesh.SetNormals(list5);
+			mesh.SetTangents(list6);
+			mesh.SetUVs(0, list3);
+			mesh.SetUVs(1, list4);
+			mesh.SetIndices(list7.ToArray(), MeshTopology.Triangles, 0);
+			this.SetMesh(mesh);
+			Object.DestroyImmediate(mesh);
 		}
-		[WrapperlessIcall]
+
+		public void EnableRectClipping(Rect rect)
+		{
+			CanvasRenderer.INTERNAL_CALL_EnableRectClipping(this, ref rect);
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern void SetVerticesInternalArray(UIVertex[] vertices, int size);
-		[WrapperlessIcall]
+		private static extern void INTERNAL_CALL_EnableRectClipping(CanvasRenderer self, ref Rect rect);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void DisableRectClipping();
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetMaterial(Material material, int index);
+
+		public void SetMaterial(Material material, Texture texture)
+		{
+			this.materialCount = Math.Max(1, this.materialCount);
+			this.SetMaterial(material, 0);
+			this.SetTexture(texture);
+		}
+
+		public Material GetMaterial()
+		{
+			return this.GetMaterial(0);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern Material GetMaterial(int index);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetPopMaterial(Material material, int index);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern Material GetPopMaterial(int index);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetTexture(Texture texture);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetAlphaTexture(Texture texture);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern void SetMesh(Mesh mesh);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Clear();
+
+		public static void SplitUIVertexStreams(List<UIVertex> verts, List<Vector3> positions, List<Color32> colors, List<Vector2> uv0S, List<Vector2> uv1S, List<Vector3> normals, List<Vector4> tangents, List<int> indicies)
+		{
+			CanvasRenderer.SplitUIVertexStreamsInternal(verts, positions, colors, uv0S, uv1S, normals, tangents);
+			CanvasRenderer.SplitIndiciesStreamsInternal(verts, indicies);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SplitUIVertexStreamsInternal(object verts, object positions, object colors, object uv0S, object uv1S, object normals, object tangents);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void SplitIndiciesStreamsInternal(object verts, object indicies);
+
+		public static void CreateUIVertexStream(List<UIVertex> verts, List<Vector3> positions, List<Color32> colors, List<Vector2> uv0S, List<Vector2> uv1S, List<Vector3> normals, List<Vector4> tangents, List<int> indicies)
+		{
+			CanvasRenderer.CreateUIVertexStreamInternal(verts, positions, colors, uv0S, uv1S, normals, tangents, indicies);
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void CreateUIVertexStreamInternal(object verts, object positions, object colors, object uv0S, object uv1S, object normals, object tangents, object indicies);
+
+		public static void AddUIVertexStream(List<UIVertex> verts, List<Vector3> positions, List<Color32> colors, List<Vector2> uv0S, List<Vector2> uv1S, List<Vector3> normals, List<Vector4> tangents)
+		{
+			CanvasRenderer.SplitUIVertexStreamsInternal(verts, positions, colors, uv0S, uv1S, normals, tangents);
+		}
+
+		[RequiredByNativeCode]
 		private static void RequestRefresh()
 		{
 			if (CanvasRenderer.onRequestRebuild != null)

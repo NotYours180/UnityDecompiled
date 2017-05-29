@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
+
 namespace UnityEditor
 {
 	internal class AssetStoreAssetsInfo : AssetStoreResultBase<AssetStoreAssetsInfo>
@@ -12,17 +13,29 @@ namespace UnityEditor
 			AnonymousUser,
 			Ok
 		}
+
 		internal AssetStoreAssetsInfo.Status status;
+
 		internal Dictionary<int, AssetStoreAsset> assets = new Dictionary<int, AssetStoreAsset>();
+
 		internal bool paymentTokenAvailable;
+
 		internal string paymentMethodCard;
+
 		internal string paymentMethodExpire;
+
 		internal float price;
+
 		internal float vat;
+
 		internal string currency;
+
 		internal string priceText;
+
 		internal string vatText;
+
 		internal string message;
+
 		internal AssetStoreAssetsInfo(AssetStoreResultBase<AssetStoreAssetsInfo>.Callback c, List<AssetStoreAsset> assets) : base(c)
 		{
 			foreach (AssetStoreAsset current in assets)
@@ -30,6 +43,7 @@ namespace UnityEditor
 				this.assets[current.id] = current;
 			}
 		}
+
 		protected override void Parse(Dictionary<string, JSONValue> dict)
 		{
 			Dictionary<string, JSONValue> dictionary = dict["purchase_info"].AsDict(true);
@@ -38,26 +52,17 @@ namespace UnityEditor
 			{
 				this.status = AssetStoreAssetsInfo.Status.BasketNotEmpty;
 			}
-			else
+			else if (a == "service-disabled")
 			{
-				if (a == "service-disabled")
-				{
-					this.status = AssetStoreAssetsInfo.Status.ServiceDisabled;
-				}
-				else
-				{
-					if (a == "user-anonymous")
-					{
-						this.status = AssetStoreAssetsInfo.Status.AnonymousUser;
-					}
-					else
-					{
-						if (a == "ok")
-						{
-							this.status = AssetStoreAssetsInfo.Status.Ok;
-						}
-					}
-				}
+				this.status = AssetStoreAssetsInfo.Status.ServiceDisabled;
+			}
+			else if (a == "user-anonymous")
+			{
+				this.status = AssetStoreAssetsInfo.Status.AnonymousUser;
+			}
+			else if (a == "ok")
+			{
+				this.status = AssetStoreAssetsInfo.Status.Ok;
 			}
 			this.paymentTokenAvailable = dictionary["payment_token_available"].AsBool();
 			if (dictionary.ContainsKey("payment_method_card"))
@@ -106,9 +111,9 @@ namespace UnityEditor
 					previewInfo.isPurchased = (current.ContainsKey("purchased") && current["purchased"].AsBool(true));
 					previewInfo.isDownloadable = (previewInfo.isPurchased || assetStoreAsset.price == null);
 					previewInfo.publisherName = current["publisher_name"].AsString(true).Trim();
-					previewInfo.packageUrl = ((!current.Get("package_url").IsNull()) ? current["package_url"].AsString(true) : string.Empty);
-					previewInfo.encryptionKey = ((!current.Get("encryption_key").IsNull()) ? current["encryption_key"].AsString(true) : string.Empty);
-					previewInfo.categoryName = ((!current.Get("category_name").IsNull()) ? current["category_name"].AsString(true) : string.Empty);
+					previewInfo.packageUrl = ((!current.Get("package_url").IsNull()) ? current["package_url"].AsString(true) : "");
+					previewInfo.encryptionKey = ((!current.Get("encryption_key").IsNull()) ? current["encryption_key"].AsString(true) : "");
+					previewInfo.categoryName = ((!current.Get("category_name").IsNull()) ? current["category_name"].AsString(true) : "");
 					previewInfo.buildProgress = -1f;
 					previewInfo.downloadProgress = -1f;
 				}

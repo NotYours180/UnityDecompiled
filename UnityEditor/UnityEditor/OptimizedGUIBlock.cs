@@ -1,24 +1,48 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	internal sealed class OptimizedGUIBlock
 	{
 		[NonSerialized]
 		private IntPtr m_Ptr;
-		private bool m_Valid;
-		private bool m_Recording;
-		private bool m_WatchForUsed;
+
+		private bool m_Valid = false;
+
+		private bool m_Recording = false;
+
+		private bool m_WatchForUsed = false;
+
 		private int m_KeyboardControl;
+
 		private int m_LastSearchIndex;
+
 		private int m_ActiveDragControl;
+
 		private Color m_GUIColor;
+
 		private Rect m_Rect;
+
+		public bool valid
+		{
+			get
+			{
+				return this.m_Valid;
+			}
+			set
+			{
+				this.m_Valid = value;
+			}
+		}
+
 		public OptimizedGUIBlock()
 		{
 			this.Init();
 		}
+
 		~OptimizedGUIBlock()
 		{
 			if (this.m_Ptr != IntPtr.Zero)
@@ -26,18 +50,22 @@ namespace UnityEditor
 				Debug.Log("Failed cleaning up Optimized GUI Block");
 			}
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void Init();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Dispose();
+
 		public bool Begin(bool hasChanged, Rect position)
 		{
 			if (hasChanged)
 			{
 				this.m_Valid = false;
 			}
+			bool result;
 			if (Event.current.type == EventType.Repaint)
 			{
 				if (GUIUtility.keyboardControl != this.m_KeyboardControl)
@@ -63,29 +91,34 @@ namespace UnityEditor
 				}
 				if (EditorGUI.isCollectingTooltips)
 				{
-					return true;
+					result = true;
 				}
-				if (this.m_Valid)
+				else if (this.m_Valid)
 				{
-					return false;
+					result = false;
 				}
-				this.m_Recording = true;
-				this.BeginRecording();
-				return true;
+				else
+				{
+					this.m_Recording = true;
+					this.BeginRecording();
+					result = true;
+				}
+			}
+			else if (Event.current.type == EventType.Used)
+			{
+				result = false;
 			}
 			else
 			{
-				if (Event.current.type == EventType.Used)
-				{
-					return false;
-				}
 				if (Event.current.type != EventType.Used)
 				{
 					this.m_WatchForUsed = true;
 				}
-				return true;
+				result = true;
 			}
+			return result;
 		}
+
 		public void End()
 		{
 			bool recording = this.m_Recording;
@@ -114,13 +147,16 @@ namespace UnityEditor
 			}
 			this.m_WatchForUsed = false;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void BeginRecording();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void EndRecording();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void Execute();
 	}

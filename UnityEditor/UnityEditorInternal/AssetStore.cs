@@ -1,12 +1,13 @@
 using System;
 using UnityEditor;
+
 namespace UnityEditorInternal
 {
 	public sealed class AssetStore
 	{
 		public static void Open(string assetStoreURL)
 		{
-			if (assetStoreURL != string.Empty)
+			if (assetStoreURL != "")
 			{
 				AssetStoreWindow.OpenURL(assetStoreURL);
 			}

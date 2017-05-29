@@ -1,18 +1,33 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
 	internal class TickHandler
 	{
+		[SerializeField]
 		private float[] m_TickModulos = new float[0];
+
+		[SerializeField]
 		private float[] m_TickStrengths = new float[0];
-		private int m_SmallestTick;
+
+		[SerializeField]
+		private int m_SmallestTick = 0;
+
+		[SerializeField]
 		private int m_BiggestTick = -1;
-		private float m_MinValue;
+
+		[SerializeField]
+		private float m_MinValue = 0f;
+
+		[SerializeField]
 		private float m_MaxValue = 1f;
+
+		[SerializeField]
 		private float m_PixelRange = 1f;
+
 		public int tickLevels
 		{
 			get
@@ -20,10 +35,12 @@ namespace UnityEditor
 				return this.m_BiggestTick - this.m_SmallestTick + 1;
 			}
 		}
+
 		public void SetTickModulos(float[] tickModulos)
 		{
 			this.m_TickModulos = tickModulos;
 		}
+
 		public void SetTickModulosForFrameRate(float frameRate)
 		{
 			if (frameRate != Mathf.Round(frameRate))
@@ -60,57 +77,39 @@ namespace UnityEditor
 						num *= 2;
 						list.Add(num);
 					}
+					else if (num2 % 30 == 0)
+					{
+						num *= 3;
+						list.Add(num);
+					}
+					else if (num2 % 20 == 0)
+					{
+						num *= 2;
+						list.Add(num);
+					}
+					else if (num2 % 10 == 0)
+					{
+						num *= 2;
+						list.Add(num);
+					}
+					else if (num2 % 5 == 0)
+					{
+						num *= 5;
+						list.Add(num);
+					}
+					else if (num2 % 2 == 0)
+					{
+						num *= 2;
+						list.Add(num);
+					}
+					else if (num2 % 3 == 0)
+					{
+						num *= 3;
+						list.Add(num);
+					}
 					else
 					{
-						if (num2 % 30 == 0)
-						{
-							num *= 3;
-							list.Add(num);
-						}
-						else
-						{
-							if (num2 % 20 == 0)
-							{
-								num *= 2;
-								list.Add(num);
-							}
-							else
-							{
-								if (num2 % 10 == 0)
-								{
-									num *= 2;
-									list.Add(num);
-								}
-								else
-								{
-									if (num2 % 5 == 0)
-									{
-										num *= 5;
-										list.Add(num);
-									}
-									else
-									{
-										if (num2 % 2 == 0)
-										{
-											num *= 2;
-											list.Add(num);
-										}
-										else
-										{
-											if (num2 % 3 == 0)
-											{
-												num *= 3;
-												list.Add(num);
-											}
-											else
-											{
-												num = Mathf.RoundToInt(frameRate);
-											}
-										}
-									}
-								}
-							}
-						}
+						num = Mathf.RoundToInt(frameRate);
 					}
 				}
 				float[] array = new float[9 + list.Count];
@@ -130,47 +129,65 @@ namespace UnityEditor
 				this.SetTickModulos(array);
 			}
 		}
+
 		public void SetRanges(float minValue, float maxValue, float minPixel, float maxPixel)
 		{
 			this.m_MinValue = minValue;
 			this.m_MaxValue = maxValue;
 			this.m_PixelRange = maxPixel - minPixel;
 		}
+
 		public float[] GetTicksAtLevel(int level, bool excludeTicksFromHigherlevels)
 		{
-			int num = Mathf.Clamp(this.m_SmallestTick + level, 0, this.m_TickModulos.Length - 1);
-			List<float> list = new List<float>();
-			int num2 = Mathf.FloorToInt(this.m_MinValue / this.m_TickModulos[num]);
-			int num3 = Mathf.CeilToInt(this.m_MaxValue / this.m_TickModulos[num]);
-			for (int i = num2; i <= num3; i++)
+			float[] result;
+			if (level < 0)
 			{
-				if (!excludeTicksFromHigherlevels || num >= this.m_BiggestTick || i % Mathf.RoundToInt(this.m_TickModulos[num + 1] / this.m_TickModulos[num]) != 0)
-				{
-					list.Add((float)i * this.m_TickModulos[num]);
-				}
+				result = new float[0];
 			}
-			return list.ToArray();
+			else
+			{
+				int num = Mathf.Clamp(this.m_SmallestTick + level, 0, this.m_TickModulos.Length - 1);
+				List<float> list = new List<float>();
+				int num2 = Mathf.FloorToInt(this.m_MinValue / this.m_TickModulos[num]);
+				int num3 = Mathf.CeilToInt(this.m_MaxValue / this.m_TickModulos[num]);
+				for (int i = num2; i <= num3; i++)
+				{
+					if (!excludeTicksFromHigherlevels || num >= this.m_BiggestTick || i % Mathf.RoundToInt(this.m_TickModulos[num + 1] / this.m_TickModulos[num]) != 0)
+					{
+						list.Add((float)i * this.m_TickModulos[num]);
+					}
+				}
+				result = list.ToArray();
+			}
+			return result;
 		}
+
 		public float GetStrengthOfLevel(int level)
 		{
 			return this.m_TickStrengths[this.m_SmallestTick + level];
 		}
+
 		public float GetPeriodOfLevel(int level)
 		{
 			return this.m_TickModulos[Mathf.Clamp(this.m_SmallestTick + level, 0, this.m_TickModulos.Length - 1)];
 		}
+
 		public int GetLevelWithMinSeparation(float pixelSeparation)
 		{
+			int result;
 			for (int i = 0; i < this.m_TickModulos.Length; i++)
 			{
 				float num = this.m_TickModulos[i] * this.m_PixelRange / (this.m_MaxValue - this.m_MinValue);
 				if (num >= pixelSeparation)
 				{
-					return i - this.m_SmallestTick;
+					result = i - this.m_SmallestTick;
+					return result;
 				}
 			}
-			return -1;
+			result = -1;
+			return result;
 		}
+
 		public void SetTickStrengths(float tickMinSpacing, float tickMaxSpacing, bool sqrt)
 		{
 			this.m_TickStrengths = new float[this.m_TickModulos.Length];

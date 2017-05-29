@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class LayerVisibilityWindow : EditorWindow
@@ -9,15 +10,25 @@ namespace UnityEditor
 		private class Styles
 		{
 			public readonly GUIStyle background = "grey_border";
+
 			public readonly GUIStyle menuItem = "MenuItem";
+
 			public readonly GUIStyle listEvenBg = "ObjectPickerResultsOdd";
+
 			public readonly GUIStyle listOddBg = "ObjectPickerResultsEven";
+
 			public readonly GUIStyle separator = "sv_iconselector_sep";
+
 			public readonly GUIStyle lockButton = "IN LockButton";
+
 			public readonly GUIStyle listTextStyle;
+
 			public readonly GUIStyle listHeaderStyle;
+
 			public readonly Texture2D visibleOn = EditorGUIUtility.LoadIcon("animationvisibilitytoggleon");
+
 			public readonly Texture2D visibleOff = EditorGUIUtility.LoadIcon("animationvisibilitytoggleoff");
+
 			public Styles()
 			{
 				this.listTextStyle = new GUIStyle(EditorStyles.label);
@@ -27,25 +38,35 @@ namespace UnityEditor
 				this.listHeaderStyle.padding.left = 5;
 			}
 		}
+
 		private const float kScrollBarWidth = 14f;
+
 		private const float kFrameWidth = 1f;
+
 		private const float kToggleSize = 17f;
+
 		private const float kSeparatorHeight = 6f;
+
 		private const string kLayerVisible = "Show/Hide Layer";
+
 		private const string kLayerLocked = "Lock Layer for Picking";
+
 		private static LayerVisibilityWindow s_LayerVisibilityWindow;
+
 		private static long s_LastClosedTime;
+
 		private static LayerVisibilityWindow.Styles s_Styles;
+
 		private List<string> s_LayerNames;
+
 		private List<int> s_LayerMasks;
+
 		private int m_AllLayersMask;
+
 		private float m_ContentHeight;
+
 		private Vector2 m_ScrollPosition;
-		private LayerVisibilityWindow()
-		{
-			base.hideFlags = HideFlags.DontSave;
-			base.wantsMouseMove = true;
-		}
+
 		private void CalcValidLayers()
 		{
 			this.s_LayerNames = new List<string>();
@@ -62,14 +83,23 @@ namespace UnityEditor
 				}
 			}
 		}
+
+		internal void OnEnable()
+		{
+			base.hideFlags = HideFlags.DontSave;
+			base.wantsMouseMove = true;
+		}
+
 		internal void OnDisable()
 		{
 			LayerVisibilityWindow.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
 			LayerVisibilityWindow.s_LayerVisibilityWindow = null;
 		}
+
 		internal static bool ShowAtPosition(Rect buttonRect)
 		{
 			long num = DateTime.Now.Ticks / 10000L;
+			bool result;
 			if (num >= LayerVisibilityWindow.s_LastClosedTime + 50L)
 			{
 				Event.current.Use();
@@ -78,10 +108,15 @@ namespace UnityEditor
 					LayerVisibilityWindow.s_LayerVisibilityWindow = ScriptableObject.CreateInstance<LayerVisibilityWindow>();
 				}
 				LayerVisibilityWindow.s_LayerVisibilityWindow.Init(buttonRect);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
+
 		private void Init(Rect buttonRect)
 		{
 			buttonRect = GUIUtility.GUIToScreenRect(buttonRect);
@@ -100,43 +135,45 @@ namespace UnityEditor
 			Vector2 windowSize = new Vector2(180f, num2);
 			base.ShowAsDropDown(buttonRect, windowSize);
 		}
+
 		internal void OnGUI()
 		{
-			if (Event.current.type == EventType.Layout)
+			if (Event.current.type != EventType.Layout)
 			{
-				return;
-			}
-			if (LayerVisibilityWindow.s_Styles == null)
-			{
-				LayerVisibilityWindow.s_Styles = new LayerVisibilityWindow.Styles();
-			}
-			Rect position = new Rect(1f, 1f, base.position.width - 2f, base.position.height - 2f);
-			Rect viewRect = new Rect(0f, 0f, 1f, this.m_ContentHeight);
-			bool flag = this.m_ContentHeight > position.height;
-			float num = position.width;
-			if (flag)
-			{
-				num -= 14f;
-			}
-			this.m_ScrollPosition = GUI.BeginScrollView(position, this.m_ScrollPosition, viewRect);
-			this.Draw(num);
-			GUI.EndScrollView();
-			GUI.Label(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, LayerVisibilityWindow.s_Styles.background);
-			if (Event.current.type == EventType.MouseMove)
-			{
-				Event.current.Use();
-			}
-			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
-			{
-				base.Close();
-				GUIUtility.ExitGUI();
+				if (LayerVisibilityWindow.s_Styles == null)
+				{
+					LayerVisibilityWindow.s_Styles = new LayerVisibilityWindow.Styles();
+				}
+				Rect position = new Rect(1f, 1f, base.position.width - 2f, base.position.height - 2f);
+				Rect viewRect = new Rect(0f, 0f, 1f, this.m_ContentHeight);
+				bool flag = this.m_ContentHeight > position.height;
+				float num = position.width;
+				if (flag)
+				{
+					num -= 14f;
+				}
+				this.m_ScrollPosition = GUI.BeginScrollView(position, this.m_ScrollPosition, viewRect);
+				this.Draw(num);
+				GUI.EndScrollView();
+				GUI.Label(new Rect(0f, 0f, base.position.width, base.position.height), GUIContent.none, LayerVisibilityWindow.s_Styles.background);
+				if (Event.current.type == EventType.MouseMove)
+				{
+					Event.current.Use();
+				}
+				if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+				{
+					base.Close();
+					GUIUtility.ExitGUI();
+				}
 			}
 		}
+
 		private void DrawListBackground(Rect rect, bool even)
 		{
 			GUIStyle style = (!even) ? LayerVisibilityWindow.s_Styles.listOddBg : LayerVisibilityWindow.s_Styles.listEvenBg;
 			GUI.Label(rect, GUIContent.none, style);
 		}
+
 		private void DrawHeader(ref Rect rect, string text, ref bool even)
 		{
 			this.DrawListBackground(rect, even);
@@ -144,12 +181,14 @@ namespace UnityEditor
 			rect.y += 16f;
 			even = !even;
 		}
+
 		private void DrawSeparator(ref Rect rect, bool even)
 		{
 			this.DrawListBackground(new Rect(rect.x + 1f, rect.y, rect.width - 2f, 6f), even);
 			GUI.Label(new Rect(rect.x + 5f, rect.y + 3f, rect.width - 10f, 3f), GUIContent.none, LayerVisibilityWindow.s_Styles.separator);
 			rect.y += 6f;
 		}
+
 		private void Draw(float listElementWidth)
 		{
 			Rect rect = new Rect(0f, 0f, listElementWidth, 16f);
@@ -184,6 +223,7 @@ namespace UnityEditor
 				GUIUtility.ExitGUI();
 			}
 		}
+
 		private void DoSpecialLayer(Rect rect, bool all, ref bool even)
 		{
 			int visibleLayers = Tools.visibleLayers;
@@ -199,6 +239,7 @@ namespace UnityEditor
 			}
 			even = !even;
 		}
+
 		private void DoOneLayer(Rect rect, int index, ref bool even)
 		{
 			int visibleLayers = Tools.visibleLayers;
@@ -220,6 +261,7 @@ namespace UnityEditor
 			}
 			even = !even;
 		}
+
 		private void DoOneSortingLayer(Rect rect, int index, ref bool even)
 		{
 			bool sortingLayerLocked = InternalEditorUtility.GetSortingLayerLocked(index);
@@ -232,6 +274,7 @@ namespace UnityEditor
 			}
 			even = !even;
 		}
+
 		private void DoLayerEntry(Rect rect, string layerName, bool even, bool showVisible, bool showLock, bool visible, bool locked, out bool visibleChanged, out bool lockedChanged)
 		{
 			this.DrawListBackground(rect, even);
@@ -271,6 +314,7 @@ namespace UnityEditor
 				lockedChanged = EditorGUI.EndChangeCheck();
 			}
 		}
+
 		private static void RepaintAllSceneViews()
 		{
 			UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(SceneView));

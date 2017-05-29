@@ -1,11 +1,22 @@
 using System;
+
 namespace UnityEditor
 {
 	public enum TextureImporterFormat
 	{
+		Automatic = -1,
+		[Obsolete("Use textureCompression property instead")]
 		AutomaticCompressed = -1,
+		[Obsolete("Use textureCompression property instead")]
 		Automatic16bit = -2,
+		[Obsolete("Use textureCompression property instead")]
 		AutomaticTruecolor = -3,
+		[Obsolete("Use crunchedCompression property instead")]
+		AutomaticCrunched = -5,
+		[Obsolete("HDR is handled automatically now")]
+		AutomaticHDR = -6,
+		[Obsolete("HDR is handled automatically now")]
+		AutomaticCompressedHDR = -7,
 		DXT1 = 10,
 		DXT5 = 12,
 		RGB16 = 7,
@@ -15,7 +26,14 @@ namespace UnityEditor
 		RGBA32 = 4,
 		ARGB32,
 		RGBA16 = 13,
-		PVRTC_RGB2 = 30,
+		RGBAHalf = 17,
+		BC4 = 26,
+		BC5,
+		BC6H = 24,
+		BC7,
+		DXT1Crunched = 28,
+		DXT5Crunched,
+		PVRTC_RGB2,
 		PVRTC_RGBA2,
 		PVRTC_RGB4,
 		PVRTC_RGBA4,

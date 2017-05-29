@@ -2,90 +2,107 @@ using System;
 using System.Collections;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	public sealed class DragAndDrop
 	{
 		private static Hashtable ms_GenericData;
+
 		public static extern UnityEngine.Object[] objectReferences
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern string[] paths
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern DragAndDropVisualMode visualMode
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern int activeControlID
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal static bool HandleDelayedDrag(Rect position, int id, UnityEngine.Object objectToDrag)
 		{
 			Event current = Event.current;
-			switch (current.GetTypeForControl(id))
+			EventType typeForControl = current.GetTypeForControl(id);
+			bool result;
+			if (typeForControl != EventType.MouseDown)
 			{
-			case EventType.MouseDown:
-				if (position.Contains(current.mousePosition) && current.clickCount == 1 && current.button == 0 && (Application.platform != RuntimePlatform.OSXEditor || !current.control))
+				if (typeForControl == EventType.MouseDrag)
 				{
-					GUIUtility.hotControl = id;
-					DragAndDropDelay dragAndDropDelay = (DragAndDropDelay)GUIUtility.GetStateObject(typeof(DragAndDropDelay), id);
-					dragAndDropDelay.mouseDownPosition = current.mousePosition;
-					return true;
-				}
-				break;
-			case EventType.MouseDrag:
-				if (GUIUtility.hotControl == id)
-				{
-					DragAndDropDelay dragAndDropDelay2 = (DragAndDropDelay)GUIUtility.GetStateObject(typeof(DragAndDropDelay), id);
-					if (dragAndDropDelay2.CanStartDrag())
+					if (GUIUtility.hotControl == id)
 					{
-						GUIUtility.hotControl = 0;
-						DragAndDrop.PrepareStartDrag();
-						UnityEngine.Object[] objectReferences = new UnityEngine.Object[]
+						DragAndDropDelay dragAndDropDelay = (DragAndDropDelay)GUIUtility.GetStateObject(typeof(DragAndDropDelay), id);
+						if (dragAndDropDelay.CanStartDrag())
 						{
-							objectToDrag
-						};
-						DragAndDrop.objectReferences = objectReferences;
-						DragAndDrop.StartDrag(ObjectNames.GetDragAndDropTitle(objectToDrag));
-						return true;
+							GUIUtility.hotControl = 0;
+							DragAndDrop.PrepareStartDrag();
+							UnityEngine.Object[] objectReferences = new UnityEngine.Object[]
+							{
+								objectToDrag
+							};
+							DragAndDrop.objectReferences = objectReferences;
+							DragAndDrop.StartDrag(ObjectNames.GetDragAndDropTitle(objectToDrag));
+							result = true;
+							return result;
+						}
 					}
 				}
-				break;
 			}
-			return false;
+			else if (position.Contains(current.mousePosition) && current.clickCount == 1)
+			{
+				if (current.button == 0 && (Application.platform != RuntimePlatform.OSXEditor || !current.control))
+				{
+					GUIUtility.hotControl = id;
+					DragAndDropDelay dragAndDropDelay2 = (DragAndDropDelay)GUIUtility.GetStateObject(typeof(DragAndDropDelay), id);
+					dragAndDropDelay2.mouseDownPosition = current.mousePosition;
+					result = true;
+					return result;
+				}
+			}
+			result = false;
+			return result;
 		}
+
 		public static void PrepareStartDrag()
 		{
 			DragAndDrop.ms_GenericData = null;
 			DragAndDrop.PrepareStartDrag_Internal();
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void PrepareStartDrag_Internal();
+
 		public static void StartDrag(string title)
 		{
 			if (Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseDrag)
@@ -97,20 +114,29 @@ namespace UnityEditor
 				Debug.LogError("Drags can only be started from MouseDown or MouseDrag events");
 			}
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void StartDrag_Internal(string title);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void AcceptDrag();
+
 		public static object GetGenericData(string type)
 		{
+			object result;
 			if (DragAndDrop.ms_GenericData != null && DragAndDrop.ms_GenericData.Contains(type))
 			{
-				return DragAndDrop.ms_GenericData[type];
+				result = DragAndDrop.ms_GenericData[type];
 			}
-			return null;
+			else
+			{
+				result = null;
+			}
+			return result;
 		}
+
 		public static void SetGenericData(string type, object data)
 		{
 			if (DragAndDrop.ms_GenericData == null)

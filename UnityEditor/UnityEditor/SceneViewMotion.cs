@@ -1,139 +1,164 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SceneViewMotion
 	{
-		private const float kFlyAcceleration = 1.8f;
+		private enum MotionState
+		{
+			kInactive,
+			kActive,
+			kDragging
+		}
+
 		private static Vector3 s_Motion;
+
 		private static float s_FlySpeed = 0f;
+
+		private const float kFlyAcceleration = 1.8f;
+
 		private static float s_StartZoom = 0f;
+
 		private static float s_ZoomSpeed = 0f;
+
 		private static float s_TotalMotion = 0f;
-		private static bool s_Dragged = false;
+
+		private static SceneViewMotion.MotionState s_CurrentState;
+
 		private static int s_ViewToolID = GUIUtility.GetPermanentControlID();
+
 		private static PrefKey kFPSForward = new PrefKey("View/FPS Forward", "w");
+
 		private static PrefKey kFPSBack = new PrefKey("View/FPS Back", "s");
+
 		private static PrefKey kFPSLeft = new PrefKey("View/FPS Strafe Left", "a");
+
 		private static PrefKey kFPSRight = new PrefKey("View/FPS Strafe Right", "d");
+
 		private static PrefKey kFPSUp = new PrefKey("View/FPS Strafe Up", "e");
+
 		private static PrefKey kFPSDown = new PrefKey("View/FPS Strafe Down", "q");
+
 		private static TimeHelper s_FPSTiming = default(TimeHelper);
+
 		public static void ArrowKeys(SceneView sv)
 		{
 			Event current = Event.current;
 			int controlID = GUIUtility.GetControlID(FocusType.Passive);
 			if (GUIUtility.hotControl == 0 || GUIUtility.hotControl == controlID)
 			{
-				if (EditorGUI.actionKey)
+				if (!EditorGUI.actionKey)
 				{
-					return;
-				}
-				switch (current.GetTypeForControl(controlID))
-				{
-				case EventType.KeyDown:
-					switch (current.keyCode)
+					EventType typeForControl = current.GetTypeForControl(controlID);
+					if (typeForControl != EventType.KeyDown)
 					{
-					case KeyCode.UpArrow:
-						sv.viewIsLockedToObject = false;
-						if (sv.m_Ortho.value)
+						if (typeForControl != EventType.KeyUp)
 						{
-							SceneViewMotion.s_Motion.y = 1f;
+							if (typeForControl == EventType.Layout)
+							{
+								if (GUIUtility.hotControl == controlID)
+								{
+									Vector3 forward;
+									if (!sv.m_Ortho.value)
+									{
+										forward = Camera.current.transform.forward + Camera.current.transform.up * 0.3f;
+										forward.y = 0f;
+										forward.Normalize();
+									}
+									else
+									{
+										forward = Camera.current.transform.forward;
+									}
+									Vector3 movementDirection = SceneViewMotion.GetMovementDirection();
+									sv.LookAtDirect(sv.pivot + Quaternion.LookRotation(forward) * movementDirection, sv.rotation);
+									if (SceneViewMotion.s_Motion.sqrMagnitude == 0f)
+									{
+										sv.pivot = sv.pivot;
+										SceneViewMotion.s_FlySpeed = 0f;
+										GUIUtility.hotControl = 0;
+									}
+									else
+									{
+										sv.Repaint();
+									}
+								}
+							}
 						}
-						else
+						else if (GUIUtility.hotControl == controlID)
 						{
-							SceneViewMotion.s_Motion.z = 1f;
+							switch (current.keyCode)
+							{
+							case KeyCode.UpArrow:
+							case KeyCode.DownArrow:
+								SceneViewMotion.s_Motion.z = 0f;
+								SceneViewMotion.s_Motion.y = 0f;
+								current.Use();
+								break;
+							case KeyCode.RightArrow:
+							case KeyCode.LeftArrow:
+								SceneViewMotion.s_Motion.x = 0f;
+								current.Use();
+								break;
+							}
 						}
-						GUIUtility.hotControl = controlID;
-						current.Use();
-						break;
-					case KeyCode.DownArrow:
-						sv.viewIsLockedToObject = false;
-						if (sv.m_Ortho.value)
-						{
-							SceneViewMotion.s_Motion.y = -1f;
-						}
-						else
-						{
-							SceneViewMotion.s_Motion.z = -1f;
-						}
-						GUIUtility.hotControl = controlID;
-						current.Use();
-						break;
-					case KeyCode.RightArrow:
-						sv.viewIsLockedToObject = false;
-						SceneViewMotion.s_Motion.x = 1f;
-						GUIUtility.hotControl = controlID;
-						current.Use();
-						break;
-					case KeyCode.LeftArrow:
-						sv.viewIsLockedToObject = false;
-						SceneViewMotion.s_Motion.x = -1f;
-						GUIUtility.hotControl = controlID;
-						current.Use();
-						break;
 					}
-					break;
-				case EventType.KeyUp:
-					if (GUIUtility.hotControl == controlID)
+					else
 					{
 						switch (current.keyCode)
 						{
 						case KeyCode.UpArrow:
+							sv.viewIsLockedToObject = false;
+							if (sv.m_Ortho.value)
+							{
+								SceneViewMotion.s_Motion.y = 1f;
+							}
+							else
+							{
+								SceneViewMotion.s_Motion.z = 1f;
+							}
+							GUIUtility.hotControl = controlID;
+							current.Use();
+							break;
 						case KeyCode.DownArrow:
-							SceneViewMotion.s_Motion.z = 0f;
-							SceneViewMotion.s_Motion.y = 0f;
+							sv.viewIsLockedToObject = false;
+							if (sv.m_Ortho.value)
+							{
+								SceneViewMotion.s_Motion.y = -1f;
+							}
+							else
+							{
+								SceneViewMotion.s_Motion.z = -1f;
+							}
+							GUIUtility.hotControl = controlID;
 							current.Use();
 							break;
 						case KeyCode.RightArrow:
+							sv.viewIsLockedToObject = false;
+							SceneViewMotion.s_Motion.x = 1f;
+							GUIUtility.hotControl = controlID;
+							current.Use();
+							break;
 						case KeyCode.LeftArrow:
-							SceneViewMotion.s_Motion.x = 0f;
+							sv.viewIsLockedToObject = false;
+							SceneViewMotion.s_Motion.x = -1f;
+							GUIUtility.hotControl = controlID;
 							current.Use();
 							break;
 						}
 					}
-					break;
-				case EventType.Layout:
-					if (GUIUtility.hotControl == controlID)
-					{
-						Vector3 forward;
-						if (!sv.m_Ortho.value)
-						{
-							forward = Camera.current.transform.forward + Camera.current.transform.up * 0.3f;
-							forward.y = 0f;
-							forward.Normalize();
-						}
-						else
-						{
-							forward = Camera.current.transform.forward;
-						}
-						Vector3 movementDirection = SceneViewMotion.GetMovementDirection();
-						sv.LookAtDirect(sv.pivot + Quaternion.LookRotation(forward) * movementDirection, sv.rotation);
-						if (SceneViewMotion.s_Motion.sqrMagnitude == 0f)
-						{
-							sv.pivot = sv.pivot;
-							SceneViewMotion.s_FlySpeed = 0f;
-							GUIUtility.hotControl = 0;
-						}
-						else
-						{
-							sv.Repaint();
-						}
-					}
-					break;
 				}
 			}
 		}
-		public static void DoViewTool(Transform cameraTransform, SceneView view)
+
+		public static void DoViewTool(SceneView view)
 		{
 			Event current = Event.current;
 			int num = SceneViewMotion.s_ViewToolID;
 			EventType typeForControl = current.GetTypeForControl(num);
-			float d = 0f;
 			if (view && Tools.s_LockedViewTool == ViewTool.FPS)
 			{
 				view.FixNegativeSize();
-				d = (view.pivot - cameraTransform.position).magnitude;
 			}
 			switch (typeForControl)
 			{
@@ -144,7 +169,7 @@ namespace UnityEditor
 				SceneViewMotion.HandleMouseUp(view, num, current.button, current.clickCount);
 				break;
 			case EventType.MouseDrag:
-				SceneViewMotion.HandleMouseDrag(cameraTransform, view, num);
+				SceneViewMotion.HandleMouseDrag(view, num);
 				break;
 			case EventType.KeyDown:
 				SceneViewMotion.HandleKeyDown(view);
@@ -160,43 +185,48 @@ namespace UnityEditor
 				Vector3 movementDirection = SceneViewMotion.GetMovementDirection();
 				if (GUIUtility.hotControl == num && movementDirection.sqrMagnitude != 0f)
 				{
-					cameraTransform.position += cameraTransform.rotation * movementDirection;
+					view.pivot += view.rotation * movementDirection;
+					view.Repaint();
 				}
 				break;
 			}
-			}
-			if (view && Tools.s_LockedViewTool == ViewTool.FPS)
-			{
-				if (!view.orthographic)
+			case EventType.Used:
+				if (GUIUtility.hotControl != num && SceneViewMotion.s_CurrentState != SceneViewMotion.MotionState.kInactive)
 				{
-					view.rotation = cameraTransform.rotation;
+					SceneViewMotion.ResetDragState();
 				}
-				view.pivot = cameraTransform.position + cameraTransform.forward * d;
-				view.Repaint();
+				break;
 			}
 		}
+
 		private static Vector3 GetMovementDirection()
 		{
 			float num = SceneViewMotion.s_FPSTiming.Update();
+			Vector3 result;
 			if (SceneViewMotion.s_Motion.sqrMagnitude == 0f)
 			{
 				SceneViewMotion.s_FlySpeed = 0f;
-				return Vector3.zero;
-			}
-			float d = (float)((!Event.current.shift) ? 1 : 5);
-			if (SceneViewMotion.s_FlySpeed == 0f)
-			{
-				SceneViewMotion.s_FlySpeed = 9f;
+				result = Vector3.zero;
 			}
 			else
 			{
-				SceneViewMotion.s_FlySpeed *= Mathf.Pow(1.8f, num);
+				float d = (float)((!Event.current.shift) ? 1 : 5);
+				if (SceneViewMotion.s_FlySpeed == 0f)
+				{
+					SceneViewMotion.s_FlySpeed = 9f;
+				}
+				else
+				{
+					SceneViewMotion.s_FlySpeed *= Mathf.Pow(1.8f, num);
+				}
+				result = SceneViewMotion.s_Motion.normalized * SceneViewMotion.s_FlySpeed * d * num;
 			}
-			return SceneViewMotion.s_Motion.normalized * SceneViewMotion.s_FlySpeed * d * num;
+			return result;
 		}
+
 		private static void HandleMouseDown(SceneView view, int id, int button)
 		{
-			SceneViewMotion.s_Dragged = false;
+			SceneViewMotion.s_CurrentState = SceneViewMotion.MotionState.kInactive;
 			if (Tools.viewToolActive)
 			{
 				ViewTool viewTool = Tools.viewTool;
@@ -218,13 +248,15 @@ namespace UnityEditor
 					}
 					EditorGUIUtility.SetWantsMouseJumping(1);
 					current.Use();
+					SceneViewMotion.s_CurrentState = SceneViewMotion.MotionState.kActive;
 					GUIUtility.ExitGUI();
 				}
 			}
 		}
+
 		private static void ResetDragState()
 		{
-			GUIUtility.hotControl = 0;
+			SceneViewMotion.s_CurrentState = SceneViewMotion.MotionState.kInactive;
 			Tools.s_LockedViewTool = ViewTool.None;
 			Tools.s_ButtonDown = -1;
 			SceneViewMotion.s_Motion = Vector3.zero;
@@ -234,57 +266,90 @@ namespace UnityEditor
 			}
 			EditorGUIUtility.SetWantsMouseJumping(0);
 		}
+
 		private static void HandleMouseUp(SceneView view, int id, int button, int clickCount)
 		{
 			if (GUIUtility.hotControl == id)
 			{
-				SceneViewMotion.ResetDragState();
-				RaycastHit raycastHit;
-				if (button == 2 && !SceneViewMotion.s_Dragged && SceneViewMotion.RaycastWorld(Event.current.mousePosition, out raycastHit))
+				GUIUtility.hotControl = 0;
+				if (button == 2 && SceneViewMotion.s_CurrentState != SceneViewMotion.MotionState.kDragging)
 				{
-					Vector3 b = view.pivot - view.rotation * Vector3.forward * view.cameraDistance;
-					float newSize = view.size;
-					if (!view.orthographic)
+					RaycastHit raycastHit;
+					if (SceneViewMotion.RaycastWorld(Event.current.mousePosition, out raycastHit))
 					{
-						newSize = view.size * Vector3.Dot(raycastHit.point - b, view.rotation * Vector3.forward) / view.cameraDistance;
+						Vector3 b = view.pivot - view.rotation * Vector3.forward * view.cameraDistance;
+						float newSize = view.size;
+						if (!view.orthographic)
+						{
+							newSize = view.size * Vector3.Dot(raycastHit.point - b, view.rotation * Vector3.forward) / view.cameraDistance;
+						}
+						view.LookAt(raycastHit.point, view.rotation, newSize);
 					}
-					view.LookAt(raycastHit.point, view.rotation, newSize);
 				}
+				SceneViewMotion.ResetDragState();
 				Event.current.Use();
 			}
 		}
+
 		private static bool RaycastWorld(Vector2 position, out RaycastHit hit)
 		{
 			hit = default(RaycastHit);
 			GameObject gameObject = HandleUtility.PickGameObject(position, false);
+			bool result;
 			if (!gameObject)
 			{
-				return false;
+				result = false;
 			}
-			Ray ray = HandleUtility.GUIPointToWorldRay(position);
-			MeshFilter[] componentsInChildren = gameObject.GetComponentsInChildren<MeshFilter>();
-			float num = float.PositiveInfinity;
-			MeshFilter[] array = componentsInChildren;
-			for (int i = 0; i < array.Length; i++)
+			else
 			{
-				MeshFilter meshFilter = array[i];
-				Mesh sharedMesh = meshFilter.sharedMesh;
-				if (sharedMesh)
+				Ray ray = HandleUtility.GUIPointToWorldRay(position);
+				MeshFilter[] componentsInChildren = gameObject.GetComponentsInChildren<MeshFilter>();
+				float num = float.PositiveInfinity;
+				MeshFilter[] array = componentsInChildren;
+				for (int i = 0; i < array.Length; i++)
 				{
-					RaycastHit raycastHit;
-					if (HandleUtility.IntersectRayMesh(ray, sharedMesh, meshFilter.transform.localToWorldMatrix, out raycastHit) && raycastHit.distance < num)
+					MeshFilter meshFilter = array[i];
+					Mesh sharedMesh = meshFilter.sharedMesh;
+					if (sharedMesh)
 					{
-						hit = raycastHit;
-						num = hit.distance;
+						RaycastHit raycastHit;
+						if (HandleUtility.IntersectRayMesh(ray, sharedMesh, meshFilter.transform.localToWorldMatrix, out raycastHit))
+						{
+							if (raycastHit.distance < num)
+							{
+								hit = raycastHit;
+								num = hit.distance;
+							}
+						}
 					}
 				}
+				if (num == float.PositiveInfinity)
+				{
+					Collider[] componentsInChildren2 = gameObject.GetComponentsInChildren<Collider>();
+					Collider[] array2 = componentsInChildren2;
+					for (int j = 0; j < array2.Length; j++)
+					{
+						Collider collider = array2[j];
+						RaycastHit raycastHit2;
+						if (collider.Raycast(ray, out raycastHit2, float.PositiveInfinity))
+						{
+							if (raycastHit2.distance < num)
+							{
+								hit = raycastHit2;
+								num = hit.distance;
+							}
+						}
+					}
+				}
+				if (num == float.PositiveInfinity)
+				{
+					hit.point = Vector3.Project(gameObject.transform.position - ray.origin, ray.direction) + ray.origin;
+				}
+				result = true;
 			}
-			if (num == float.PositiveInfinity)
-			{
-				hit.point = Vector3.Project(gameObject.transform.position - ray.origin, ray.direction) + ray.origin;
-			}
-			return true;
+			return result;
 		}
+
 		private static void OrbitCameraBehavior(SceneView view)
 		{
 			Event current = Event.current;
@@ -299,16 +364,17 @@ namespace UnityEditor
 			}
 			view.rotation = quaternion;
 		}
-		private static void HandleMouseDrag(Transform cameraTransform, SceneView view, int id)
+
+		private static void HandleMouseDrag(SceneView view, int id)
 		{
-			SceneViewMotion.s_Dragged = true;
+			SceneViewMotion.s_CurrentState = SceneViewMotion.MotionState.kDragging;
 			if (GUIUtility.hotControl == id)
 			{
 				Event current = Event.current;
 				switch (Tools.s_LockedViewTool)
 				{
 				case ViewTool.Orbit:
-					if (!view.in2DMode)
+					if (!view.in2DMode && !view.isRotationLocked)
 					{
 						SceneViewMotion.OrbitCameraBehavior(view);
 						view.svRot.UpdateGizmoLabel(view, view.rotation * Vector3.forward, view.m_Ortho.target);
@@ -322,6 +388,7 @@ namespace UnityEditor
 					Vector3 vector = camera.WorldToScreenPoint(view.pivot);
 					vector += new Vector3(-Event.current.delta.x, Event.current.delta.y, 0f);
 					Vector3 vector2 = Camera.current.ScreenToWorldPoint(vector) - view.pivot;
+					vector2 *= EditorGUIUtility.pixelsPerPoint;
 					if (current.shift)
 					{
 						vector2 *= 4f;
@@ -351,15 +418,17 @@ namespace UnityEditor
 					break;
 				}
 				case ViewTool.FPS:
-					if (!view.in2DMode)
+					if (!view.in2DMode && !view.isRotationLocked)
 					{
 						if (!view.orthographic)
 						{
 							view.viewIsLockedToObject = false;
-							Quaternion quaternion = cameraTransform.rotation;
+							Vector3 a = view.pivot - view.rotation * Vector3.forward * view.cameraDistance;
+							Quaternion quaternion = view.rotation;
 							quaternion = Quaternion.AngleAxis(current.delta.y * 0.003f * 57.29578f, quaternion * Vector3.right) * quaternion;
 							quaternion = Quaternion.AngleAxis(current.delta.x * 0.003f * 57.29578f, Vector3.up) * quaternion;
-							cameraTransform.rotation = quaternion;
+							view.rotation = quaternion;
+							view.pivot = a + quaternion * Vector3.forward * view.cameraDistance;
 						}
 						else
 						{
@@ -375,10 +444,12 @@ namespace UnityEditor
 				current.Use();
 			}
 		}
+
 		private static void HandleKeyDown(SceneView sceneView)
 		{
 			if (Event.current.keyCode == KeyCode.Escape && GUIUtility.hotControl == SceneViewMotion.s_ViewToolID)
 			{
+				GUIUtility.hotControl = 0;
 				SceneViewMotion.ResetDragState();
 			}
 			if (Tools.s_LockedViewTool == ViewTool.FPS)
@@ -391,50 +462,35 @@ namespace UnityEditor
 					SceneViewMotion.s_Motion.z = 1f;
 					current.Use();
 				}
-				else
+				else if (current.keyCode == SceneViewMotion.kFPSBack.keyCode)
 				{
-					if (current.keyCode == SceneViewMotion.kFPSBack.keyCode)
-					{
-						sceneView.viewIsLockedToObject = false;
-						SceneViewMotion.s_Motion.z = -1f;
-						current.Use();
-					}
-					else
-					{
-						if (current.keyCode == SceneViewMotion.kFPSLeft.keyCode)
-						{
-							sceneView.viewIsLockedToObject = false;
-							SceneViewMotion.s_Motion.x = -1f;
-							current.Use();
-						}
-						else
-						{
-							if (current.keyCode == SceneViewMotion.kFPSRight.keyCode)
-							{
-								sceneView.viewIsLockedToObject = false;
-								SceneViewMotion.s_Motion.x = 1f;
-								current.Use();
-							}
-							else
-							{
-								if (current.keyCode == SceneViewMotion.kFPSUp.keyCode)
-								{
-									sceneView.viewIsLockedToObject = false;
-									SceneViewMotion.s_Motion.y = 1f;
-									current.Use();
-								}
-								else
-								{
-									if (current.keyCode == SceneViewMotion.kFPSDown.keyCode)
-									{
-										sceneView.viewIsLockedToObject = false;
-										SceneViewMotion.s_Motion.y = -1f;
-										current.Use();
-									}
-								}
-							}
-						}
-					}
+					sceneView.viewIsLockedToObject = false;
+					SceneViewMotion.s_Motion.z = -1f;
+					current.Use();
+				}
+				else if (current.keyCode == SceneViewMotion.kFPSLeft.keyCode)
+				{
+					sceneView.viewIsLockedToObject = false;
+					SceneViewMotion.s_Motion.x = -1f;
+					current.Use();
+				}
+				else if (current.keyCode == SceneViewMotion.kFPSRight.keyCode)
+				{
+					sceneView.viewIsLockedToObject = false;
+					SceneViewMotion.s_Motion.x = 1f;
+					current.Use();
+				}
+				else if (current.keyCode == SceneViewMotion.kFPSUp.keyCode)
+				{
+					sceneView.viewIsLockedToObject = false;
+					SceneViewMotion.s_Motion.y = 1f;
+					current.Use();
+				}
+				else if (current.keyCode == SceneViewMotion.kFPSDown.keyCode)
+				{
+					sceneView.viewIsLockedToObject = false;
+					SceneViewMotion.s_Motion.y = -1f;
+					current.Use();
 				}
 				if (current.type != EventType.KeyDown && vector.sqrMagnitude == 0f)
 				{
@@ -442,6 +498,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private static void HandleKeyUp()
 		{
 			if (Tools.s_LockedViewTool == ViewTool.FPS)
@@ -452,48 +509,34 @@ namespace UnityEditor
 					SceneViewMotion.s_Motion.z = 0f;
 					current.Use();
 				}
-				else
+				else if (current.keyCode == SceneViewMotion.kFPSBack.keyCode)
 				{
-					if (current.keyCode == SceneViewMotion.kFPSBack.keyCode)
-					{
-						SceneViewMotion.s_Motion.z = 0f;
-						current.Use();
-					}
-					else
-					{
-						if (current.keyCode == SceneViewMotion.kFPSLeft.keyCode)
-						{
-							SceneViewMotion.s_Motion.x = 0f;
-							current.Use();
-						}
-						else
-						{
-							if (current.keyCode == SceneViewMotion.kFPSRight.keyCode)
-							{
-								SceneViewMotion.s_Motion.x = 0f;
-								current.Use();
-							}
-							else
-							{
-								if (current.keyCode == SceneViewMotion.kFPSUp.keyCode)
-								{
-									SceneViewMotion.s_Motion.y = 0f;
-									current.Use();
-								}
-								else
-								{
-									if (current.keyCode == SceneViewMotion.kFPSDown.keyCode)
-									{
-										SceneViewMotion.s_Motion.y = 0f;
-										current.Use();
-									}
-								}
-							}
-						}
-					}
+					SceneViewMotion.s_Motion.z = 0f;
+					current.Use();
+				}
+				else if (current.keyCode == SceneViewMotion.kFPSLeft.keyCode)
+				{
+					SceneViewMotion.s_Motion.x = 0f;
+					current.Use();
+				}
+				else if (current.keyCode == SceneViewMotion.kFPSRight.keyCode)
+				{
+					SceneViewMotion.s_Motion.x = 0f;
+					current.Use();
+				}
+				else if (current.keyCode == SceneViewMotion.kFPSUp.keyCode)
+				{
+					SceneViewMotion.s_Motion.y = 0f;
+					current.Use();
+				}
+				else if (current.keyCode == SceneViewMotion.kFPSDown.keyCode)
+				{
+					SceneViewMotion.s_Motion.y = 0f;
+					current.Use();
 				}
 			}
 		}
+
 		private static void HandleScrollWheel(SceneView view, bool zoomTowardsCenter)
 		{
 			float cameraDistance = view.cameraDistance;
@@ -508,12 +551,9 @@ namespace UnityEditor
 				{
 					num = 0.3f;
 				}
-				else
+				else if (num < 0f && num > -0.3f)
 				{
-					if (num < 0f && num > -0.3f)
-					{
-						num = -0.3f;
-					}
+					num = -0.3f;
 				}
 				view.size += num;
 			}
@@ -528,6 +568,7 @@ namespace UnityEditor
 			}
 			Event.current.Use();
 		}
+
 		public static void ResetMotion()
 		{
 			SceneViewMotion.s_Motion = Vector3.zero;

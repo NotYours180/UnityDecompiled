@@ -1,27 +1,33 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Rendering;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public class Texture : Object
 	{
 		public static extern int masterTextureLimit
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public static extern AnisotropicFiltering anisotropicFiltering
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public virtual int width
 		{
 			get
@@ -33,6 +39,7 @@ namespace UnityEngine
 				throw new Exception("not implemented");
 			}
 		}
+
 		public virtual int height
 		{
 			get
@@ -44,61 +51,101 @@ namespace UnityEngine
 				throw new Exception("not implemented");
 			}
 		}
+
+		public virtual TextureDimension dimension
+		{
+			get
+			{
+				return Texture.Internal_GetDimension(this);
+			}
+			set
+			{
+				throw new Exception("not implemented");
+			}
+		}
+
 		public extern FilterMode filterMode
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern int anisoLevel
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern TextureWrapMode wrapMode
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float mipMapBias
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		public extern Vector2 texelSize
+
+		public Vector2 texelSize
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				Vector2 result;
+				this.INTERNAL_get_texelSize(out result);
+				return result;
+			}
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetGlobalAnisotropicFilteringLimits(int forcedMin, int globalMax);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern int Internal_GetWidth(Texture mono);
-		[WrapperlessIcall]
+		private static extern int Internal_GetWidth(Texture t);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern int Internal_GetHeight(Texture mono);
-		[WrapperlessIcall]
+		private static extern int Internal_GetHeight(Texture t);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern IntPtr GetNativeTexturePtr();
-		[WrapperlessIcall]
+		private static extern TextureDimension Internal_GetDimension(Texture t);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private extern void INTERNAL_get_texelSize(out Vector2 value);
+
+		public IntPtr GetNativeTexturePtr()
+		{
+			IntPtr result;
+			Texture.INTERNAL_CALL_GetNativeTexturePtr(this, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_GetNativeTexturePtr(Texture self, out IntPtr value);
+
+		[Obsolete("Use GetNativeTexturePtr instead."), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern int GetNativeTextureID();
 	}

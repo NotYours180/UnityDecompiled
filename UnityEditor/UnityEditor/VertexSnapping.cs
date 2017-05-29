@@ -1,24 +1,45 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class VertexSnapping
 	{
 		private static Vector3 s_VertexSnappingOffset = Vector3.zero;
+
 		public static void HandleKeyAndMouseMove(int id)
 		{
 			Event current = Event.current;
-			switch (current.GetTypeForControl(id))
+			EventType typeForControl = current.GetTypeForControl(id);
+			if (typeForControl != EventType.MouseMove)
 			{
-			case EventType.MouseMove:
-				if (Tools.vertexDragging)
+				if (typeForControl != EventType.KeyDown)
 				{
-					VertexSnapping.EnableVertexSnapping(id);
-					current.Use();
+					if (typeForControl == EventType.KeyUp)
+					{
+						if (current.keyCode == KeyCode.V)
+						{
+							if (current.shift)
+							{
+								Tools.vertexDragging = !Tools.vertexDragging;
+							}
+							else if (Tools.vertexDragging)
+							{
+								Tools.vertexDragging = false;
+							}
+							if (Tools.vertexDragging)
+							{
+								VertexSnapping.EnableVertexSnapping(id);
+							}
+							else
+							{
+								VertexSnapping.DisableVertexSnapping(id);
+							}
+							current.Use();
+						}
+					}
 				}
-				break;
-			case EventType.KeyDown:
-				if (current.keyCode == KeyCode.V)
+				else if (current.keyCode == KeyCode.V)
 				{
 					if (!Tools.vertexDragging && !current.shift)
 					{
@@ -26,34 +47,14 @@ namespace UnityEditor
 					}
 					current.Use();
 				}
-				break;
-			case EventType.KeyUp:
-				if (current.keyCode == KeyCode.V)
-				{
-					if (current.shift)
-					{
-						Tools.vertexDragging = !Tools.vertexDragging;
-					}
-					else
-					{
-						if (Tools.vertexDragging)
-						{
-							Tools.vertexDragging = false;
-						}
-					}
-					if (Tools.vertexDragging)
-					{
-						VertexSnapping.EnableVertexSnapping(id);
-					}
-					else
-					{
-						VertexSnapping.DisableVertexSnapping(id);
-					}
-					current.Use();
-				}
-				break;
+			}
+			else if (Tools.vertexDragging)
+			{
+				VertexSnapping.EnableVertexSnapping(id);
+				current.Use();
 			}
 		}
+
 		private static void EnableVertexSnapping(int id)
 		{
 			Tools.vertexDragging = true;
@@ -67,6 +68,7 @@ namespace UnityEditor
 				VertexSnapping.s_VertexSnappingOffset = Tools.handleOffset;
 			}
 		}
+
 		private static void DisableVertexSnapping(int id)
 		{
 			Tools.vertexDragging = false;
@@ -76,6 +78,7 @@ namespace UnityEditor
 				VertexSnapping.s_VertexSnappingOffset = Vector3.zero;
 			}
 		}
+
 		private static void UpdateVertexSnappingOffset()
 		{
 			Event current = Event.current;
@@ -99,6 +102,7 @@ namespace UnityEditor
 			Tools.handleOffset = Vector3.zero;
 			Tools.handleOffset = a - Tools.handlePosition;
 		}
+
 		private static Vector3 FindNearestPivot(Transform[] transforms, Vector2 screenPosition)
 		{
 			bool flag = false;
@@ -115,6 +119,7 @@ namespace UnityEditor
 			}
 			return vector;
 		}
+
 		private static Vector3 ScreenToWorld(Vector2 screen, Transform target)
 		{
 			Ray ray = HandleUtility.GUIPointToWorldRay(screen);

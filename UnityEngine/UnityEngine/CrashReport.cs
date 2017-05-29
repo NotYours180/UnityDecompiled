@@ -1,81 +1,91 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public sealed class CrashReport
 	{
 		private static List<CrashReport> internalReports;
+
 		private static object reportsLock = new object();
+
 		private readonly string id;
+
 		public readonly DateTime time;
+
 		public readonly string text;
+
+		[CompilerGenerated]
+		private static Comparison<CrashReport> <>f__mg$cache0;
+
 		public static CrashReport[] reports
 		{
 			get
 			{
 				CrashReport.PopulateReports();
 				object obj = CrashReport.reportsLock;
-				Monitor.Enter(obj);
 				CrashReport[] result;
-				try
+				lock (obj)
 				{
 					result = CrashReport.internalReports.ToArray();
-				}
-				finally
-				{
-					Monitor.Exit(obj);
 				}
 				return result;
 			}
 		}
+
 		public static CrashReport lastReport
 		{
 			get
 			{
 				CrashReport.PopulateReports();
 				object obj = CrashReport.reportsLock;
-				Monitor.Enter(obj);
-				try
+				CrashReport result;
+				lock (obj)
 				{
 					if (CrashReport.internalReports.Count > 0)
 					{
-						return CrashReport.internalReports[CrashReport.internalReports.Count - 1];
+						result = CrashReport.internalReports[CrashReport.internalReports.Count - 1];
+						return result;
 					}
 				}
-				finally
-				{
-					Monitor.Exit(obj);
-				}
-				return null;
+				result = null;
+				return result;
 			}
 		}
+
 		private CrashReport(string id, DateTime time, string text)
 		{
 			this.id = id;
 			this.time = time;
 			this.text = text;
 		}
+
 		private static int Compare(CrashReport c1, CrashReport c2)
 		{
 			long ticks = c1.time.Ticks;
 			long ticks2 = c2.time.Ticks;
+			int result;
 			if (ticks > ticks2)
 			{
-				return 1;
+				result = 1;
 			}
-			if (ticks < ticks2)
+			else if (ticks < ticks2)
 			{
-				return -1;
+				result = -1;
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
+
 		private static void PopulateReports()
 		{
 			object obj = CrashReport.reportsLock;
-			Monitor.Enter(obj);
-			try
+			lock (obj)
 			{
 				if (CrashReport.internalReports == null)
 				{
@@ -86,20 +96,21 @@ namespace UnityEngine
 					{
 						string text = array[i];
 						double value;
-						string text2;
-						CrashReport.GetReportData(text, out value, out text2);
+						string reportData = CrashReport.GetReportData(text, out value);
 						DateTime dateTime = new DateTime(1970, 1, 1);
 						DateTime dateTime2 = dateTime.AddSeconds(value);
-						CrashReport.internalReports.Add(new CrashReport(text, dateTime2, text2));
+						CrashReport.internalReports.Add(new CrashReport(text, dateTime2, reportData));
 					}
-					CrashReport.internalReports.Sort(new Comparison<CrashReport>(CrashReport.Compare));
+					List<CrashReport> arg_AB_0 = CrashReport.internalReports;
+					if (CrashReport.<>f__mg$cache0 == null)
+					{
+						CrashReport.<>f__mg$cache0 = new Comparison<CrashReport>(CrashReport.Compare);
+					}
+					arg_AB_0.Sort(CrashReport.<>f__mg$cache0);
 				}
 			}
-			finally
-			{
-				Monitor.Exit(obj);
-			}
 		}
+
 		public static void RemoveAll()
 		{
 			CrashReport[] reports = CrashReport.reports;
@@ -109,29 +120,28 @@ namespace UnityEngine
 				crashReport.Remove();
 			}
 		}
+
 		public void Remove()
 		{
 			if (CrashReport.RemoveReport(this.id))
 			{
 				object obj = CrashReport.reportsLock;
-				Monitor.Enter(obj);
-				try
+				lock (obj)
 				{
 					CrashReport.internalReports.Remove(this);
 				}
-				finally
-				{
-					Monitor.Exit(obj);
-				}
 			}
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern string[] GetReports();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void GetReportData(string id, out double secondsSinceUnixEpoch, out string text);
-		[WrapperlessIcall]
+		private static extern string GetReportData(string id, out double secondsSinceUnixEpoch);
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool RemoveReport(string id);
 	}

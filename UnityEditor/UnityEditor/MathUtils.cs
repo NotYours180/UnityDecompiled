@@ -1,79 +1,128 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public class MathUtils
 	{
 		private const int kMaxDecimals = 15;
+
 		internal static float ClampToFloat(double value)
 		{
-			if (value < -3.4028234663852886E+38)
+			float result;
+			if (double.IsPositiveInfinity(value))
 			{
-				return -3.40282347E+38f;
+				result = float.PositiveInfinity;
 			}
-			if (value > 3.4028234663852886E+38)
+			else if (double.IsNegativeInfinity(value))
 			{
-				return 3.40282347E+38f;
+				result = float.NegativeInfinity;
 			}
-			return (float)value;
+			else if (value < -3.4028234663852886E+38)
+			{
+				result = -3.40282347E+38f;
+			}
+			else if (value > 3.4028234663852886E+38)
+			{
+				result = 3.40282347E+38f;
+			}
+			else
+			{
+				result = (float)value;
+			}
+			return result;
 		}
+
 		internal static int ClampToInt(long value)
 		{
+			int result;
 			if (value < -2147483648L)
 			{
-				return -2147483648;
+				result = -2147483648;
 			}
-			if (value > 2147483647L)
+			else if (value > 2147483647L)
 			{
-				return 2147483647;
+				result = 2147483647;
 			}
-			return (int)value;
+			else
+			{
+				result = (int)value;
+			}
+			return result;
 		}
+
 		internal static float RoundToMultipleOf(float value, float roundingValue)
 		{
+			float result;
 			if (roundingValue == 0f)
 			{
-				return value;
+				result = value;
 			}
-			return Mathf.Round(value / roundingValue) * roundingValue;
+			else
+			{
+				result = Mathf.Round(value / roundingValue) * roundingValue;
+			}
+			return result;
 		}
+
 		internal static float GetClosestPowerOfTen(float positiveNumber)
 		{
+			float result;
 			if (positiveNumber <= 0f)
 			{
-				return 1f;
+				result = 1f;
 			}
-			return Mathf.Pow(10f, (float)Mathf.RoundToInt(Mathf.Log10(positiveNumber)));
+			else
+			{
+				result = Mathf.Pow(10f, (float)Mathf.RoundToInt(Mathf.Log10(positiveNumber)));
+			}
+			return result;
 		}
+
 		internal static int GetNumberOfDecimalsForMinimumDifference(float minDifference)
 		{
-			return Mathf.Clamp(-Mathf.FloorToInt(Mathf.Log10(minDifference)), 0, 15);
+			return Mathf.Clamp(-Mathf.FloorToInt(Mathf.Log10(Mathf.Abs(minDifference))), 0, 15);
 		}
+
 		internal static int GetNumberOfDecimalsForMinimumDifference(double minDifference)
 		{
-			return (int)Math.Max(0.0, -Math.Floor(Math.Log10(minDifference)));
+			return (int)Math.Max(0.0, -Math.Floor(Math.Log10(Math.Abs(minDifference))));
 		}
+
 		internal static float RoundBasedOnMinimumDifference(float valueToRound, float minDifference)
 		{
+			float result;
 			if (minDifference == 0f)
 			{
-				return MathUtils.DiscardLeastSignificantDecimal(valueToRound);
+				result = MathUtils.DiscardLeastSignificantDecimal(valueToRound);
 			}
-			return (float)Math.Round((double)valueToRound, MathUtils.GetNumberOfDecimalsForMinimumDifference(minDifference), MidpointRounding.AwayFromZero);
+			else
+			{
+				result = (float)Math.Round((double)valueToRound, MathUtils.GetNumberOfDecimalsForMinimumDifference(minDifference), MidpointRounding.AwayFromZero);
+			}
+			return result;
 		}
+
 		internal static double RoundBasedOnMinimumDifference(double valueToRound, double minDifference)
 		{
+			double result;
 			if (minDifference == 0.0)
 			{
-				return MathUtils.DiscardLeastSignificantDecimal(valueToRound);
+				result = MathUtils.DiscardLeastSignificantDecimal(valueToRound);
 			}
-			return Math.Round(valueToRound, MathUtils.GetNumberOfDecimalsForMinimumDifference(minDifference), MidpointRounding.AwayFromZero);
+			else
+			{
+				result = Math.Round(valueToRound, MathUtils.GetNumberOfDecimalsForMinimumDifference(minDifference), MidpointRounding.AwayFromZero);
+			}
+			return result;
 		}
+
 		internal static float DiscardLeastSignificantDecimal(float v)
 		{
 			int digits = Mathf.Clamp((int)(5f - Mathf.Log10(Mathf.Abs(v))), 0, 15);
 			return (float)Math.Round((double)v, digits, MidpointRounding.AwayFromZero);
 		}
+
 		internal static double DiscardLeastSignificantDecimal(double v)
 		{
 			int digits = Math.Max(0, (int)(5.0 - Math.Log10(Math.Abs(v))));
@@ -88,14 +137,17 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static float GetQuatLength(Quaternion q)
 		{
 			return Mathf.Sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 		}
+
 		public static Quaternion GetQuatConjugate(Quaternion q)
 		{
 			return new Quaternion(-q.x, -q.y, -q.z, q.w);
 		}
+
 		public static Matrix4x4 OrthogonalizeMatrix(Matrix4x4 m)
 		{
 			Matrix4x4 identity = Matrix4x4.identity;
@@ -109,6 +161,7 @@ namespace UnityEditor
 			identity.SetColumn(2, normalized);
 			return identity;
 		}
+
 		public static void QuaternionNormalize(ref Quaternion q)
 		{
 			float num = 1f / Mathf.Sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
@@ -117,6 +170,7 @@ namespace UnityEditor
 			q.z *= num;
 			q.w *= num;
 		}
+
 		public static Quaternion QuaternionFromMatrix(Matrix4x4 m)
 		{
 			Quaternion result = default(Quaternion);
@@ -130,6 +184,7 @@ namespace UnityEditor
 			MathUtils.QuaternionNormalize(ref result);
 			return result;
 		}
+
 		public static Quaternion GetQuatLog(Quaternion q)
 		{
 			Quaternion result = q;
@@ -148,6 +203,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static Quaternion GetQuatExp(Quaternion q)
 		{
 			Quaternion result = q;
@@ -163,6 +219,7 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static Quaternion GetQuatSquad(float t, Quaternion q0, Quaternion q1, Quaternion a0, Quaternion a1)
 		{
 			float t2 = 2f * t * (1f - t);
@@ -176,6 +233,7 @@ namespace UnityEditor
 			result.w /= num;
 			return result;
 		}
+
 		public static Quaternion GetSquadIntermediate(Quaternion q0, Quaternion q1, Quaternion q2)
 		{
 			Quaternion quatConjugate = MathUtils.GetQuatConjugate(q1);
@@ -184,6 +242,7 @@ namespace UnityEditor
 			Quaternion q3 = new Quaternion(-0.25f * (quatLog.x + quatLog2.x), -0.25f * (quatLog.y + quatLog2.y), -0.25f * (quatLog.z + quatLog2.z), -0.25f * (quatLog.w + quatLog2.w));
 			return q1 * MathUtils.GetQuatExp(q3);
 		}
+
 		public static float Ease(float t, float k1, float k2)
 		{
 			float num = k1 * 2f / 3.14159274f + k2 - k1 + (1f - k2) * 2f / 3.14159274f;
@@ -192,19 +251,17 @@ namespace UnityEditor
 			{
 				num2 = k1 * 0.636619747f * (Mathf.Sin(t / k1 * 3.14159274f / 2f - 1.57079637f) + 1f);
 			}
+			else if (t < k2)
+			{
+				num2 = 2f * k1 / 3.14159274f + t - k1;
+			}
 			else
 			{
-				if (t < k2)
-				{
-					num2 = 2f * k1 / 3.14159274f + t - k1;
-				}
-				else
-				{
-					num2 = 2f * k1 / 3.14159274f + k2 - k1 + (1f - k2) * 0.636619747f * Mathf.Sin((t - k2) / (1f - k2) * 3.14159274f / 2f);
-				}
+				num2 = 2f * k1 / 3.14159274f + k2 - k1 + (1f - k2) * 0.636619747f * Mathf.Sin((t - k2) / (1f - k2) * 3.14159274f / 2f);
 			}
 			return num2 / num;
 		}
+
 		public static Quaternion Slerp(Quaternion p, Quaternion q, float t)
 		{
 			float num = Quaternion.Dot(p, q);
@@ -241,46 +298,62 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		public static object IntersectRayTriangle(Ray ray, Vector3 v0, Vector3 v1, Vector3 v2, bool bidirectional)
 		{
 			Vector3 lhs = v1 - v0;
 			Vector3 vector = v2 - v0;
 			Vector3 vector2 = Vector3.Cross(lhs, vector);
 			float num = Vector3.Dot(-ray.direction, vector2);
+			object result;
 			if (num <= 0f)
 			{
-				return null;
+				result = null;
 			}
-			Vector3 vector3 = ray.origin - v0;
-			float num2 = Vector3.Dot(vector3, vector2);
-			if (num2 < 0f && !bidirectional)
+			else
 			{
-				return null;
+				Vector3 vector3 = ray.origin - v0;
+				float num2 = Vector3.Dot(vector3, vector2);
+				if (num2 < 0f && !bidirectional)
+				{
+					result = null;
+				}
+				else
+				{
+					Vector3 rhs = Vector3.Cross(-ray.direction, vector3);
+					float num3 = Vector3.Dot(vector, rhs);
+					if (num3 < 0f || num3 > num)
+					{
+						result = null;
+					}
+					else
+					{
+						float num4 = -Vector3.Dot(lhs, rhs);
+						if (num4 < 0f || num3 + num4 > num)
+						{
+							result = null;
+						}
+						else
+						{
+							float num5 = 1f / num;
+							num2 *= num5;
+							num3 *= num5;
+							num4 *= num5;
+							float x = 1f - num3 - num4;
+							result = new RaycastHit
+							{
+								point = ray.origin + num2 * ray.direction,
+								distance = num2,
+								barycentricCoordinate = new Vector3(x, num3, num4),
+								normal = Vector3.Normalize(vector2)
+							};
+						}
+					}
+				}
 			}
-			Vector3 rhs = Vector3.Cross(-ray.direction, vector3);
-			float num3 = Vector3.Dot(vector, rhs);
-			if (num3 < 0f || num3 > num)
-			{
-				return null;
-			}
-			float num4 = -Vector3.Dot(lhs, rhs);
-			if (num4 < 0f || num3 + num4 > num)
-			{
-				return null;
-			}
-			float num5 = 1f / num;
-			num2 *= num5;
-			num3 *= num5;
-			num4 *= num5;
-			float x = 1f - num3 - num4;
-			return new RaycastHit
-			{
-				point = ray.origin + num2 * ray.direction,
-				distance = num2,
-				barycentricCoordinate = new Vector3(x, num3, num4),
-				normal = Vector3.Normalize(vector2)
-			};
+			return result;
 		}
+
 		public static Vector3 ClosestPtSegmentRay(Vector3 p1, Vector3 q1, Ray ray, out float squaredDist, out float s, out Vector3 closestRay)
 		{
 			Vector3 origin = ray.origin;
@@ -291,107 +364,124 @@ namespace UnityEditor
 			float num = Vector3.Dot(vector, vector);
 			float num2 = Vector3.Dot(vector2, vector2);
 			float num3 = Vector3.Dot(vector2, rhs);
+			Vector3 result;
 			if (num <= Mathf.Epsilon && num2 <= Mathf.Epsilon)
 			{
 				squaredDist = Vector3.Dot(p1 - origin, p1 - origin);
 				s = 0f;
 				closestRay = origin;
-				return p1;
-			}
-			float num4;
-			if (num <= Mathf.Epsilon)
-			{
-				s = 0f;
-				num4 = num3 / num2;
-				num4 = Mathf.Clamp(num4, 0f, 1f);
+				result = p1;
 			}
 			else
 			{
-				float num5 = Vector3.Dot(vector, rhs);
-				if (num2 <= Mathf.Epsilon)
+				float num4;
+				if (num <= Mathf.Epsilon)
 				{
-					num4 = 0f;
-					s = Mathf.Clamp(-num5 / num, 0f, 1f);
+					s = 0f;
+					num4 = num3 / num2;
+					num4 = Mathf.Clamp(num4, 0f, 1f);
 				}
 				else
 				{
-					float num6 = Vector3.Dot(vector, vector2);
-					float num7 = num * num2 - num6 * num6;
-					if (num7 != 0f)
-					{
-						s = Mathf.Clamp((num6 * num3 - num5 * num2) / num7, 0f, 1f);
-					}
-					else
-					{
-						s = 0f;
-					}
-					num4 = (num6 * s + num3) / num2;
-					if (num4 < 0f)
+					float num5 = Vector3.Dot(vector, rhs);
+					if (num2 <= Mathf.Epsilon)
 					{
 						num4 = 0f;
 						s = Mathf.Clamp(-num5 / num, 0f, 1f);
 					}
 					else
 					{
-						if (num4 > 1f)
+						float num6 = Vector3.Dot(vector, vector2);
+						float num7 = num * num2 - num6 * num6;
+						if (num7 != 0f)
+						{
+							s = Mathf.Clamp((num6 * num3 - num5 * num2) / num7, 0f, 1f);
+						}
+						else
+						{
+							s = 0f;
+						}
+						num4 = (num6 * s + num3) / num2;
+						if (num4 < 0f)
+						{
+							num4 = 0f;
+							s = Mathf.Clamp(-num5 / num, 0f, 1f);
+						}
+						else if (num4 > 1f)
 						{
 							num4 = 1f;
 							s = Mathf.Clamp((num6 - num5) / num, 0f, 1f);
 						}
 					}
 				}
+				Vector3 vector3 = p1 + vector * s;
+				Vector3 vector4 = origin + vector2 * num4;
+				squaredDist = Vector3.Dot(vector3 - vector4, vector3 - vector4);
+				closestRay = vector4;
+				result = vector3;
 			}
-			Vector3 vector3 = p1 + vector * s;
-			Vector3 vector4 = origin + vector2 * num4;
-			squaredDist = Vector3.Dot(vector3 - vector4, vector3 - vector4);
-			closestRay = vector4;
-			return vector3;
+			return result;
 		}
+
 		public static bool IntersectRaySphere(Ray ray, Vector3 sphereOrigin, float sphereRadius, ref float t, ref Vector3 q)
 		{
 			Vector3 vector = ray.origin - sphereOrigin;
 			float num = Vector3.Dot(vector, ray.direction);
 			float num2 = Vector3.Dot(vector, vector) - sphereRadius * sphereRadius;
+			bool result;
 			if (num2 > 0f && num > 0f)
 			{
-				return false;
+				result = false;
 			}
-			float num3 = num * num - num2;
-			if (num3 < 0f)
+			else
 			{
-				return false;
+				float num3 = num * num - num2;
+				if (num3 < 0f)
+				{
+					result = false;
+				}
+				else
+				{
+					t = -num - Mathf.Sqrt(num3);
+					if (t < 0f)
+					{
+						t = 0f;
+					}
+					q = ray.origin + t * ray.direction;
+					result = true;
+				}
 			}
-			t = -num - Mathf.Sqrt(num3);
-			if (t < 0f)
-			{
-				t = 0f;
-			}
-			q = ray.origin + t * ray.direction;
-			return true;
+			return result;
 		}
+
 		public static bool ClosestPtRaySphere(Ray ray, Vector3 sphereOrigin, float sphereRadius, ref float t, ref Vector3 q)
 		{
 			Vector3 vector = ray.origin - sphereOrigin;
 			float num = Vector3.Dot(vector, ray.direction);
 			float num2 = Vector3.Dot(vector, vector) - sphereRadius * sphereRadius;
+			bool result;
 			if (num2 > 0f && num > 0f)
 			{
 				t = 0f;
 				q = ray.origin;
-				return true;
+				result = true;
 			}
-			float num3 = num * num - num2;
-			if (num3 < 0f)
+			else
 			{
-				num3 = 0f;
+				float num3 = num * num - num2;
+				if (num3 < 0f)
+				{
+					num3 = 0f;
+				}
+				t = -num - Mathf.Sqrt(num3);
+				if (t < 0f)
+				{
+					t = 0f;
+				}
+				q = ray.origin + t * ray.direction;
+				result = true;
 			}
-			t = -num - Mathf.Sqrt(num3);
-			if (t < 0f)
-			{
-				t = 0f;
-			}
-			q = ray.origin + t * ray.direction;
-			return true;
+			return result;
 		}
 	}
 }

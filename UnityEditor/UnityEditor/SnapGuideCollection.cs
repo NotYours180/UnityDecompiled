@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class SnapGuideCollection
 	{
-		private List<SnapGuide> currentGuides;
+		private List<SnapGuide> currentGuides = null;
+
 		private Dictionary<float, List<SnapGuide>> guides = new Dictionary<float, List<SnapGuide>>();
+
 		public void Clear()
 		{
 			this.guides.Clear();
 		}
+
 		public void AddGuide(SnapGuide guide)
 		{
 			List<SnapGuide> list;
@@ -21,34 +25,41 @@ namespace UnityEditor
 			}
 			list.Add(guide);
 		}
+
 		public float SnapToGuides(float value, float snapDistance)
 		{
+			float result;
 			if (this.guides.Count == 0)
 			{
-				return value;
-			}
-			KeyValuePair<float, List<SnapGuide>> keyValuePair = default(KeyValuePair<float, List<SnapGuide>>);
-			float num = float.PositiveInfinity;
-			foreach (KeyValuePair<float, List<SnapGuide>> current in this.guides)
-			{
-				float num2 = Mathf.Abs(value - current.Key);
-				if (num2 < num)
-				{
-					keyValuePair = current;
-					num = num2;
-				}
-			}
-			if (num <= snapDistance)
-			{
-				value = keyValuePair.Key;
-				this.currentGuides = keyValuePair.Value;
+				result = value;
 			}
 			else
 			{
-				this.currentGuides = null;
+				KeyValuePair<float, List<SnapGuide>> keyValuePair = default(KeyValuePair<float, List<SnapGuide>>);
+				float num = float.PositiveInfinity;
+				foreach (KeyValuePair<float, List<SnapGuide>> current in this.guides)
+				{
+					float num2 = Mathf.Abs(value - current.Key);
+					if (num2 < num)
+					{
+						keyValuePair = current;
+						num = num2;
+					}
+				}
+				if (num <= snapDistance)
+				{
+					value = keyValuePair.Key;
+					this.currentGuides = keyValuePair.Value;
+				}
+				else
+				{
+					this.currentGuides = null;
+				}
+				result = value;
 			}
-			return value;
+			return result;
 		}
+
 		public void OnGUI()
 		{
 			if (Event.current.type == EventType.MouseUp)
@@ -56,6 +67,7 @@ namespace UnityEditor
 				this.currentGuides = null;
 			}
 		}
+
 		public void DrawGuides()
 		{
 			if (this.currentGuides != null)

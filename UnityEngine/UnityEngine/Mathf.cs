@@ -1,235 +1,344 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
 using UnityEngineInternal;
+
 namespace UnityEngine
 {
 	public struct Mathf
 	{
 		public const float PI = 3.14159274f;
+
 		public const float Infinity = float.PositiveInfinity;
+
 		public const float NegativeInfinity = float.NegativeInfinity;
+
 		public const float Deg2Rad = 0.0174532924f;
+
 		public const float Rad2Deg = 57.29578f;
+
 		public static readonly float Epsilon = (!MathfInternal.IsFlushToZeroEnabled) ? MathfInternal.FloatMinDenormal : MathfInternal.FloatMinNormal;
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int ClosestPowerOfTwo(int value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float GammaToLinearSpace(float value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float LinearToGammaSpace(float value);
+
+		public static Color CorrelatedColorTemperatureToRGB(float kelvin)
+		{
+			Color result;
+			Mathf.INTERNAL_CALL_CorrelatedColorTemperatureToRGB(kelvin, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_CorrelatedColorTemperatureToRGB(float kelvin, out Color value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern bool IsPowerOfTwo(int value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern int NextPowerOfTwo(int value);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float PerlinNoise(float x, float y);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern ushort FloatToHalf(float val);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern float HalfToFloat(ushort val);
+
 		public static float Sin(float f)
 		{
 			return (float)Math.Sin((double)f);
 		}
+
 		public static float Cos(float f)
 		{
 			return (float)Math.Cos((double)f);
 		}
+
 		public static float Tan(float f)
 		{
 			return (float)Math.Tan((double)f);
 		}
+
 		public static float Asin(float f)
 		{
 			return (float)Math.Asin((double)f);
 		}
+
 		public static float Acos(float f)
 		{
 			return (float)Math.Acos((double)f);
 		}
+
 		public static float Atan(float f)
 		{
 			return (float)Math.Atan((double)f);
 		}
+
 		public static float Atan2(float y, float x)
 		{
 			return (float)Math.Atan2((double)y, (double)x);
 		}
+
 		public static float Sqrt(float f)
 		{
 			return (float)Math.Sqrt((double)f);
 		}
+
 		public static float Abs(float f)
 		{
 			return Math.Abs(f);
 		}
+
 		public static int Abs(int value)
 		{
 			return Math.Abs(value);
 		}
+
 		public static float Min(float a, float b)
 		{
 			return (a >= b) ? b : a;
 		}
+
 		public static float Min(params float[] values)
 		{
 			int num = values.Length;
+			float result;
 			if (num == 0)
 			{
-				return 0f;
+				result = 0f;
 			}
-			float num2 = values[0];
-			for (int i = 1; i < num; i++)
+			else
 			{
-				if (values[i] < num2)
+				float num2 = values[0];
+				for (int i = 1; i < num; i++)
 				{
-					num2 = values[i];
+					if (values[i] < num2)
+					{
+						num2 = values[i];
+					}
 				}
+				result = num2;
 			}
-			return num2;
+			return result;
 		}
+
 		public static int Min(int a, int b)
 		{
 			return (a >= b) ? b : a;
 		}
+
 		public static int Min(params int[] values)
 		{
 			int num = values.Length;
+			int result;
 			if (num == 0)
 			{
-				return 0;
+				result = 0;
 			}
-			int num2 = values[0];
-			for (int i = 1; i < num; i++)
+			else
 			{
-				if (values[i] < num2)
+				int num2 = values[0];
+				for (int i = 1; i < num; i++)
 				{
-					num2 = values[i];
+					if (values[i] < num2)
+					{
+						num2 = values[i];
+					}
 				}
+				result = num2;
 			}
-			return num2;
+			return result;
 		}
+
 		public static float Max(float a, float b)
 		{
 			return (a <= b) ? b : a;
 		}
+
 		public static float Max(params float[] values)
 		{
 			int num = values.Length;
+			float result;
 			if (num == 0)
 			{
-				return 0f;
+				result = 0f;
 			}
-			float num2 = values[0];
-			for (int i = 1; i < num; i++)
+			else
 			{
-				if (values[i] > num2)
+				float num2 = values[0];
+				for (int i = 1; i < num; i++)
 				{
-					num2 = values[i];
+					if (values[i] > num2)
+					{
+						num2 = values[i];
+					}
 				}
+				result = num2;
 			}
-			return num2;
+			return result;
 		}
+
 		public static int Max(int a, int b)
 		{
 			return (a <= b) ? b : a;
 		}
+
 		public static int Max(params int[] values)
 		{
 			int num = values.Length;
+			int result;
 			if (num == 0)
 			{
-				return 0;
+				result = 0;
 			}
-			int num2 = values[0];
-			for (int i = 1; i < num; i++)
+			else
 			{
-				if (values[i] > num2)
+				int num2 = values[0];
+				for (int i = 1; i < num; i++)
 				{
-					num2 = values[i];
+					if (values[i] > num2)
+					{
+						num2 = values[i];
+					}
 				}
+				result = num2;
 			}
-			return num2;
+			return result;
 		}
+
 		public static float Pow(float f, float p)
 		{
 			return (float)Math.Pow((double)f, (double)p);
 		}
+
 		public static float Exp(float power)
 		{
 			return (float)Math.Exp((double)power);
 		}
+
 		public static float Log(float f, float p)
 		{
 			return (float)Math.Log((double)f, (double)p);
 		}
+
 		public static float Log(float f)
 		{
 			return (float)Math.Log((double)f);
 		}
+
 		public static float Log10(float f)
 		{
 			return (float)Math.Log10((double)f);
 		}
+
 		public static float Ceil(float f)
 		{
 			return (float)Math.Ceiling((double)f);
 		}
+
 		public static float Floor(float f)
 		{
 			return (float)Math.Floor((double)f);
 		}
+
 		public static float Round(float f)
 		{
 			return (float)Math.Round((double)f);
 		}
+
 		public static int CeilToInt(float f)
 		{
 			return (int)Math.Ceiling((double)f);
 		}
+
 		public static int FloorToInt(float f)
 		{
 			return (int)Math.Floor((double)f);
 		}
+
 		public static int RoundToInt(float f)
 		{
 			return (int)Math.Round((double)f);
 		}
+
 		public static float Sign(float f)
 		{
 			return (f < 0f) ? -1f : 1f;
 		}
+
 		public static float Clamp(float value, float min, float max)
 		{
 			if (value < min)
 			{
 				value = min;
 			}
-			else
+			else if (value > max)
 			{
-				if (value > max)
-				{
-					value = max;
-				}
+				value = max;
 			}
 			return value;
 		}
+
 		public static int Clamp(int value, int min, int max)
 		{
 			if (value < min)
 			{
 				value = min;
 			}
-			else
+			else if (value > max)
 			{
-				if (value > max)
-				{
-					value = max;
-				}
+				value = max;
 			}
 			return value;
 		}
+
 		public static float Clamp01(float value)
 		{
+			float result;
 			if (value < 0f)
 			{
-				return 0f;
+				result = 0f;
 			}
-			if (value > 1f)
+			else if (value > 1f)
 			{
-				return 1f;
+				result = 1f;
 			}
-			return value;
+			else
+			{
+				result = value;
+			}
+			return result;
 		}
-		public static float Lerp(float from, float to, float t)
+
+		public static float Lerp(float a, float b, float t)
 		{
-			return from + (to - from) * Mathf.Clamp01(t);
+			return a + (b - a) * Mathf.Clamp01(t);
 		}
+
+		public static float LerpUnclamped(float a, float b, float t)
+		{
+			return a + (b - a) * t;
+		}
+
 		public static float LerpAngle(float a, float b, float t)
 		{
 			float num = Mathf.Repeat(b - a, 360f);
@@ -239,25 +348,44 @@ namespace UnityEngine
 			}
 			return a + num * Mathf.Clamp01(t);
 		}
+
 		public static float MoveTowards(float current, float target, float maxDelta)
 		{
+			float result;
 			if (Mathf.Abs(target - current) <= maxDelta)
 			{
-				return target;
+				result = target;
 			}
-			return current + Mathf.Sign(target - current) * maxDelta;
+			else
+			{
+				result = current + Mathf.Sign(target - current) * maxDelta;
+			}
+			return result;
 		}
+
 		public static float MoveTowardsAngle(float current, float target, float maxDelta)
 		{
-			target = current + Mathf.DeltaAngle(current, target);
-			return Mathf.MoveTowards(current, target, maxDelta);
+			float num = Mathf.DeltaAngle(current, target);
+			float result;
+			if (-maxDelta < num && num < maxDelta)
+			{
+				result = target;
+			}
+			else
+			{
+				target = current + num;
+				result = Mathf.MoveTowards(current, target, maxDelta);
+			}
+			return result;
 		}
+
 		public static float SmoothStep(float from, float to, float t)
 		{
 			t = Mathf.Clamp01(t);
 			t = -2f * t * t * t + 3f * t * t;
 			return to * t + from * (1f - t);
 		}
+
 		public static float Gamma(float value, float absmax, float gamma)
 		{
 			bool flag = false;
@@ -266,23 +394,31 @@ namespace UnityEngine
 				flag = true;
 			}
 			float num = Mathf.Abs(value);
+			float result;
 			if (num > absmax)
 			{
-				return (!flag) ? num : (-num);
+				result = ((!flag) ? num : (-num));
 			}
-			float num2 = Mathf.Pow(num / absmax, gamma) * absmax;
-			return (!flag) ? num2 : (-num2);
+			else
+			{
+				float num2 = Mathf.Pow(num / absmax, gamma) * absmax;
+				result = ((!flag) ? num2 : (-num2));
+			}
+			return result;
 		}
+
 		public static bool Approximately(float a, float b)
 		{
 			return Mathf.Abs(b - a) < Mathf.Max(1E-06f * Mathf.Max(Mathf.Abs(a), Mathf.Abs(b)), Mathf.Epsilon * 8f);
 		}
+
 		[ExcludeFromDocs]
 		public static float SmoothDamp(float current, float target, ref float currentVelocity, float smoothTime, float maxSpeed)
 		{
 			float deltaTime = Time.deltaTime;
 			return Mathf.SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
 		}
+
 		[ExcludeFromDocs]
 		public static float SmoothDamp(float current, float target, ref float currentVelocity, float smoothTime)
 		{
@@ -290,6 +426,7 @@ namespace UnityEngine
 			float maxSpeed = float.PositiveInfinity;
 			return Mathf.SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
 		}
+
 		public static float SmoothDamp(float current, float target, ref float currentVelocity, float smoothTime, [DefaultValue("Mathf.Infinity")] float maxSpeed, [DefaultValue("Time.deltaTime")] float deltaTime)
 		{
 			smoothTime = Mathf.Max(0.0001f, smoothTime);
@@ -311,12 +448,14 @@ namespace UnityEngine
 			}
 			return num8;
 		}
+
 		[ExcludeFromDocs]
 		public static float SmoothDampAngle(float current, float target, ref float currentVelocity, float smoothTime, float maxSpeed)
 		{
 			float deltaTime = Time.deltaTime;
 			return Mathf.SmoothDampAngle(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
 		}
+
 		[ExcludeFromDocs]
 		public static float SmoothDampAngle(float current, float target, ref float currentVelocity, float smoothTime)
 		{
@@ -324,68 +463,38 @@ namespace UnityEngine
 			float maxSpeed = float.PositiveInfinity;
 			return Mathf.SmoothDampAngle(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
 		}
+
 		public static float SmoothDampAngle(float current, float target, ref float currentVelocity, float smoothTime, [DefaultValue("Mathf.Infinity")] float maxSpeed, [DefaultValue("Time.deltaTime")] float deltaTime)
 		{
 			target = current + Mathf.DeltaAngle(current, target);
 			return Mathf.SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
 		}
+
 		public static float Repeat(float t, float length)
 		{
 			return t - Mathf.Floor(t / length) * length;
 		}
+
 		public static float PingPong(float t, float length)
 		{
 			t = Mathf.Repeat(t, length * 2f);
 			return length - Mathf.Abs(t - length);
 		}
-		public static float InverseLerp(float from, float to, float value)
+
+		public static float InverseLerp(float a, float b, float value)
 		{
-			if (from < to)
+			float result;
+			if (a != b)
 			{
-				if (value < from)
-				{
-					return 0f;
-				}
-				if (value > to)
-				{
-					return 1f;
-				}
-				value -= from;
-				value /= to - from;
-				return value;
+				result = Mathf.Clamp01((value - a) / (b - a));
 			}
 			else
 			{
-				if (from <= to)
-				{
-					return 0f;
-				}
-				if (value < to)
-				{
-					return 1f;
-				}
-				if (value > from)
-				{
-					return 0f;
-				}
-				return 1f - (value - to) / (from - to);
+				result = 0f;
 			}
+			return result;
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int ClosestPowerOfTwo(int value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern float GammaToLinearSpace(float value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern float LinearToGammaSpace(float value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern bool IsPowerOfTwo(int value);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern int NextPowerOfTwo(int value);
+
 		public static float DeltaAngle(float current, float target)
 		{
 			float num = Mathf.Repeat(target - current, 360f);
@@ -395,9 +504,7 @@ namespace UnityEngine
 			}
 			return num;
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern float PerlinNoise(float x, float y);
+
 		internal static bool LineIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, ref Vector2 result)
 		{
 			float num = p2.x - p1.x;
@@ -405,16 +512,22 @@ namespace UnityEngine
 			float num3 = p4.x - p3.x;
 			float num4 = p4.y - p3.y;
 			float num5 = num * num4 - num2 * num3;
+			bool result2;
 			if (num5 == 0f)
 			{
-				return false;
+				result2 = false;
 			}
-			float num6 = p3.x - p1.x;
-			float num7 = p3.y - p1.y;
-			float num8 = (num6 * num4 - num7 * num3) / num5;
-			result = new Vector2(p1.x + num8 * num, p1.y + num8 * num2);
-			return true;
+			else
+			{
+				float num6 = p3.x - p1.x;
+				float num7 = p3.y - p1.y;
+				float num8 = (num6 * num4 - num7 * num3) / num5;
+				result = new Vector2(p1.x + num8 * num, p1.y + num8 * num2);
+				result2 = true;
+			}
+			return result2;
 		}
+
 		internal static bool LineSegmentIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, ref Vector2 result)
 		{
 			float num = p2.x - p1.x;
@@ -422,30 +535,42 @@ namespace UnityEngine
 			float num3 = p4.x - p3.x;
 			float num4 = p4.y - p3.y;
 			float num5 = num * num4 - num2 * num3;
+			bool result2;
 			if (num5 == 0f)
 			{
-				return false;
+				result2 = false;
 			}
-			float num6 = p3.x - p1.x;
-			float num7 = p3.y - p1.y;
-			float num8 = (num6 * num4 - num7 * num3) / num5;
-			if (num8 < 0f || num8 > 1f)
+			else
 			{
-				return false;
+				float num6 = p3.x - p1.x;
+				float num7 = p3.y - p1.y;
+				float num8 = (num6 * num4 - num7 * num3) / num5;
+				if (num8 < 0f || num8 > 1f)
+				{
+					result2 = false;
+				}
+				else
+				{
+					float num9 = (num6 * num2 - num7 * num) / num5;
+					if (num9 < 0f || num9 > 1f)
+					{
+						result2 = false;
+					}
+					else
+					{
+						result = new Vector2(p1.x + num8 * num, p1.y + num8 * num2);
+						result2 = true;
+					}
+				}
 			}
-			float num9 = (num6 * num2 - num7 * num) / num5;
-			if (num9 < 0f || num9 > 1f)
-			{
-				return false;
-			}
-			result = new Vector2(p1.x + num8 * num, p1.y + num8 * num2);
-			return true;
+			return result2;
 		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern ushort FloatToHalf(float val);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern float HalfToFloat(ushort val);
+
+		internal static long RandomToLong(System.Random r)
+		{
+			byte[] array = new byte[8];
+			r.NextBytes(array);
+			return (long)(BitConverter.ToUInt64(array, 0) & 9223372036854775807uL);
+		}
 	}
 }

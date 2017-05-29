@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class RagdollBuilder : ScriptableWizard
@@ -8,71 +9,138 @@ namespace UnityEditor
 		private class BoneInfo
 		{
 			public string name;
+
 			public Transform anchor;
+
 			public CharacterJoint joint;
+
 			public RagdollBuilder.BoneInfo parent;
+
 			public float minLimit;
+
 			public float maxLimit;
+
 			public float swingLimit;
+
 			public Vector3 axis;
+
 			public Vector3 normalAxis;
+
 			public float radiusScale;
+
 			public Type colliderType;
+
 			public ArrayList children = new ArrayList();
+
 			public float density;
+
 			public float summedMass;
 		}
+
 		public Transform pelvis;
-		public Transform leftHips;
-		public Transform leftKnee;
-		public Transform leftFoot;
-		public Transform rightHips;
-		public Transform rightKnee;
-		public Transform rightFoot;
-		public Transform leftArm;
-		public Transform leftElbow;
-		public Transform rightArm;
-		public Transform rightElbow;
-		public Transform middleSpine;
-		public Transform head;
+
+		public Transform leftHips = null;
+
+		public Transform leftKnee = null;
+
+		public Transform leftFoot = null;
+
+		public Transform rightHips = null;
+
+		public Transform rightKnee = null;
+
+		public Transform rightFoot = null;
+
+		public Transform leftArm = null;
+
+		public Transform leftElbow = null;
+
+		public Transform rightArm = null;
+
+		public Transform rightElbow = null;
+
+		public Transform middleSpine = null;
+
+		public Transform head = null;
+
 		public float totalMass = 20f;
-		public float strength;
+
+		public float strength = 0f;
+
 		private Vector3 right = Vector3.right;
+
 		private Vector3 up = Vector3.up;
+
 		private Vector3 forward = Vector3.forward;
+
 		private Vector3 worldRight = Vector3.right;
+
 		private Vector3 worldUp = Vector3.up;
+
 		private Vector3 worldForward = Vector3.forward;
-		public bool flipForward;
+
+		public bool flipForward = false;
+
 		private ArrayList bones;
+
 		private RagdollBuilder.BoneInfo rootBone;
+
 		private string CheckConsistency()
 		{
 			this.PrepareBones();
 			Hashtable hashtable = new Hashtable();
-			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
+			IEnumerator enumerator = this.bones.GetEnumerator();
+			string result;
+			try
 			{
-				if (boneInfo.anchor)
+				while (enumerator.MoveNext())
 				{
-					if (hashtable[boneInfo.anchor] != null)
+					RagdollBuilder.BoneInfo boneInfo = (RagdollBuilder.BoneInfo)enumerator.Current;
+					if (boneInfo.anchor)
 					{
-						RagdollBuilder.BoneInfo boneInfo2 = (RagdollBuilder.BoneInfo)hashtable[boneInfo.anchor];
-						string result = string.Format("{0} and {1} may not be assigned to the same bone.", boneInfo.name, boneInfo2.name);
+						if (hashtable[boneInfo.anchor] != null)
+						{
+							RagdollBuilder.BoneInfo boneInfo2 = (RagdollBuilder.BoneInfo)hashtable[boneInfo.anchor];
+							result = string.Format("{0} and {1} may not be assigned to the same bone.", boneInfo.name, boneInfo2.name);
+							return result;
+						}
+						hashtable[boneInfo.anchor] = boneInfo;
+					}
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
+			IEnumerator enumerator2 = this.bones.GetEnumerator();
+			try
+			{
+				while (enumerator2.MoveNext())
+				{
+					RagdollBuilder.BoneInfo boneInfo3 = (RagdollBuilder.BoneInfo)enumerator2.Current;
+					if (boneInfo3.anchor == null)
+					{
+						result = string.Format("{0} has not been assigned yet.\n", boneInfo3.name);
 						return result;
 					}
-					hashtable[boneInfo.anchor] = boneInfo;
 				}
 			}
-			foreach (RagdollBuilder.BoneInfo boneInfo3 in this.bones)
+			finally
 			{
-				if (boneInfo3.anchor == null)
+				IDisposable disposable2;
+				if ((disposable2 = (enumerator2 as IDisposable)) != null)
 				{
-					string result = string.Format("{0} has not been assigned yet.\n", boneInfo3.name);
-					return result;
+					disposable2.Dispose();
 				}
 			}
-			return string.Empty;
+			result = "";
+			return result;
 		}
+
 		private void OnDrawGizmos()
 		{
 			if (this.pelvis)
@@ -85,17 +153,20 @@ namespace UnityEditor
 				Gizmos.DrawRay(this.pelvis.position, this.pelvis.TransformDirection(this.forward));
 			}
 		}
+
 		[MenuItem("GameObject/3D Object/Ragdoll...", false, 2000)]
 		private static void CreateWizard()
 		{
 			ScriptableWizard.DisplayWizard<RagdollBuilder>("Create Ragdoll");
 		}
+
 		private void DecomposeVector(out Vector3 normalCompo, out Vector3 tangentCompo, Vector3 outwardDir, Vector3 outwardNormal)
 		{
 			outwardNormal = outwardNormal.normalized;
 			normalCompo = outwardNormal * Vector3.Dot(outwardDir, outwardNormal);
 			tangentCompo = outwardDir - normalCompo;
 		}
+
 		private void CalculateAxes()
 		{
 			if (this.head != null && this.pelvis != null)
@@ -115,6 +186,7 @@ namespace UnityEditor
 				this.forward = -this.forward;
 			}
 		}
+
 		private void OnWizardUpdate()
 		{
 			base.errorString = this.CheckConsistency();
@@ -129,6 +201,7 @@ namespace UnityEditor
 			}
 			base.isValid = (base.errorString.Length == 0);
 		}
+
 		private void PrepareBones()
 		{
 			if (this.pelvis)
@@ -151,6 +224,7 @@ namespace UnityEditor
 			this.AddMirroredJoint("Elbow", this.leftElbow, this.rightElbow, "Arm", this.worldForward, this.worldUp, -90f, 0f, 0f, typeof(CapsuleCollider), 0.2f, 1f);
 			this.AddJoint("Head", this.head, "Middle Spine", this.worldRight, this.worldForward, -40f, 25f, 25f, null, 1f, 1f);
 		}
+
 		private void OnWizardCreate()
 		{
 			this.Cleanup();
@@ -161,22 +235,41 @@ namespace UnityEditor
 			this.BuildJoints();
 			this.CalculateMass();
 		}
+
 		private RagdollBuilder.BoneInfo FindBone(string name)
 		{
-			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
+			IEnumerator enumerator = this.bones.GetEnumerator();
+			RagdollBuilder.BoneInfo result;
+			try
 			{
-				if (boneInfo.name == name)
+				while (enumerator.MoveNext())
 				{
-					return boneInfo;
+					RagdollBuilder.BoneInfo boneInfo = (RagdollBuilder.BoneInfo)enumerator.Current;
+					if (boneInfo.name == name)
+					{
+						result = boneInfo;
+						return result;
+					}
 				}
 			}
-			return null;
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
+			result = null;
+			return result;
 		}
+
 		private void AddMirroredJoint(string name, Transform leftAnchor, Transform rightAnchor, string parent, Vector3 worldTwistAxis, Vector3 worldSwingAxis, float minLimit, float maxLimit, float swingLimit, Type colliderType, float radiusScale, float density)
 		{
 			this.AddJoint("Left " + name, leftAnchor, parent, worldTwistAxis, worldSwingAxis, minLimit, maxLimit, swingLimit, colliderType, radiusScale, density);
 			this.AddJoint("Right " + name, rightAnchor, parent, worldTwistAxis, worldSwingAxis, minLimit, maxLimit, swingLimit, colliderType, radiusScale, density);
 		}
+
 		private void AddJoint(string name, Transform anchor, string parent, Vector3 worldTwistAxis, Vector3 worldSwingAxis, float minLimit, float maxLimit, float swingLimit, Type colliderType, float radiusScale, float density)
 		{
 			RagdollBuilder.BoneInfo boneInfo = new RagdollBuilder.BoneInfo();
@@ -194,154 +287,233 @@ namespace UnityEditor
 			{
 				boneInfo.parent = this.FindBone(parent);
 			}
-			else
+			else if (name.StartsWith("Left"))
 			{
-				if (name.StartsWith("Left"))
-				{
-					boneInfo.parent = this.FindBone("Left " + parent);
-				}
-				else
-				{
-					if (name.StartsWith("Right"))
-					{
-						boneInfo.parent = this.FindBone("Right " + parent);
-					}
-				}
+				boneInfo.parent = this.FindBone("Left " + parent);
+			}
+			else if (name.StartsWith("Right"))
+			{
+				boneInfo.parent = this.FindBone("Right " + parent);
 			}
 			boneInfo.parent.children.Add(boneInfo);
 			this.bones.Add(boneInfo);
 		}
+
 		private void BuildCapsules()
 		{
-			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
+			IEnumerator enumerator = this.bones.GetEnumerator();
+			try
 			{
-				if (boneInfo.colliderType == typeof(CapsuleCollider))
+				while (enumerator.MoveNext())
 				{
-					int num;
-					float num2;
-					if (boneInfo.children.Count == 1)
+					RagdollBuilder.BoneInfo boneInfo = (RagdollBuilder.BoneInfo)enumerator.Current;
+					if (boneInfo.colliderType == typeof(CapsuleCollider))
 					{
-						RagdollBuilder.BoneInfo boneInfo2 = (RagdollBuilder.BoneInfo)boneInfo.children[0];
-						Vector3 position = boneInfo2.anchor.position;
-						RagdollBuilder.CalculateDirection(boneInfo.anchor.InverseTransformPoint(position), out num, out num2);
-					}
-					else
-					{
-						Vector3 position2 = boneInfo.anchor.position - boneInfo.parent.anchor.position + boneInfo.anchor.position;
-						RagdollBuilder.CalculateDirection(boneInfo.anchor.InverseTransformPoint(position2), out num, out num2);
-						if (boneInfo.anchor.GetComponentsInChildren(typeof(Transform)).Length > 1)
+						int num;
+						float num2;
+						if (boneInfo.children.Count == 1)
 						{
-							Bounds bounds = default(Bounds);
-							Component[] componentsInChildren = boneInfo.anchor.GetComponentsInChildren(typeof(Transform));
-							for (int i = 0; i < componentsInChildren.Length; i++)
+							RagdollBuilder.BoneInfo boneInfo2 = (RagdollBuilder.BoneInfo)boneInfo.children[0];
+							Vector3 position = boneInfo2.anchor.position;
+							RagdollBuilder.CalculateDirection(boneInfo.anchor.InverseTransformPoint(position), out num, out num2);
+						}
+						else
+						{
+							Vector3 position2 = boneInfo.anchor.position - boneInfo.parent.anchor.position + boneInfo.anchor.position;
+							RagdollBuilder.CalculateDirection(boneInfo.anchor.InverseTransformPoint(position2), out num, out num2);
+							if (boneInfo.anchor.GetComponentsInChildren(typeof(Transform)).Length > 1)
 							{
-								Transform transform = (Transform)componentsInChildren[i];
-								bounds.Encapsulate(boneInfo.anchor.InverseTransformPoint(transform.position));
-							}
-							if (num2 > 0f)
-							{
-								num2 = bounds.max[num];
-							}
-							else
-							{
-								num2 = bounds.min[num];
+								Bounds bounds = default(Bounds);
+								Component[] componentsInChildren = boneInfo.anchor.GetComponentsInChildren(typeof(Transform));
+								for (int i = 0; i < componentsInChildren.Length; i++)
+								{
+									Transform transform = (Transform)componentsInChildren[i];
+									bounds.Encapsulate(boneInfo.anchor.InverseTransformPoint(transform.position));
+								}
+								if (num2 > 0f)
+								{
+									num2 = bounds.max[num];
+								}
+								else
+								{
+									num2 = bounds.min[num];
+								}
 							}
 						}
+						CapsuleCollider capsuleCollider = boneInfo.anchor.gameObject.AddComponent<CapsuleCollider>();
+						capsuleCollider.direction = num;
+						Vector3 zero = Vector3.zero;
+						zero[num] = num2 * 0.5f;
+						capsuleCollider.center = zero;
+						capsuleCollider.height = Mathf.Abs(num2);
+						capsuleCollider.radius = Mathf.Abs(num2 * boneInfo.radiusScale);
 					}
-					CapsuleCollider capsuleCollider = boneInfo.anchor.gameObject.AddComponent<CapsuleCollider>();
-					capsuleCollider.direction = num;
-					Vector3 zero = Vector3.zero;
-					zero[num] = num2 * 0.5f;
-					capsuleCollider.center = zero;
-					capsuleCollider.height = Mathf.Abs(num2);
-					capsuleCollider.radius = Mathf.Abs(num2 * boneInfo.radiusScale);
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
 				}
 			}
 		}
+
 		private void Cleanup()
 		{
-			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
+			IEnumerator enumerator = this.bones.GetEnumerator();
+			try
 			{
-				if (boneInfo.anchor)
+				while (enumerator.MoveNext())
 				{
-					Component[] componentsInChildren = boneInfo.anchor.GetComponentsInChildren(typeof(Joint));
-					Component[] array = componentsInChildren;
-					for (int i = 0; i < array.Length; i++)
+					RagdollBuilder.BoneInfo boneInfo = (RagdollBuilder.BoneInfo)enumerator.Current;
+					if (boneInfo.anchor)
 					{
-						Joint obj = (Joint)array[i];
-						UnityEngine.Object.DestroyImmediate(obj);
-					}
-					Component[] componentsInChildren2 = boneInfo.anchor.GetComponentsInChildren(typeof(Rigidbody));
-					Component[] array2 = componentsInChildren2;
-					for (int j = 0; j < array2.Length; j++)
-					{
-						Rigidbody obj2 = (Rigidbody)array2[j];
-						UnityEngine.Object.DestroyImmediate(obj2);
-					}
-					Component[] componentsInChildren3 = boneInfo.anchor.GetComponentsInChildren(typeof(Collider));
-					Component[] array3 = componentsInChildren3;
-					for (int k = 0; k < array3.Length; k++)
-					{
-						Collider obj3 = (Collider)array3[k];
-						UnityEngine.Object.DestroyImmediate(obj3);
+						Component[] componentsInChildren = boneInfo.anchor.GetComponentsInChildren(typeof(Joint));
+						Component[] array = componentsInChildren;
+						for (int i = 0; i < array.Length; i++)
+						{
+							Joint obj = (Joint)array[i];
+							UnityEngine.Object.DestroyImmediate(obj);
+						}
+						Component[] componentsInChildren2 = boneInfo.anchor.GetComponentsInChildren(typeof(Rigidbody));
+						Component[] array2 = componentsInChildren2;
+						for (int j = 0; j < array2.Length; j++)
+						{
+							Rigidbody obj2 = (Rigidbody)array2[j];
+							UnityEngine.Object.DestroyImmediate(obj2);
+						}
+						Component[] componentsInChildren3 = boneInfo.anchor.GetComponentsInChildren(typeof(Collider));
+						Component[] array3 = componentsInChildren3;
+						for (int k = 0; k < array3.Length; k++)
+						{
+							Collider obj3 = (Collider)array3[k];
+							UnityEngine.Object.DestroyImmediate(obj3);
+						}
 					}
 				}
 			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
 		}
+
 		private void BuildBodies()
 		{
-			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
+			IEnumerator enumerator = this.bones.GetEnumerator();
+			try
 			{
-				boneInfo.anchor.gameObject.AddComponent<Rigidbody>();
-				boneInfo.anchor.GetComponent<Rigidbody>().mass = boneInfo.density;
-			}
-		}
-		private void BuildJoints()
-		{
-			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
-			{
-				if (boneInfo.parent != null)
+				while (enumerator.MoveNext())
 				{
-					CharacterJoint characterJoint = boneInfo.anchor.gameObject.AddComponent<CharacterJoint>();
-					boneInfo.joint = characterJoint;
-					characterJoint.axis = RagdollBuilder.CalculateDirectionAxis(boneInfo.anchor.InverseTransformDirection(boneInfo.axis));
-					characterJoint.swingAxis = RagdollBuilder.CalculateDirectionAxis(boneInfo.anchor.InverseTransformDirection(boneInfo.normalAxis));
-					characterJoint.anchor = Vector3.zero;
-					characterJoint.connectedBody = boneInfo.parent.anchor.GetComponent<Rigidbody>();
-					characterJoint.enablePreprocessing = false;
-					SoftJointLimit softJointLimit = default(SoftJointLimit);
-					softJointLimit.contactDistance = 0f;
-					softJointLimit.limit = boneInfo.minLimit;
-					characterJoint.lowTwistLimit = softJointLimit;
-					softJointLimit.limit = boneInfo.maxLimit;
-					characterJoint.highTwistLimit = softJointLimit;
-					softJointLimit.limit = boneInfo.swingLimit;
-					characterJoint.swing1Limit = softJointLimit;
-					softJointLimit.limit = 0f;
-					characterJoint.swing2Limit = softJointLimit;
+					RagdollBuilder.BoneInfo boneInfo = (RagdollBuilder.BoneInfo)enumerator.Current;
+					boneInfo.anchor.gameObject.AddComponent<Rigidbody>();
+					boneInfo.anchor.GetComponent<Rigidbody>().mass = boneInfo.density;
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
 				}
 			}
 		}
+
+		private void BuildJoints()
+		{
+			IEnumerator enumerator = this.bones.GetEnumerator();
+			try
+			{
+				while (enumerator.MoveNext())
+				{
+					RagdollBuilder.BoneInfo boneInfo = (RagdollBuilder.BoneInfo)enumerator.Current;
+					if (boneInfo.parent != null)
+					{
+						CharacterJoint characterJoint = boneInfo.anchor.gameObject.AddComponent<CharacterJoint>();
+						boneInfo.joint = characterJoint;
+						characterJoint.axis = RagdollBuilder.CalculateDirectionAxis(boneInfo.anchor.InverseTransformDirection(boneInfo.axis));
+						characterJoint.swingAxis = RagdollBuilder.CalculateDirectionAxis(boneInfo.anchor.InverseTransformDirection(boneInfo.normalAxis));
+						characterJoint.anchor = Vector3.zero;
+						characterJoint.connectedBody = boneInfo.parent.anchor.GetComponent<Rigidbody>();
+						characterJoint.enablePreprocessing = false;
+						SoftJointLimit softJointLimit = default(SoftJointLimit);
+						softJointLimit.contactDistance = 0f;
+						softJointLimit.limit = boneInfo.minLimit;
+						characterJoint.lowTwistLimit = softJointLimit;
+						softJointLimit.limit = boneInfo.maxLimit;
+						characterJoint.highTwistLimit = softJointLimit;
+						softJointLimit.limit = boneInfo.swingLimit;
+						characterJoint.swing1Limit = softJointLimit;
+						softJointLimit.limit = 0f;
+						characterJoint.swing2Limit = softJointLimit;
+					}
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
+			}
+		}
+
 		private void CalculateMassRecurse(RagdollBuilder.BoneInfo bone)
 		{
 			float num = bone.anchor.GetComponent<Rigidbody>().mass;
-			foreach (RagdollBuilder.BoneInfo boneInfo in bone.children)
+			IEnumerator enumerator = bone.children.GetEnumerator();
+			try
 			{
-				this.CalculateMassRecurse(boneInfo);
-				num += boneInfo.summedMass;
+				while (enumerator.MoveNext())
+				{
+					RagdollBuilder.BoneInfo boneInfo = (RagdollBuilder.BoneInfo)enumerator.Current;
+					this.CalculateMassRecurse(boneInfo);
+					num += boneInfo.summedMass;
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 			bone.summedMass = num;
 		}
+
 		private void CalculateMass()
 		{
 			this.CalculateMassRecurse(this.rootBone);
 			float num = this.totalMass / this.rootBone.summedMass;
-			foreach (RagdollBuilder.BoneInfo boneInfo in this.bones)
+			IEnumerator enumerator = this.bones.GetEnumerator();
+			try
 			{
-				boneInfo.anchor.GetComponent<Rigidbody>().mass *= num;
+				while (enumerator.MoveNext())
+				{
+					RagdollBuilder.BoneInfo boneInfo = (RagdollBuilder.BoneInfo)enumerator.Current;
+					boneInfo.anchor.GetComponent<Rigidbody>().mass *= num;
+				}
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
+				{
+					disposable.Dispose();
+				}
 			}
 			this.CalculateMassRecurse(this.rootBone);
 		}
+
 		private static void CalculateDirection(Vector3 point, out int direction, out float distance)
 		{
 			direction = 0;
@@ -355,6 +527,7 @@ namespace UnityEditor
 			}
 			distance = point[direction];
 		}
+
 		private static Vector3 CalculateDirectionAxis(Vector3 point)
 		{
 			int index = 0;
@@ -371,6 +544,7 @@ namespace UnityEditor
 			}
 			return zero;
 		}
+
 		private static int SmallestComponent(Vector3 point)
 		{
 			int num = 0;
@@ -384,6 +558,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private static int LargestComponent(Vector3 point)
 		{
 			int num = 0;
@@ -397,6 +572,7 @@ namespace UnityEditor
 			}
 			return num;
 		}
+
 		private static int SecondLargestComponent(Vector3 point)
 		{
 			int num = RagdollBuilder.SmallestComponent(point);
@@ -407,16 +583,22 @@ namespace UnityEditor
 				num2 = num;
 				num = num3;
 			}
+			int result;
 			if (num == 0 && num2 == 1)
 			{
-				return 2;
+				result = 2;
 			}
-			if (num == 0 && num2 == 2)
+			else if (num == 0 && num2 == 2)
 			{
-				return 1;
+				result = 1;
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
+
 		private Bounds Clip(Bounds bounds, Transform relativeTo, Transform clipTransform, bool below)
 		{
 			int index = RagdollBuilder.LargestComponent(bounds.size);
@@ -434,6 +616,7 @@ namespace UnityEditor
 			}
 			return bounds;
 		}
+
 		private Bounds GetBreastBounds(Transform relativeTo)
 		{
 			Bounds result = default(Bounds);
@@ -446,6 +629,7 @@ namespace UnityEditor
 			result.size = size;
 			return result;
 		}
+
 		private void AddBreastColliders()
 		{
 			if (this.middleSpine != null && this.pelvis != null)
@@ -473,6 +657,7 @@ namespace UnityEditor
 				boxCollider2.size = size;
 			}
 		}
+
 		private void AddHeadCollider()
 		{
 			if (this.head.GetComponent<Collider>())

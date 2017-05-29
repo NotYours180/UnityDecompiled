@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class PopupWindowContentForNewLibrary : PopupWindowContent
@@ -7,29 +8,41 @@ namespace UnityEditor
 		private class Texts
 		{
 			public GUIContent header = new GUIContent("Create New Library");
+
 			public GUIContent name = new GUIContent("Name");
+
 			public GUIContent location = new GUIContent("Location");
+
 			public GUIContent[] fileLocations = new GUIContent[]
 			{
 				new GUIContent("Preferences Folder"),
 				new GUIContent("Project Folder")
 			};
+
 			public PresetFileLocation[] fileLocationOrder = new PresetFileLocation[]
 			{
 				PresetFileLocation.PreferencesFolder,
 				PresetFileLocation.ProjectFolder
 			};
 		}
-		private string m_NewLibraryName = string.Empty;
-		private int m_SelectedIndexInPopup;
-		private string m_ErrorString;
+
+		private string m_NewLibraryName = "";
+
+		private int m_SelectedIndexInPopup = 0;
+
+		private string m_ErrorString = null;
+
 		private Rect m_WantedSize;
+
 		private Func<string, PresetFileLocation, string> m_CreateLibraryCallback;
+
 		private static PopupWindowContentForNewLibrary.Texts s_Texts;
+
 		public PopupWindowContentForNewLibrary(Func<string, PresetFileLocation, string> createLibraryCallback)
 		{
 			this.m_CreateLibraryCallback = createLibraryCallback;
 		}
+
 		public override void OnGUI(Rect rect)
 		{
 			if (PopupWindowContentForNewLibrary.s_Texts == null)
@@ -84,10 +97,12 @@ namespace UnityEditor
 			GUILayout.Space(15f);
 			EditorGUILayout.EndVertical();
 		}
+
 		public override Vector2 GetWindowSize()
 		{
 			return new Vector2(350f, (this.m_WantedSize.height <= 0f) ? 90f : this.m_WantedSize.height);
 		}
+
 		private void KeyboardHandling(EditorWindow editorWindow)
 		{
 			Event current = Event.current;
@@ -95,22 +110,20 @@ namespace UnityEditor
 			if (type == EventType.KeyDown)
 			{
 				KeyCode keyCode = current.keyCode;
-				if (keyCode != KeyCode.Return)
+				if (keyCode != KeyCode.KeypadEnter && keyCode != KeyCode.Return)
 				{
 					if (keyCode == KeyCode.Escape)
 					{
 						editorWindow.Close();
-						goto IL_57;
-					}
-					if (keyCode != KeyCode.KeypadEnter)
-					{
-						goto IL_57;
 					}
 				}
-				this.CreateLibraryAndCloseWindow(editorWindow);
-				IL_57:;
+				else
+				{
+					this.CreateLibraryAndCloseWindow(editorWindow);
+				}
 			}
 		}
+
 		private void CreateLibraryAndCloseWindow(EditorWindow editorWindow)
 		{
 			PresetFileLocation arg = PopupWindowContentForNewLibrary.s_Texts.fileLocationOrder[this.m_SelectedIndexInPopup];

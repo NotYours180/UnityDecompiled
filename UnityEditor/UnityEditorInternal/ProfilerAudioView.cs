@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditorInternal
 {
 	public enum ProfilerAudioView
@@ -6,6 +7,8 @@ namespace UnityEditorInternal
 		Stats,
 		Channels,
 		Groups,
-		ChannelsAndGroups
+		ChannelsAndGroups,
+		DSPGraph,
+		Clips
 	}
 }

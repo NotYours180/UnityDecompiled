@@ -3,17 +3,23 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+
 namespace UnityEditor.Utils
 {
 	internal class ProcessOutputStreamReader
 	{
 		private readonly Func<bool> hostProcessExited;
+
 		private readonly StreamReader stream;
+
 		internal List<string> lines;
+
 		private Thread thread;
+
 		internal ProcessOutputStreamReader(Process p, StreamReader stream) : this(() => p.HasExited, stream)
 		{
 		}
+
 		internal ProcessOutputStreamReader(Func<bool> hostProcessExited, StreamReader stream)
 		{
 			this.hostProcessExited = hostProcessExited;
@@ -22,47 +28,49 @@ namespace UnityEditor.Utils
 			this.thread = new Thread(new ThreadStart(this.ThreadFunc));
 			this.thread.Start();
 		}
+
 		private void ThreadFunc()
 		{
-			if (this.hostProcessExited())
+			if (!this.hostProcessExited())
 			{
-				return;
-			}
-			while (this.stream.BaseStream != null)
-			{
-				string text = this.stream.ReadLine();
-				if (text == null)
-				{
-					return;
-				}
-				List<string> obj = this.lines;
-				Monitor.Enter(obj);
 				try
 				{
-					this.lines.Add(text);
+					while (this.stream.BaseStream != null)
+					{
+						string text = this.stream.ReadLine();
+						if (text == null)
+						{
+							break;
+						}
+						object obj = this.lines;
+						lock (obj)
+						{
+							this.lines.Add(text);
+						}
+					}
 				}
-				finally
+				catch (ObjectDisposedException)
 				{
-					Monitor.Exit(obj);
+					object obj2 = this.lines;
+					lock (obj2)
+					{
+						this.lines.Add("Could not read output because an ObjectDisposedException was thrown.");
+					}
 				}
 			}
 		}
+
 		internal string[] GetOutput()
 		{
 			if (this.hostProcessExited())
 			{
 				this.thread.Join();
 			}
-			List<string> obj = this.lines;
-			Monitor.Enter(obj);
+			object obj = this.lines;
 			string[] result;
-			try
+			lock (obj)
 			{
 				result = this.lines.ToArray();
-			}
-			finally
-			{
-				Monitor.Exit(obj);
 			}
 			return result;
 		}

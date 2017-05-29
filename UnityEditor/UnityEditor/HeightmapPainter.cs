@@ -1,15 +1,22 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class HeightmapPainter
 	{
 		public int size;
+
 		public float strength;
+
 		public float targetHeight;
+
 		public TerrainTool tool;
+
 		public Brush brush;
+
 		public TerrainData terrainData;
+
 		private float Smooth(int x, int y)
 		{
 			float num = 0f;
@@ -25,33 +32,40 @@ namespace UnityEditor
 			num += this.terrainData.GetHeight(x, y - 1) * num2;
 			return num / 8f;
 		}
+
 		private float ApplyBrush(float height, float brushStrength, int x, int y)
 		{
+			float result;
 			if (this.tool == TerrainTool.PaintHeight)
 			{
-				return height + brushStrength;
+				result = height + brushStrength;
 			}
-			if (this.tool == TerrainTool.SetHeight)
+			else if (this.tool == TerrainTool.SetHeight)
 			{
 				if (this.targetHeight > height)
 				{
 					height += brushStrength;
 					height = Mathf.Min(height, this.targetHeight);
-					return height;
+					result = height;
 				}
-				height -= brushStrength;
-				height = Mathf.Max(height, this.targetHeight);
-				return height;
+				else
+				{
+					height -= brushStrength;
+					height = Mathf.Max(height, this.targetHeight);
+					result = height;
+				}
+			}
+			else if (this.tool == TerrainTool.SmoothHeight)
+			{
+				result = Mathf.Lerp(height, this.Smooth(x, y), brushStrength);
 			}
 			else
 			{
-				if (this.tool == TerrainTool.SmoothHeight)
-				{
-					return Mathf.Lerp(height, this.Smooth(x, y), brushStrength);
-				}
-				return height;
+				result = height;
 			}
+			return result;
 		}
+
 		public void PaintHeight(float xCenterNormalized, float yCenterNormalized)
 		{
 			int num;

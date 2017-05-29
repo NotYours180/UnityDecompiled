@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class TerrainEditorUtility
@@ -66,25 +67,30 @@ namespace UnityEditor
 			terrainData.splatPrototypes = array2;
 			terrainData.SetAlphamaps(0, 0, array);
 		}
+
 		internal static void RemoveTree(Terrain terrain, int index)
 		{
 			TerrainData terrainData = terrain.terrainData;
-			if (terrainData == null)
+			if (!(terrainData == null))
 			{
-				return;
+				Undo.RegisterCompleteObjectUndo(terrainData, "Remove tree");
+				terrainData.RemoveTreePrototype(index);
 			}
-			Undo.RegisterCompleteObjectUndo(terrainData, "Remove tree");
-			terrainData.RemoveTreePrototype(index);
 		}
+
 		internal static void RemoveDetail(Terrain terrain, int index)
 		{
 			TerrainData terrainData = terrain.terrainData;
-			if (terrainData == null)
+			if (!(terrainData == null))
 			{
-				return;
+				Undo.RegisterCompleteObjectUndo(terrainData, "Remove detail object");
+				terrainData.RemoveDetailPrototype(index);
 			}
-			Undo.RegisterCompleteObjectUndo(terrainData, "Remove detail object");
-			terrainData.RemoveDetailPrototype(index);
+		}
+
+		internal static bool IsLODTreePrototype(GameObject prefab)
+		{
+			return prefab != null && prefab.GetComponent<LODGroup>() != null;
 		}
 	}
 }

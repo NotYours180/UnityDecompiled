@@ -1,13 +1,18 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class WindowFocusState : ScriptableObject
 	{
 		private static WindowFocusState m_Instance;
-		internal string m_LastWindowTypeInSameDock = string.Empty;
-		internal bool m_WasMaximizedBeforePlay;
-		internal bool m_CurrentlyInPlayMode;
+
+		internal string m_LastWindowTypeInSameDock = "";
+
+		internal bool m_WasMaximizedBeforePlay = false;
+
+		internal bool m_CurrentlyInPlayMode = false;
+
 		internal static WindowFocusState instance
 		{
 			get
@@ -23,6 +28,7 @@ namespace UnityEditor
 				return WindowFocusState.m_Instance;
 			}
 		}
+
 		private void OnEnable()
 		{
 			base.hideFlags = HideFlags.HideAndDontSave;

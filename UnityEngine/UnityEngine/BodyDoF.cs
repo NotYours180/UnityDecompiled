@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	internal enum BodyDoF
@@ -9,6 +10,9 @@ namespace UnityEngine
 		ChestFrontBack,
 		ChestLeftRight,
 		ChestRollLeftRight,
+		UpperChestFrontBack,
+		UpperChestLeftRight,
+		UpperChestRollLeftRight,
 		LastBodyDoF
 	}
 }

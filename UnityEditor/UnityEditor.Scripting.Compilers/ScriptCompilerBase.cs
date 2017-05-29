@@ -4,31 +4,36 @@ using System.IO;
 using System.Linq;
 using UnityEditor.Utils;
 using UnityEngine;
+
 namespace UnityEditor.Scripting.Compilers
 {
 	internal abstract class ScriptCompilerBase : IDisposable
 	{
 		private Program process;
-		private string _responseFile;
+
+		private string _responseFile = null;
+
 		protected MonoIsland _island;
+
 		protected ScriptCompilerBase(MonoIsland island)
 		{
 			this._island = island;
 		}
+
 		protected abstract Program StartCompiler();
+
 		protected abstract CompilerOutputParserBase CreateOutputParser();
+
 		protected string[] GetErrorOutput()
 		{
 			return this.process.GetErrorOutput();
 		}
+
 		protected string[] GetStandardOutput()
 		{
 			return this.process.GetStandardOutput();
 		}
-		protected bool CompilingForWSA()
-		{
-			return this._island._target == BuildTarget.MetroPlayer;
-		}
+
 		public void BeginCompiling()
 		{
 			if (this.process != null)
@@ -37,6 +42,7 @@ namespace UnityEditor.Scripting.Compilers
 			}
 			this.process = this.StartCompiler();
 		}
+
 		public virtual void Dispose()
 		{
 			if (this.process != null)
@@ -50,28 +56,46 @@ namespace UnityEditor.Scripting.Compilers
 				this._responseFile = null;
 			}
 		}
+
 		public virtual bool Poll()
 		{
 			return this.process == null || this.process.HasExited;
 		}
-		protected void AddCustomResponseFileIfPresent(List<string> arguments, string responseFileName)
+
+		protected string GetMonoProfileLibDirectory()
+		{
+			string profile = BuildPipeline.CompatibilityProfileToClassLibFolder(this._island._api_compatibility_level);
+			string monoInstallation = (this._island._api_compatibility_level != ApiCompatibilityLevel.NET_4_6) ? "Mono" : "MonoBleedingEdge";
+			return MonoInstallationFinder.GetProfileDirectory(profile, monoInstallation);
+		}
+
+		protected bool AddCustomResponseFileIfPresent(List<string> arguments, string responseFileName)
 		{
 			string text = Path.Combine("Assets", responseFileName);
+			bool result;
 			if (!File.Exists(text))
 			{
-				return;
+				result = false;
 			}
-			arguments.Add("@" + text);
+			else
+			{
+				arguments.Add("@" + text);
+				result = true;
+			}
+			return result;
 		}
+
 		protected string GenerateResponseFile(List<string> arguments)
 		{
 			this._responseFile = CommandLineFormatter.GenerateResponseFile(arguments);
 			return this._responseFile;
 		}
+
 		protected static string PrepareFileName(string fileName)
 		{
 			return CommandLineFormatter.PrepareFileName(fileName);
 		}
+
 		public virtual CompilerMessage[] GetCompilerMessages()
 		{
 			if (!this.Poll())
@@ -81,21 +105,28 @@ namespace UnityEditor.Scripting.Compilers
 			this.DumpStreamOutputToLog();
 			return this.CreateOutputParser().Parse(this.GetStreamContainingCompilerMessages(), this.CompilationHadFailure()).ToArray<CompilerMessage>();
 		}
+
 		protected bool CompilationHadFailure()
 		{
 			return this.process.ExitCode != 0;
 		}
+
 		protected virtual string[] GetStreamContainingCompilerMessages()
 		{
-			return this.GetErrorOutput();
+			List<string> list = new List<string>();
+			list.AddRange(this.GetErrorOutput());
+			list.Add(string.Empty);
+			list.AddRange(this.GetStandardOutput());
+			return list.ToArray();
 		}
+
 		private void DumpStreamOutputToLog()
 		{
 			bool flag = this.CompilationHadFailure();
 			string[] errorOutput = this.GetErrorOutput();
 			if (flag || errorOutput.Length != 0)
 			{
-				Console.WriteLine(string.Empty);
+				Console.WriteLine("");
 				Console.WriteLine("-----Compiler Commandline Arguments:");
 				this.process.LogProcessStartInfo();
 				string[] standardOutput = this.GetStandardOutput();

@@ -1,27 +1,34 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor.Audio
 {
 	internal sealed class MixerEffectDefinitions
 	{
 		private static readonly List<MixerEffectDefinition> s_MixerEffectDefinitions = new List<MixerEffectDefinition>();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void ClearDefinitionsRuntime();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void AddDefinitionRuntime(string name, MixerParameterDefinition[] parameters);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetAudioEffectNames();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern MixerParameterDefinition[] GetAudioEffectParameterDesc(string effectName);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool EffectCanBeSidechainTarget(AudioMixerEffectController effect);
+
 		public static void Refresh()
 		{
 			MixerEffectDefinitions.ClearDefinitions();
@@ -37,6 +44,7 @@ namespace UnityEditor.Audio
 					displayScale = 1f,
 					displayExponent = 1f,
 					minRange = -80f,
+					maxRange = 0f,
 					defaultValue = -10f,
 					description = "Threshold of side-chain level detector"
 				},
@@ -57,6 +65,7 @@ namespace UnityEditor.Audio
 					units = "ms",
 					displayScale = 1000f,
 					displayExponent = 3f,
+					minRange = 0f,
 					maxRange = 10f,
 					defaultValue = 0.1f,
 					description = "Level detector attack time"
@@ -67,6 +76,7 @@ namespace UnityEditor.Audio
 					units = "ms",
 					displayScale = 1000f,
 					displayExponent = 3f,
+					minRange = 0f,
 					maxRange = 10f,
 					defaultValue = 0.1f,
 					description = "Level detector release time"
@@ -79,6 +89,7 @@ namespace UnityEditor.Audio
 					displayExponent = 1f,
 					minRange = -80f,
 					maxRange = 40f,
+					defaultValue = 0f,
 					description = "Make-up gain"
 				},
 				new MixerParameterDefinition
@@ -87,6 +98,7 @@ namespace UnityEditor.Audio
 					units = "dB",
 					displayScale = 1f,
 					displayExponent = 1f,
+					minRange = 0f,
 					maxRange = 50f,
 					defaultValue = 10f,
 					description = "Sharpness of compression curve knee"
@@ -97,6 +109,7 @@ namespace UnityEditor.Audio
 					units = "%",
 					displayScale = 100f,
 					displayExponent = 1f,
+					minRange = 0f,
 					maxRange = 1f,
 					defaultValue = 1f,
 					description = "Sidechain/source mix. If set to 100% the compressor detects level entirely from sidechain signal."
@@ -113,17 +126,22 @@ namespace UnityEditor.Audio
 				MixerEffectDefinitions.RegisterAudioMixerEffect(text, audioEffectParameterDesc);
 			}
 		}
+
 		public static bool EffectExists(string name)
 		{
+			bool result;
 			foreach (MixerEffectDefinition current in MixerEffectDefinitions.s_MixerEffectDefinitions)
 			{
 				if (current.name == name)
 				{
-					return true;
+					result = true;
+					return result;
 				}
 			}
-			return false;
+			result = false;
+			return result;
 		}
+
 		public static string[] GetEffectList()
 		{
 			string[] array = new string[MixerEffectDefinitions.s_MixerEffectDefinitions.Count];
@@ -133,29 +151,37 @@ namespace UnityEditor.Audio
 			}
 			return array;
 		}
+
 		public static void ClearDefinitions()
 		{
 			MixerEffectDefinitions.s_MixerEffectDefinitions.Clear();
 			MixerEffectDefinitions.ClearDefinitionsRuntime();
 		}
+
 		public static MixerParameterDefinition[] GetEffectParameters(string effect)
 		{
+			MixerParameterDefinition[] result;
 			foreach (MixerEffectDefinition current in MixerEffectDefinitions.s_MixerEffectDefinitions)
 			{
 				if (current.name == effect)
 				{
-					return current.parameters;
+					result = current.parameters;
+					return result;
 				}
 			}
-			return new MixerParameterDefinition[0];
+			result = new MixerParameterDefinition[0];
+			return result;
 		}
+
 		public static bool RegisterAudioMixerEffect(string name, MixerParameterDefinition[] definitions)
 		{
+			bool result;
 			foreach (MixerEffectDefinition current in MixerEffectDefinitions.s_MixerEffectDefinitions)
 			{
 				if (current.name == name)
 				{
-					return false;
+					result = false;
+					return result;
 				}
 			}
 			MixerEffectDefinition item = new MixerEffectDefinition(name, definitions);
@@ -165,7 +191,8 @@ namespace UnityEditor.Audio
 			{
 				MixerEffectDefinitions.AddDefinitionRuntime(current2.name, current2.parameters);
 			}
-			return true;
+			result = true;
+			return result;
 		}
 	}
 }

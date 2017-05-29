@@ -1,20 +1,27 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+
 internal class PreviewGUI
 {
 	internal class Styles
 	{
 		public static GUIStyle preButton;
+
 		public static void Init()
 		{
 			PreviewGUI.Styles.preButton = "preButton";
 		}
 	}
+
 	private static int sliderHash = "Slider".GetHashCode();
+
 	private static Rect s_ViewRect;
+
 	private static Rect s_Position;
+
 	private static Vector2 s_ScrollPos;
+
 	internal static void BeginScrollView(Rect position, Vector2 scrollPosition, Rect viewRect, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar)
 	{
 		PreviewGUI.s_ScrollPos = scrollPosition;
@@ -22,11 +29,13 @@ internal class PreviewGUI
 		PreviewGUI.s_Position = position;
 		GUIClip.Push(position, new Vector2(Mathf.Round(-scrollPosition.x - viewRect.x - (viewRect.width - position.width) * 0.5f), Mathf.Round(-scrollPosition.y - viewRect.y - (viewRect.height - position.height) * 0.5f)), Vector2.zero, false);
 	}
+
 	public static int CycleButton(int selected, GUIContent[] options)
 	{
 		PreviewGUI.Styles.Init();
 		return EditorGUILayout.CycleButton(selected, options, PreviewGUI.Styles.preButton);
 	}
+
 	public static Vector2 EndScrollView()
 	{
 		GUIClip.Pop();
@@ -39,16 +48,8 @@ internal class PreviewGUI
 		{
 			if (type != EventType.Used)
 			{
-				bool flag = false;
-				bool flag2 = false;
-				if (flag2 || rect3.width > rect.width)
-				{
-					flag2 = true;
-				}
-				if (flag || rect3.height > rect.height)
-				{
-					flag = true;
-				}
+				bool flag = (int)rect3.width > (int)rect.width;
+				bool flag2 = (int)rect3.height > (int)rect.height;
 				int controlID = GUIUtility.GetControlID(PreviewGUI.sliderHash, FocusType.Passive);
 				if (flag2)
 				{
@@ -82,36 +83,38 @@ internal class PreviewGUI
 		}
 		return result;
 	}
+
 	public static Vector2 Drag2D(Vector2 scrollPosition, Rect position)
 	{
 		int controlID = GUIUtility.GetControlID(PreviewGUI.sliderHash, FocusType.Passive);
 		Event current = Event.current;
-		switch (current.GetTypeForControl(controlID))
+		EventType typeForControl = current.GetTypeForControl(controlID);
+		if (typeForControl != EventType.MouseDown)
 		{
-		case EventType.MouseDown:
-			if (position.Contains(current.mousePosition) && position.width > 50f)
+			if (typeForControl != EventType.MouseDrag)
 			{
-				GUIUtility.hotControl = controlID;
-				current.Use();
-				EditorGUIUtility.SetWantsMouseJumping(1);
+				if (typeForControl == EventType.MouseUp)
+				{
+					if (GUIUtility.hotControl == controlID)
+					{
+						GUIUtility.hotControl = 0;
+					}
+					EditorGUIUtility.SetWantsMouseJumping(0);
+				}
 			}
-			break;
-		case EventType.MouseUp:
-			if (GUIUtility.hotControl == controlID)
-			{
-				GUIUtility.hotControl = 0;
-			}
-			EditorGUIUtility.SetWantsMouseJumping(0);
-			break;
-		case EventType.MouseDrag:
-			if (GUIUtility.hotControl == controlID)
+			else if (GUIUtility.hotControl == controlID)
 			{
 				scrollPosition -= current.delta * (float)((!current.shift) ? 1 : 3) / Mathf.Min(position.width, position.height) * 140f;
 				scrollPosition.y = Mathf.Clamp(scrollPosition.y, -90f, 90f);
 				current.Use();
 				GUI.changed = true;
 			}
-			break;
+		}
+		else if (position.Contains(current.mousePosition) && position.width > 50f)
+		{
+			GUIUtility.hotControl = controlID;
+			current.Use();
+			EditorGUIUtility.SetWantsMouseJumping(1);
 		}
 		return scrollPosition;
 	}

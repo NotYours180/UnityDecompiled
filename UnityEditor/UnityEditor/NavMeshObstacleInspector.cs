@@ -1,18 +1,26 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.AI;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(NavMeshObstacle))]
 	internal class NavMeshObstacleInspector : Editor
 	{
 		private SerializedProperty m_Shape;
+
 		private SerializedProperty m_Center;
+
 		private SerializedProperty m_Extents;
+
 		private SerializedProperty m_Carve;
+
 		private SerializedProperty m_MoveThreshold;
+
 		private SerializedProperty m_TimeToStationary;
+
 		private SerializedProperty m_CarveOnlyStationary;
+
 		private void OnEnable()
 		{
 			this.m_Shape = base.serializedObject.FindProperty("m_Shape");
@@ -23,6 +31,7 @@ namespace UnityEditor
 			this.m_TimeToStationary = base.serializedObject.FindProperty("m_TimeToStationary");
 			this.m_CarveOnlyStationary = base.serializedObject.FindProperty("m_CarveOnlyStationary");
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
@@ -31,7 +40,7 @@ namespace UnityEditor
 			if (EditorGUI.EndChangeCheck())
 			{
 				base.serializedObject.ApplyModifiedProperties();
-				(this.target as NavMeshObstacle).FitExtents();
+				(base.target as NavMeshObstacle).FitExtents();
 				base.serializedObject.Update();
 			}
 			EditorGUILayout.PropertyField(this.m_Center, new GUILayoutOption[0]);
@@ -45,23 +54,15 @@ namespace UnityEditor
 					this.m_Extents.vector3Value = new Vector3(num, num2 / 2f, num);
 				}
 			}
-			else
+			else if (this.m_Shape.enumValueIndex == 1)
 			{
-				if (this.m_Shape.enumValueIndex == 1)
+				EditorGUI.BeginChangeCheck();
+				Vector3 vector = this.m_Extents.vector3Value * 2f;
+				vector = EditorGUILayout.Vector3Field("Size", vector, new GUILayoutOption[0]);
+				if (EditorGUI.EndChangeCheck())
 				{
-					EditorGUI.BeginChangeCheck();
-					Vector3 vector = this.m_Extents.vector3Value * 2f;
-					vector = EditorGUILayout.Vector3Field("Size", vector, new GUILayoutOption[0]);
-					if (EditorGUI.EndChangeCheck())
-					{
-						this.m_Extents.vector3Value = vector / 2f;
-					}
+					this.m_Extents.vector3Value = vector / 2f;
 				}
-			}
-			if (!InternalEditorUtility.HasProFeaturesEnabled())
-			{
-				EditorGUILayout.HelpBox("This is only available in the Pro version of Unity.", MessageType.Warning);
-				GUI.enabled = false;
 			}
 			EditorGUILayout.PropertyField(this.m_Carve, new GUILayoutOption[0]);
 			if (this.m_Carve.boolValue)

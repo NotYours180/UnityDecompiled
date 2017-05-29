@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	public sealed class AssetStoreAsset
@@ -7,45 +8,79 @@ namespace UnityEditor
 		internal class PreviewInfo
 		{
 			public string packageName;
+
 			public string packageShortUrl;
+
 			public int packageSize;
+
 			public string packageVersion;
+
 			public int packageRating;
+
 			public int packageAssetCount;
+
 			public bool isPurchased;
+
 			public bool isDownloadable;
+
 			public string publisherName;
+
 			public string encryptionKey;
+
 			public string packageUrl;
+
 			public float buildProgress;
+
 			public float downloadProgress;
+
 			public string categoryName;
 		}
+
 		public int id;
+
 		public string name;
+
 		public string displayName;
+
 		public string staticPreviewURL;
+
 		public string dynamicPreviewURL;
+
 		public string className;
+
 		public string price;
+
 		public int packageID;
+
 		internal AssetStoreAsset.PreviewInfo previewInfo;
+
 		public Texture2D previewImage;
+
 		internal AssetBundleCreateRequest previewBundleRequest;
+
 		internal AssetBundle previewBundle;
+
 		internal UnityEngine.Object previewAsset;
+
 		internal bool disposed;
+
 		public UnityEngine.Object Preview
 		{
 			get
 			{
+				UnityEngine.Object result;
 				if (this.previewAsset != null)
 				{
-					return this.previewAsset;
+					result = this.previewAsset;
 				}
-				return this.previewImage;
+				else
+				{
+					result = this.previewImage;
+				}
+				return result;
 			}
 		}
+
 		public bool HasLivePreview
 		{
 			get
@@ -53,6 +88,7 @@ namespace UnityEditor
 				return this.previewAsset != null;
 			}
 		}
+
 		internal string DebugString
 		{
 			get
@@ -90,10 +126,12 @@ namespace UnityEditor
 				return text;
 			}
 		}
+
 		public AssetStoreAsset()
 		{
 			this.disposed = false;
 		}
+
 		public void Dispose()
 		{
 			if (this.previewImage != null)

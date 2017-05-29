@@ -1,24 +1,33 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public struct DrivenRectTransformTracker
 	{
 		private List<RectTransform> m_Tracked;
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool CanRecordModifications();
+
 		public void Add(Object driver, RectTransform rectTransform, DrivenTransformProperties drivenProperties)
 		{
 			if (this.m_Tracked == null)
 			{
 				this.m_Tracked = new List<RectTransform>();
 			}
-			if (!Application.isPlaying)
+			rectTransform.drivenByObject = driver;
+			rectTransform.drivenProperties |= drivenProperties;
+			if (!Application.isPlaying && DrivenRectTransformTracker.CanRecordModifications())
 			{
 				RuntimeUndo.RecordObject(rectTransform, "Driving RectTransform");
 			}
 			this.m_Tracked.Add(rectTransform);
-			rectTransform.drivenByObject = driver;
-			rectTransform.drivenProperties |= drivenProperties;
 		}
+
 		public void Clear()
 		{
 			if (this.m_Tracked != null)
@@ -27,7 +36,7 @@ namespace UnityEngine
 				{
 					if (this.m_Tracked[i] != null)
 					{
-						if (!Application.isPlaying)
+						if (!Application.isPlaying && DrivenRectTransformTracker.CanRecordModifications())
 						{
 							RuntimeUndo.RecordObject(this.m_Tracked[i], "Driving RectTransform");
 						}

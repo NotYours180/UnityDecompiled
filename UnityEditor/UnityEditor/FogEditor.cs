@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CustomEditor(typeof(RenderSettings))]
@@ -7,20 +8,33 @@ namespace UnityEditor
 	{
 		internal class Styles
 		{
-			public static readonly GUIContent fogHeader = EditorGUIUtility.TextContent("RenderSettings.FogHeader");
-			public static readonly GUIContent fogWarning = EditorGUIUtility.TextContent("RenderSettings.FogWarning");
-			public static readonly GUIContent fogDensity = EditorGUIUtility.TextContent("RenderSettings.FogDensity");
-			public static readonly GUIContent fogLinearStart = EditorGUIUtility.TextContent("RenderSettings.FogLinearStart");
-			public static readonly GUIContent fogLinearEnd = EditorGUIUtility.TextContent("RenderSettings.FogLinearEnd");
+			public static readonly GUIContent FogWarning = EditorGUIUtility.TextContent("Fog has no effect on opaque objects when using Deferred Shading rendering. Use the Global Fog image effect instead, which supports opaque objects.");
+
+			public static readonly GUIContent FogDensity = EditorGUIUtility.TextContent("Density|Controls the density of the fog effect in the Scene when using Exponential or Exponential Squared modes.");
+
+			public static readonly GUIContent FogLinearStart = EditorGUIUtility.TextContent("Start|Controls the distance from the camera where the fog will start in the Scene.");
+
+			public static readonly GUIContent FogLinearEnd = EditorGUIUtility.TextContent("End|Controls the distance from the camera where the fog will completely obscure objects in the Scene.");
+
+			public static readonly GUIContent FogEnable = EditorGUIUtility.TextContent("Fog|Specifies whether fog is used in the Scene or not.");
+
+			public static readonly GUIContent FogColor = EditorGUIUtility.TextContent("Color|Controls the color of that fog drawn in the Scene.");
+
+			public static readonly GUIContent FogMode = EditorGUIUtility.TextContent("Mode|Controls the mathematical function determining the way fog accumulates with distance from the camera. Options are Linear, Exponential, and Exponential Squared.");
 		}
-		private const string kShowEditorKey = "ShowFogEditorFoldout";
+
 		protected SerializedProperty m_Fog;
+
 		protected SerializedProperty m_FogColor;
+
 		protected SerializedProperty m_FogMode;
+
 		protected SerializedProperty m_FogDensity;
+
 		protected SerializedProperty m_LinearFogStart;
+
 		protected SerializedProperty m_LinearFogEnd;
-		private bool m_ShowEditor;
+
 		public virtual void OnEnable()
 		{
 			this.m_Fog = base.serializedObject.FindProperty("m_Fog");
@@ -29,41 +43,36 @@ namespace UnityEditor
 			this.m_FogDensity = base.serializedObject.FindProperty("m_FogDensity");
 			this.m_LinearFogStart = base.serializedObject.FindProperty("m_LinearFogStart");
 			this.m_LinearFogEnd = base.serializedObject.FindProperty("m_LinearFogEnd");
-			this.m_ShowEditor = InspectorState.GetBool("ShowFogEditorFoldout", false);
 		}
+
 		public virtual void OnDisable()
 		{
-			InspectorState.SetBool("ShowFogEditorFoldout", this.m_ShowEditor);
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
-			this.m_ShowEditor = EditorGUILayout.ToggleTitlebar(this.m_ShowEditor, FogEditor.Styles.fogHeader, this.m_Fog);
-			if (this.m_ShowEditor)
+			EditorGUILayout.PropertyField(this.m_Fog, FogEditor.Styles.FogEnable, new GUILayoutOption[0]);
+			if (this.m_Fog.boolValue)
 			{
 				EditorGUI.indentLevel++;
-				EditorGUI.BeginDisabledGroup(!this.m_Fog.boolValue);
-				EditorGUILayout.PropertyField(this.m_FogColor, new GUILayoutOption[0]);
-				EditorGUILayout.PropertyField(this.m_FogMode, new GUILayoutOption[0]);
-				EditorGUI.indentLevel++;
-				FogMode intValue = (FogMode)this.m_FogMode.intValue;
-				if (intValue != FogMode.Linear)
+				EditorGUILayout.PropertyField(this.m_FogColor, FogEditor.Styles.FogColor, new GUILayoutOption[0]);
+				EditorGUILayout.PropertyField(this.m_FogMode, FogEditor.Styles.FogMode, new GUILayoutOption[0]);
+				if (this.m_FogMode.intValue != 1)
 				{
-					EditorGUILayout.PropertyField(this.m_FogDensity, FogEditor.Styles.fogDensity, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_FogDensity, FogEditor.Styles.FogDensity, new GUILayoutOption[0]);
 				}
 				else
 				{
-					EditorGUILayout.PropertyField(this.m_LinearFogStart, FogEditor.Styles.fogLinearStart, new GUILayoutOption[0]);
-					EditorGUILayout.PropertyField(this.m_LinearFogEnd, FogEditor.Styles.fogLinearEnd, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_LinearFogStart, FogEditor.Styles.FogLinearStart, new GUILayoutOption[0]);
+					EditorGUILayout.PropertyField(this.m_LinearFogEnd, FogEditor.Styles.FogLinearEnd, new GUILayoutOption[0]);
 				}
-				EditorGUI.indentLevel--;
-				if (SceneView.GetSceneViewRenderingPath() == RenderingPath.DeferredShading)
+				if (SceneView.IsUsingDeferredRenderingPath())
 				{
-					EditorGUILayout.HelpBox(FogEditor.Styles.fogWarning.text, MessageType.Info);
+					EditorGUILayout.HelpBox(FogEditor.Styles.FogWarning.text, MessageType.Info);
 				}
-				EditorGUILayout.EndFadeGroup();
-				EditorGUI.EndDisabledGroup();
 				EditorGUI.indentLevel--;
+				EditorGUILayout.Space();
 			}
 			base.serializedObject.ApplyModifiedProperties();
 		}

@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEditor.Animations;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[Serializable]
@@ -9,29 +9,61 @@ namespace UnityEditor
 	public sealed class ModelImporterClipAnimation
 	{
 		private string m_TakeName;
+
 		private string m_Name;
+
 		private float m_FirstFrame;
+
 		private float m_LastFrame;
-		private int m_WrapMode;
+
+		private WrapMode m_WrapMode;
+
 		private int m_Loop;
+
 		private float m_OrientationOffsetY;
+
 		private float m_Level;
+
 		private float m_CycleOffset;
+
+		private float m_AdditiveReferencePoseFrame;
+
+		private int m_HasAdditiveReferencePose;
+
 		private int m_LoopTime;
+
 		private int m_LoopBlend;
+
 		private int m_LoopBlendOrientation;
+
 		private int m_LoopBlendPositionY;
+
 		private int m_LoopBlendPositionXZ;
+
 		private int m_KeepOriginalOrientation;
+
 		private int m_KeepOriginalPositionY;
+
 		private int m_KeepOriginalPositionXZ;
+
 		private int m_HeightFromFeet;
+
 		private int m_Mirror;
-		private int m_MaskType;
+
+		private int m_MaskType = 3;
+
 		private AvatarMask m_MaskSource;
+
+		private int[] m_BodyMask;
+
 		private AnimationEvent[] m_AnimationEvents;
+
 		private ClipAnimationInfoCurve[] m_AdditionnalCurves;
+
+		private TransformMaskElement[] m_TransformMask;
+
 		private bool m_MaskNeedsUpdating;
+
 		public string takeName
 		{
 			get
@@ -43,6 +75,7 @@ namespace UnityEditor
 				this.m_TakeName = value;
 			}
 		}
+
 		public string name
 		{
 			get
@@ -54,6 +87,7 @@ namespace UnityEditor
 				this.m_Name = value;
 			}
 		}
+
 		public float firstFrame
 		{
 			get
@@ -65,6 +99,7 @@ namespace UnityEditor
 				this.m_FirstFrame = value;
 			}
 		}
+
 		public float lastFrame
 		{
 			get
@@ -76,17 +111,19 @@ namespace UnityEditor
 				this.m_LastFrame = value;
 			}
 		}
+
 		public WrapMode wrapMode
 		{
 			get
 			{
-				return (WrapMode)this.m_WrapMode;
+				return this.m_WrapMode;
 			}
 			set
 			{
-				this.m_WrapMode = (int)value;
+				this.m_WrapMode = value;
 			}
 		}
+
 		public bool loop
 		{
 			get
@@ -98,6 +135,7 @@ namespace UnityEditor
 				this.m_Loop = ((!value) ? 0 : 1);
 			}
 		}
+
 		public float rotationOffset
 		{
 			get
@@ -109,6 +147,7 @@ namespace UnityEditor
 				this.m_OrientationOffsetY = value;
 			}
 		}
+
 		public float heightOffset
 		{
 			get
@@ -120,6 +159,7 @@ namespace UnityEditor
 				this.m_Level = value;
 			}
 		}
+
 		public float cycleOffset
 		{
 			get
@@ -131,6 +171,7 @@ namespace UnityEditor
 				this.m_CycleOffset = value;
 			}
 		}
+
 		public bool loopTime
 		{
 			get
@@ -142,6 +183,7 @@ namespace UnityEditor
 				this.m_LoopTime = ((!value) ? 0 : 1);
 			}
 		}
+
 		public bool loopPose
 		{
 			get
@@ -153,6 +195,7 @@ namespace UnityEditor
 				this.m_LoopBlend = ((!value) ? 0 : 1);
 			}
 		}
+
 		public bool lockRootRotation
 		{
 			get
@@ -164,6 +207,7 @@ namespace UnityEditor
 				this.m_LoopBlendOrientation = ((!value) ? 0 : 1);
 			}
 		}
+
 		public bool lockRootHeightY
 		{
 			get
@@ -175,6 +219,7 @@ namespace UnityEditor
 				this.m_LoopBlendPositionY = ((!value) ? 0 : 1);
 			}
 		}
+
 		public bool lockRootPositionXZ
 		{
 			get
@@ -186,6 +231,7 @@ namespace UnityEditor
 				this.m_LoopBlendPositionXZ = ((!value) ? 0 : 1);
 			}
 		}
+
 		public bool keepOriginalOrientation
 		{
 			get
@@ -197,6 +243,7 @@ namespace UnityEditor
 				this.m_KeepOriginalOrientation = ((!value) ? 0 : 1);
 			}
 		}
+
 		public bool keepOriginalPositionY
 		{
 			get
@@ -208,6 +255,7 @@ namespace UnityEditor
 				this.m_KeepOriginalPositionY = ((!value) ? 0 : 1);
 			}
 		}
+
 		public bool keepOriginalPositionXZ
 		{
 			get
@@ -219,6 +267,7 @@ namespace UnityEditor
 				this.m_KeepOriginalPositionXZ = ((!value) ? 0 : 1);
 			}
 		}
+
 		public bool heightFromFeet
 		{
 			get
@@ -230,6 +279,7 @@ namespace UnityEditor
 				this.m_HeightFromFeet = ((!value) ? 0 : 1);
 			}
 		}
+
 		public bool mirror
 		{
 			get
@@ -241,6 +291,7 @@ namespace UnityEditor
 				this.m_Mirror = ((!value) ? 0 : 1);
 			}
 		}
+
 		public ClipAnimationMaskType maskType
 		{
 			get
@@ -252,6 +303,7 @@ namespace UnityEditor
 				this.m_MaskType = (int)value;
 			}
 		}
+
 		public AvatarMask maskSource
 		{
 			get
@@ -263,6 +315,7 @@ namespace UnityEditor
 				this.m_MaskSource = value;
 			}
 		}
+
 		public AnimationEvent[] events
 		{
 			get
@@ -274,6 +327,7 @@ namespace UnityEditor
 				this.m_AnimationEvents = value;
 			}
 		}
+
 		public ClipAnimationInfoCurve[] curves
 		{
 			get
@@ -285,6 +339,7 @@ namespace UnityEditor
 				this.m_AdditionnalCurves = value;
 			}
 		}
+
 		public bool maskNeedsUpdating
 		{
 			get
@@ -292,11 +347,66 @@ namespace UnityEditor
 				return this.m_MaskNeedsUpdating;
 			}
 		}
+
+		public float additiveReferencePoseFrame
+		{
+			get
+			{
+				return this.m_AdditiveReferencePoseFrame;
+			}
+			set
+			{
+				this.m_AdditiveReferencePoseFrame = value;
+			}
+		}
+
+		public bool hasAdditiveReferencePose
+		{
+			get
+			{
+				return this.m_HasAdditiveReferencePose != 0;
+			}
+			set
+			{
+				this.m_HasAdditiveReferencePose = ((!value) ? 0 : 1);
+			}
+		}
+
+		public void ConfigureMaskFromClip(ref AvatarMask mask)
+		{
+			mask.transformCount = this.m_TransformMask.Length;
+			for (int i = 0; i < mask.transformCount; i++)
+			{
+				mask.SetTransformPath(i, this.m_TransformMask[i].path);
+				mask.SetTransformActive(i, this.m_TransformMask[i].weight > 0f);
+			}
+			for (int j = 0; j < this.m_BodyMask.Length; j++)
+			{
+				mask.SetHumanoidBodyPartActive((AvatarMaskBodyPart)j, this.m_BodyMask[j] != 0);
+			}
+		}
+
+		public void ConfigureClipFromMask(AvatarMask mask)
+		{
+			this.m_TransformMask = new TransformMaskElement[mask.transformCount];
+			for (int i = 0; i < mask.transformCount; i++)
+			{
+				this.m_TransformMask[i].path = mask.GetTransformPath(i);
+				this.m_TransformMask[i].weight = ((!mask.GetTransformActive(i)) ? 0f : 1f);
+			}
+			this.m_BodyMask = new int[13];
+			for (int j = 0; j < 13; j++)
+			{
+				this.m_BodyMask[j] = ((!mask.GetHumanoidBodyPartActive((AvatarMaskBodyPart)j)) ? 0 : 1);
+			}
+		}
+
 		public override bool Equals(object o)
 		{
 			ModelImporterClipAnimation modelImporterClipAnimation = o as ModelImporterClipAnimation;
-			return modelImporterClipAnimation != null && this.takeName == modelImporterClipAnimation.takeName && this.name == modelImporterClipAnimation.name && this.firstFrame == modelImporterClipAnimation.firstFrame && this.lastFrame == modelImporterClipAnimation.lastFrame && this.m_WrapMode == modelImporterClipAnimation.m_WrapMode && this.m_Loop == modelImporterClipAnimation.m_Loop && this.loopPose == modelImporterClipAnimation.loopPose && this.lockRootRotation == modelImporterClipAnimation.lockRootRotation && this.lockRootHeightY == modelImporterClipAnimation.lockRootHeightY && this.lockRootPositionXZ == modelImporterClipAnimation.lockRootPositionXZ && this.mirror == modelImporterClipAnimation.mirror && this.maskType == modelImporterClipAnimation.maskType && this.maskSource == modelImporterClipAnimation.maskSource;
+			return modelImporterClipAnimation != null && this.takeName == modelImporterClipAnimation.takeName && this.name == modelImporterClipAnimation.name && this.firstFrame == modelImporterClipAnimation.firstFrame && this.lastFrame == modelImporterClipAnimation.lastFrame && this.m_WrapMode == modelImporterClipAnimation.m_WrapMode && this.m_Loop == modelImporterClipAnimation.m_Loop && this.loopPose == modelImporterClipAnimation.loopPose && this.lockRootRotation == modelImporterClipAnimation.lockRootRotation && this.lockRootHeightY == modelImporterClipAnimation.lockRootHeightY && this.lockRootPositionXZ == modelImporterClipAnimation.lockRootPositionXZ && this.mirror == modelImporterClipAnimation.mirror && this.maskType == modelImporterClipAnimation.maskType && this.maskSource == modelImporterClipAnimation.maskSource && this.additiveReferencePoseFrame == modelImporterClipAnimation.additiveReferencePoseFrame && this.hasAdditiveReferencePose == modelImporterClipAnimation.hasAdditiveReferencePose;
 		}
+
 		public override int GetHashCode()
 		{
 			return this.name.GetHashCode();

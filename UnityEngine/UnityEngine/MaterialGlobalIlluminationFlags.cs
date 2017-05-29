@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	[Flags]
@@ -7,6 +8,7 @@ namespace UnityEngine
 		None = 0,
 		RealtimeEmissive = 1,
 		BakedEmissive = 2,
-		EmissiveIsBlack = 4
+		EmissiveIsBlack = 4,
+		AnyEmissive = 3
 	}
 }

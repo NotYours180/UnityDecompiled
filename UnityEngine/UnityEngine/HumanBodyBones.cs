@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	public enum HumanBodyBones
@@ -12,7 +13,8 @@ namespace UnityEngine
 		RightFoot,
 		Spine,
 		Chest,
-		Neck,
+		UpperChest = 54,
+		Neck = 9,
 		Head,
 		LeftShoulder,
 		RightShoulder,
@@ -57,6 +59,6 @@ namespace UnityEngine
 		RightLittleProximal,
 		RightLittleIntermediate,
 		RightLittleDistal,
-		LastBone
+		LastBone = 55
 	}
 }

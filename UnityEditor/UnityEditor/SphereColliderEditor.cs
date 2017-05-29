@@ -1,20 +1,35 @@
 using System;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(SphereCollider))]
-	internal class SphereColliderEditor : Collider3DEditorBase
+	internal class SphereColliderEditor : PrimitiveCollider3DEditor
 	{
+		private static readonly int s_HandleControlIDHint = typeof(SphereColliderEditor).Name.GetHashCode();
+
 		private SerializedProperty m_Center;
+
 		private SerializedProperty m_Radius;
-		private int m_HandleControlID;
+
+		private readonly SphereBoundsHandle m_BoundsHandle = new SphereBoundsHandle(SphereColliderEditor.s_HandleControlIDHint);
+
+		protected override PrimitiveBoundsHandle boundsHandle
+		{
+			get
+			{
+				return this.m_BoundsHandle;
+			}
+		}
+
 		public override void OnEnable()
 		{
 			base.OnEnable();
 			this.m_Center = base.serializedObject.FindProperty("m_Center");
 			this.m_Radius = base.serializedObject.FindProperty("m_Radius");
-			this.m_HandleControlID = -1;
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
@@ -25,45 +40,31 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_Radius, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
 		}
-		public void OnSceneGUI()
+
+		protected override void CopyColliderPropertiesToHandle()
 		{
-			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
-			SphereCollider sphereCollider = (SphereCollider)this.target;
-			Color color = Handles.color;
-			if (sphereCollider.enabled)
+			SphereCollider sphereCollider = (SphereCollider)base.target;
+			this.m_BoundsHandle.center = base.TransformColliderCenterToHandleSpace(sphereCollider.transform, sphereCollider.center);
+			this.m_BoundsHandle.radius = sphereCollider.radius * this.GetRadiusScaleFactor();
+		}
+
+		protected override void CopyHandlePropertiesToCollider()
+		{
+			SphereCollider sphereCollider = (SphereCollider)base.target;
+			sphereCollider.center = base.TransformHandleCenterToColliderSpace(sphereCollider.transform, this.m_BoundsHandle.center);
+			float radiusScaleFactor = this.GetRadiusScaleFactor();
+			sphereCollider.radius = ((!Mathf.Approximately(radiusScaleFactor, 0f)) ? (this.m_BoundsHandle.radius / this.GetRadiusScaleFactor()) : 0f);
+		}
+
+		private float GetRadiusScaleFactor()
+		{
+			float num = 0f;
+			Vector3 lossyScale = ((SphereCollider)base.target).transform.lossyScale;
+			for (int i = 0; i < 3; i++)
 			{
-				Handles.color = Handles.s_ColliderHandleColor;
+				num = Mathf.Max(num, Mathf.Abs(lossyScale[i]));
 			}
-			else
-			{
-				Handles.color = Handles.s_ColliderHandleColorDisabled;
-			}
-			bool enabled = GUI.enabled;
-			if (!base.editingCollider && !flag)
-			{
-				GUI.enabled = false;
-				Handles.color = new Color(0f, 0f, 0f, 0.001f);
-			}
-			Vector3 lossyScale = sphereCollider.transform.lossyScale;
-			float num = Mathf.Max(Mathf.Max(Mathf.Abs(lossyScale.x), Mathf.Abs(lossyScale.y)), Mathf.Abs(lossyScale.z));
-			float num2 = num * sphereCollider.radius;
-			num2 = Mathf.Abs(num2);
-			num2 = Mathf.Max(num2, 1E-05f);
-			Vector3 position = sphereCollider.transform.TransformPoint(sphereCollider.center);
-			Quaternion rotation = sphereCollider.transform.rotation;
-			int hotControl = GUIUtility.hotControl;
-			float num3 = Handles.RadiusHandle(rotation, position, num2, true);
-			if (GUI.changed)
-			{
-				Undo.RecordObject(sphereCollider, "Adjust Radius");
-				sphereCollider.radius = num3 * 1f / num;
-			}
-			if (hotControl != GUIUtility.hotControl && GUIUtility.hotControl != 0)
-			{
-				this.m_HandleControlID = GUIUtility.hotControl;
-			}
-			Handles.color = color;
-			GUI.enabled = enabled;
+			return num;
 		}
 	}
 }

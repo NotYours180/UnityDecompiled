@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+
 namespace UnityEditor.Scripting.Compilers
 {
 	internal class GendarmeOutputParser : UnityScriptCompilerOutputParser
@@ -10,16 +11,17 @@ namespace UnityEditor.Scripting.Compilers
 		{
 			throw new ArgumentException("Gendarme Output Parser needs standard out");
 		}
+
 		[DebuggerHidden]
 		public override IEnumerable<CompilerMessage> Parse(string[] errorOutput, string[] standardOutput, bool compilationHadFailure)
 		{
-			GendarmeOutputParser.<Parse>c__Iterator8 <Parse>c__Iterator = new GendarmeOutputParser.<Parse>c__Iterator8();
+			GendarmeOutputParser.<Parse>c__Iterator0 <Parse>c__Iterator = new GendarmeOutputParser.<Parse>c__Iterator0();
 			<Parse>c__Iterator.standardOutput = standardOutput;
-			<Parse>c__Iterator.<$>standardOutput = standardOutput;
-			GendarmeOutputParser.<Parse>c__Iterator8 expr_15 = <Parse>c__Iterator;
-			expr_15.$PC = -2;
-			return expr_15;
+			GendarmeOutputParser.<Parse>c__Iterator0 expr_0E = <Parse>c__Iterator;
+			expr_0E.$PC = -2;
+			return expr_0E;
 		}
+
 		private static CompilerMessage CompilerErrorFor(GendarmeRuleData gendarmeRuleData)
 		{
 			StringBuilder stringBuilder = new StringBuilder();
@@ -29,12 +31,14 @@ namespace UnityEditor.Scripting.Compilers
 			string message = stringBuilder.ToString();
 			return new CompilerMessage
 			{
+				type = CompilerMessageType.Error,
 				message = message,
 				file = gendarmeRuleData.File,
 				line = gendarmeRuleData.Line,
 				column = 1
 			};
 		}
+
 		private static GendarmeRuleData GetGendarmeRuleDataFor(IList<string> output, int index)
 		{
 			GendarmeRuleData gendarmeRuleData = new GendarmeRuleData();
@@ -45,69 +49,69 @@ namespace UnityEditor.Scripting.Compilers
 				{
 					gendarmeRuleData.Problem = text.Substring(text.LastIndexOf("Problem:", StringComparison.Ordinal) + "Problem:".Length);
 				}
+				else if (text.StartsWith("* Details"))
+				{
+					gendarmeRuleData.Details = text;
+				}
+				else if (text.StartsWith("* Source"))
+				{
+					gendarmeRuleData.IsAssemblyError = false;
+					gendarmeRuleData.Source = text;
+					gendarmeRuleData.Line = GendarmeOutputParser.GetLineNumberFrom(text);
+					gendarmeRuleData.File = GendarmeOutputParser.GetFileNameFrome(text);
+				}
+				else if (text.StartsWith("* Severity"))
+				{
+					gendarmeRuleData.Severity = text;
+				}
+				else if (text.StartsWith("* Location"))
+				{
+					gendarmeRuleData.IsAssemblyError = true;
+					gendarmeRuleData.Location = text;
+				}
 				else
 				{
-					if (text.StartsWith("* Details"))
+					if (!text.StartsWith("* Target"))
 					{
-						gendarmeRuleData.Details = text;
+						gendarmeRuleData.LastIndex = i;
+						break;
 					}
-					else
-					{
-						if (text.StartsWith("* Source"))
-						{
-							gendarmeRuleData.IsAssemblyError = false;
-							gendarmeRuleData.Source = text;
-							gendarmeRuleData.Line = GendarmeOutputParser.GetLineNumberFrom(text);
-							gendarmeRuleData.File = GendarmeOutputParser.GetFileNameFrome(text);
-						}
-						else
-						{
-							if (text.StartsWith("* Severity"))
-							{
-								gendarmeRuleData.Severity = text;
-							}
-							else
-							{
-								if (text.StartsWith("* Location"))
-								{
-									gendarmeRuleData.IsAssemblyError = true;
-									gendarmeRuleData.Location = text;
-								}
-								else
-								{
-									if (!text.StartsWith("* Target"))
-									{
-										gendarmeRuleData.LastIndex = i;
-										break;
-									}
-									gendarmeRuleData.Target = text;
-								}
-							}
-						}
-					}
+					gendarmeRuleData.Target = text;
 				}
 			}
 			return gendarmeRuleData;
 		}
+
 		private static string GetFileNameFrome(string currentLine)
 		{
 			int num = currentLine.LastIndexOf("* Source:") + "* Source:".Length;
 			int num2 = currentLine.IndexOf("(");
+			string result;
 			if (num != -1 && num2 != -1)
 			{
-				return currentLine.Substring(num, num2 - num).Trim();
+				result = currentLine.Substring(num, num2 - num).Trim();
 			}
-			return string.Empty;
+			else
+			{
+				result = "";
+			}
+			return result;
 		}
+
 		private static int GetLineNumberFrom(string currentLine)
 		{
 			int num = currentLine.IndexOf("(") + 2;
 			int num2 = currentLine.IndexOf(")");
+			int result;
 			if (num != -1 && num2 != -1)
 			{
-				return int.Parse(currentLine.Substring(num, num2 - num));
+				result = int.Parse(currentLine.Substring(num, num2 - num));
 			}
-			return 0;
+			else
+			{
+				result = 0;
+			}
+			return result;
 		}
 	}
 }

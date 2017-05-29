@@ -1,39 +1,68 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
+	[EditorWindowTitle(title = "Asset Server", useTypeNameAsIconName = true)]
 	internal class ASMainWindow : EditorWindow, IHasCustomMenu
 	{
 		internal class Constants
 		{
 			public GUIStyle background = "OL Box";
+
 			public GUIStyle groupBox;
+
 			public GUIStyle groupBoxNoMargin;
+
 			public GUIStyle contentBox = "GroupBox";
+
 			public GUIStyle entrySelected = "ServerUpdateChangesetOn";
+
 			public GUIStyle entryNormal = "ServerUpdateChangeset";
+
 			public GUIStyle element = "OL elem";
+
 			public GUIStyle header = "OL header";
+
 			public GUIStyle title = "OL Title";
+
 			public GUIStyle columnHeader = "OL Title";
+
 			public GUIStyle serverUpdateLog = "ServerUpdateLog";
+
 			public GUIStyle serverUpdateInfo = "ServerUpdateInfo";
+
 			public GUIStyle smallButton = "Button";
+
 			public GUIStyle errorLabel = "ErrorLabel";
+
 			public GUIStyle miniButton = "MiniButton";
+
 			public GUIStyle button = "Button";
+
 			public GUIStyle largeButton = "ButtonMid";
+
 			public GUIStyle bigButton = "LargeButton";
+
 			public GUIStyle entryEven = "CN EntryBackEven";
+
 			public GUIStyle entryOdd = "CN EntryBackOdd";
+
 			public GUIStyle dropDown = "MiniPullDown";
+
 			public GUIStyle toggle = "Toggle";
+
 			public GUIContent badgeDelete = EditorGUIUtility.IconContent("AS Badge Delete");
+
 			public GUIContent badgeMove = EditorGUIUtility.IconContent("AS Badge Move");
+
 			public GUIContent badgeNew = EditorGUIUtility.IconContent("AS Badge New");
+
 			public Vector2 toggleSize;
+
 			public Constants()
 			{
 				this.groupBoxNoMargin = new GUIStyle();
@@ -44,20 +73,22 @@ namespace UnityEditor
 				this.contentBox.overflow = new RectOffset(0, 1, 0, 1);
 				this.contentBox.padding = new RectOffset(8, 8, 7, 7);
 				this.title = new GUIStyle(this.title);
-				RectOffset arg_232_0 = this.title.padding;
+				RectOffset arg_233_0 = this.title.padding;
 				int num = this.contentBox.padding.left + 2;
 				this.title.padding.right = num;
-				arg_232_0.left = num;
+				arg_233_0.left = num;
 				this.background = new GUIStyle(this.background);
 				this.background.padding.top = 1;
 			}
 		}
+
 		public enum ShowSearchField
 		{
 			None,
 			ProjectView,
 			HistoryList
 		}
+
 		internal enum Page
 		{
 			NotInitialized = -1,
@@ -68,11 +99,14 @@ namespace UnityEditor
 			ServerConfig,
 			Admin
 		}
+
 		[Serializable]
 		public class SearchField
 		{
 			private string m_FilterText = string.Empty;
-			private bool m_Show;
+
+			private bool m_Show = false;
+
 			public string FilterText
 			{
 				get
@@ -80,6 +114,7 @@ namespace UnityEditor
 					return this.m_FilterText;
 				}
 			}
+
 			public bool Show
 			{
 				get
@@ -91,75 +126,112 @@ namespace UnityEditor
 					this.m_Show = value;
 				}
 			}
+
 			public bool DoGUI()
 			{
 				GUI.SetNextControlName("SearchFilter");
 				string text = EditorGUILayout.ToolbarSearchField(this.m_FilterText, new GUILayoutOption[0]);
+				bool result;
 				if (this.m_FilterText != text)
 				{
 					this.m_FilterText = text;
-					return true;
+					result = true;
 				}
-				return false;
+				else
+				{
+					result = false;
+				}
+				return result;
 			}
 		}
-		private const ASMainWindow.Page lastMainPage = ASMainWindow.Page.Commit;
-		public static ASMainWindow.Constants constants;
-		public AssetsItem[] sharedCommits;
-		public AssetsItem[] sharedDeletedItems;
-		public Changeset[] sharedChangesets;
-		private GUIContent[] changesetContents;
-		public ASMainWindow.ShowSearchField m_ShowSearch;
+
+		public static ASMainWindow.Constants constants = null;
+
+		public AssetsItem[] sharedCommits = null;
+
+		public AssetsItem[] sharedDeletedItems = null;
+
+		public Changeset[] sharedChangesets = null;
+
+		private GUIContent[] changesetContents = null;
+
+		public ASMainWindow.ShowSearchField m_ShowSearch = ASMainWindow.ShowSearchField.None;
+
 		public ASMainWindow.ShowSearchField m_SearchToShow = ASMainWindow.ShowSearchField.HistoryList;
+
 		public ASMainWindow.SearchField m_SearchField = new ASMainWindow.SearchField();
+
+		private const ASMainWindow.Page lastMainPage = ASMainWindow.Page.Commit;
+
 		private string[] pageTitles = new string[]
 		{
 			"Overview",
 			"Update",
 			"Commit",
-			string.Empty
+			""
 		};
+
 		private string[] dropDownMenuItems = new string[]
 		{
 			"Connection",
-			string.Empty,
+			"",
 			"Show History",
 			"Discard Changes",
-			string.Empty,
+			"",
 			"Server Administration"
 		};
+
 		private string[] unconfiguredDropDownMenuItems = new string[]
 		{
 			"Connection",
-			string.Empty,
+			"",
 			"Server Administration"
 		};
+
 		private string[] commitDropDownMenuItems = new string[]
 		{
 			"Commit",
-			string.Empty,
+			"",
 			"Compare",
 			"Compare Binary",
-			string.Empty,
+			"",
 			"Discard"
 		};
+
 		private bool needsSetup = true;
-		private string connectionString = string.Empty;
+
+		private string connectionString = "";
+
 		private int maxNickLength = 1;
-		private bool showSmallWindow;
+
+		private bool showSmallWindow = false;
+
 		private int widthToHideButtons = 591;
-		private bool wasHidingButtons;
+
+		private bool wasHidingButtons = false;
+
 		private ASMainWindow.Page selectedPage = ASMainWindow.Page.NotInitialized;
+
 		private ListViewState lv = new ListViewState(0);
+
 		private ParentViewState pv = new ParentViewState();
+
 		internal ASHistoryWindow asHistoryWin;
+
 		internal ASUpdateWindow asUpdateWin;
+
 		internal ASCommitWindow asCommitWin;
+
 		internal ASServerAdminWindow asAdminWin;
+
 		internal ASConfigWindow asConfigWin;
-		private bool error;
-		private bool isInitialUpdate;
+
+		private bool error = false;
+
+		private bool isInitialUpdate = false;
+
 		private Vector2 iconSize = new Vector2(16f, 16f);
+
 		private SplitterState splitter = new SplitterState(new float[]
 		{
 			50f,
@@ -169,15 +241,25 @@ namespace UnityEditor
 			80,
 			80
 		}, null);
-		private bool committing;
-		private bool selectionChangedWhileCommitting;
+
+		private bool committing = false;
+
+		private bool selectionChangedWhileCommitting = false;
+
 		private string commitMessage = string.Empty;
-		private bool pvHasSelection;
-		private bool somethingDiscardableSelected;
-		private bool mySelection;
-		private bool focusCommitMessage;
+
+		private bool pvHasSelection = false;
+
+		private bool somethingDiscardableSelected = false;
+
+		private bool mySelection = false;
+
+		private bool focusCommitMessage = false;
+
 		private int lastRevertSelectionChanged = -1;
-		private bool m_CheckedMaint;
+
+		private bool m_CheckedMaint = false;
+
 		public bool NeedsSetup
 		{
 			get
@@ -189,6 +271,7 @@ namespace UnityEditor
 				this.needsSetup = value;
 			}
 		}
+
 		public bool Error
 		{
 			get
@@ -196,21 +279,25 @@ namespace UnityEditor
 				return this.error;
 			}
 		}
+
 		public ASMainWindow()
 		{
 			base.position = new Rect(50f, 50f, 800f, 600f);
 		}
+
 		public void LogError(string errorStr)
 		{
 			Debug.LogError(errorStr);
 			AssetServer.SetAssetServerError(errorStr, false);
 			this.error = true;
 		}
+
 		private void Awake()
 		{
 			this.pv.lv = new ListViewState(0);
 			this.isInitialUpdate = true;
 		}
+
 		private void NotifyClosingCommit()
 		{
 			if (this.asCommitWin != null)
@@ -218,6 +305,7 @@ namespace UnityEditor
 				this.asCommitWin.OnClose();
 			}
 		}
+
 		private void OnDestroy()
 		{
 			this.sharedCommits = null;
@@ -229,26 +317,30 @@ namespace UnityEditor
 				this.NotifyClosingCommit();
 			}
 		}
+
 		private void DoSelectionChange()
 		{
 			if (this.committing)
 			{
 				this.selectionChangedWhileCommitting = true;
-				return;
 			}
-			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
-			List<string> list = new List<string>(Selection.objects.Length);
-			UnityEngine.Object[] objects = Selection.objects;
-			for (int i = 0; i < objects.Length; i++)
+			else
 			{
-				UnityEngine.Object @object = objects[i];
-				if (hierarchyProperty.Find(@object.GetInstanceID(), null))
+				HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.Assets);
+				List<string> list = new List<string>(Selection.objects.Length);
+				UnityEngine.Object[] objects = Selection.objects;
+				for (int i = 0; i < objects.Length; i++)
 				{
-					list.Add(hierarchyProperty.guid);
+					UnityEngine.Object @object = objects[i];
+					if (hierarchyProperty.Find(@object.GetInstanceID(), null))
+					{
+						list.Add(hierarchyProperty.guid);
+					}
 				}
+				this.pvHasSelection = ASCommitWindow.MarkSelected(this.pv, list);
 			}
-			this.pvHasSelection = ASCommitWindow.MarkSelected(this.pv, list);
 		}
+
 		private void OnSelectionChange()
 		{
 			switch (this.selectedPage)
@@ -276,11 +368,13 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		internal void Reinit()
 		{
 			this.SwitchSelectedPage(ASMainWindow.Page.Overview);
 			base.Repaint();
 		}
+
 		public void DoDiscardChanges(bool lastActionsResult)
 		{
 			List<string> list = new List<string>();
@@ -301,6 +395,7 @@ namespace UnityEditor
 			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBReinitOnSuccess");
 			AssetServer.DoUpdateWithoutConflictResolutionOnNextTick(list.ToArray());
 		}
+
 		private bool WordWrappedLabelButton(string label, string buttonText)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -312,22 +407,30 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			return result;
 		}
+
 		private bool ToolbarToggle(bool pressed, string title, GUIStyle style)
 		{
 			bool changed = GUI.changed;
 			GUI.changed = false;
 			GUILayout.Toggle(pressed, title, style, new GUILayoutOption[0]);
+			bool result;
 			if (GUI.changed)
 			{
-				return true;
+				result = true;
 			}
-			GUI.changed |= changed;
-			return false;
+			else
+			{
+				GUI.changed |= changed;
+				result = false;
+			}
+			return result;
 		}
+
 		private bool RightButton(string title)
 		{
 			return this.RightButton(title, ASMainWindow.constants.smallButton);
 		}
+
 		private bool RightButton(string title, GUIStyle style)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -336,84 +439,119 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			return result;
 		}
+
 		public void ShowConflictResolutions(string[] conflicting)
 		{
 			if (this.asUpdateWin == null)
 			{
 				this.LogError("Found unexpected conflicts. Please use Bug Reporter to report a bug.");
-				return;
 			}
-			this.asUpdateWin.ShowConflictResolutions(conflicting);
+			else
+			{
+				this.asUpdateWin.ShowConflictResolutions(conflicting);
+			}
 		}
+
 		public virtual void AddItemsToMenu(GenericMenu menu)
 		{
 			if (!this.needsSetup)
 			{
 				menu.AddItem(new GUIContent("Refresh"), false, new GenericMenu.MenuFunction(this.ActionRefresh));
-				menu.AddSeparator(string.Empty);
+				menu.AddSeparator("");
 			}
 			menu.AddItem(new GUIContent("Connection"), false, new GenericMenu.MenuFunction2(this.ActionSwitchPage), ASMainWindow.Page.ServerConfig);
-			menu.AddSeparator(string.Empty);
+			menu.AddSeparator("");
 			if (!this.needsSetup)
 			{
 				menu.AddItem(new GUIContent("Show History"), false, new GenericMenu.MenuFunction2(this.ActionSwitchPage), ASMainWindow.Page.History);
 				menu.AddItem(new GUIContent("Discard Changes"), false, new GenericMenu.MenuFunction(this.ActionDiscardChanges));
-				menu.AddSeparator(string.Empty);
+				menu.AddSeparator("");
 			}
 			menu.AddItem(new GUIContent("Server Administration"), false, new GenericMenu.MenuFunction2(this.ActionSwitchPage), ASMainWindow.Page.Admin);
 		}
+
 		public bool UpdateNeedsRefresh()
 		{
 			return this.sharedChangesets == null || AssetServer.GetRefreshUpdate();
 		}
+
 		public bool CommitNeedsRefresh()
 		{
 			return this.sharedCommits == null || this.sharedDeletedItems == null || AssetServer.GetRefreshCommit();
 		}
+
 		private void ContextMenuClick(object userData, string[] options, int selected)
 		{
 			if (selected >= 0)
 			{
 				string text = this.dropDownMenuItems[selected];
-				switch (text)
+				if (text != null)
 				{
-				case "Connection":
-					this.ActionSwitchPage(ASMainWindow.Page.ServerConfig);
-					break;
-				case "Show History":
-					this.ActionSwitchPage(ASMainWindow.Page.History);
-					break;
-				case "Discard Changes":
-					this.ActionDiscardChanges();
-					break;
-				case "Server Administration":
-					this.ActionSwitchPage(ASMainWindow.Page.Admin);
-					break;
+					if (!(text == "Connection"))
+					{
+						if (!(text == "Show History"))
+						{
+							if (!(text == "Discard Changes"))
+							{
+								if (text == "Server Administration")
+								{
+									this.ActionSwitchPage(ASMainWindow.Page.Admin);
+								}
+							}
+							else
+							{
+								this.ActionDiscardChanges();
+							}
+						}
+						else
+						{
+							this.ActionSwitchPage(ASMainWindow.Page.History);
+						}
+					}
+					else
+					{
+						this.ActionSwitchPage(ASMainWindow.Page.ServerConfig);
+					}
 				}
 			}
 		}
+
 		private void CommitContextMenuClick(object userData, string[] options, int selected)
 		{
 			if (selected >= 0)
 			{
 				string text = this.commitDropDownMenuItems[selected];
-				switch (text)
+				if (text != null)
 				{
-				case "Commit":
-					this.StartCommitting();
-					break;
-				case "Compare":
-					ASCommitWindow.DoShowDiff(ASCommitWindow.GetParentViewSelectedItems(this.pv, false, false), false);
-					break;
-				case "Compare Binary":
-					ASCommitWindow.DoShowDiff(ASCommitWindow.GetParentViewSelectedItems(this.pv, false, false), true);
-					break;
-				case "Discard":
-					this.DoMyRevert(false);
-					break;
+					if (!(text == "Commit"))
+					{
+						if (!(text == "Compare"))
+						{
+							if (!(text == "Compare Binary"))
+							{
+								if (text == "Discard")
+								{
+									this.DoMyRevert(false);
+								}
+							}
+							else
+							{
+								ASCommitWindow.DoShowDiff(ASCommitWindow.GetParentViewSelectedItems(this.pv, false, false), true);
+							}
+						}
+						else
+						{
+							ASCommitWindow.DoShowDiff(ASCommitWindow.GetParentViewSelectedItems(this.pv, false, false), false);
+						}
+					}
+					else
+					{
+						this.StartCommitting();
+					}
 				}
 			}
 		}
+
 		public void CommitItemsChanged()
 		{
 			this.InitCommits();
@@ -424,6 +562,7 @@ namespace UnityEditor
 			}
 			base.Repaint();
 		}
+
 		public void RevertProject(int toRevision, Changeset[] changesets)
 		{
 			AssetServer.SetStickyChangeset(toRevision);
@@ -432,12 +571,14 @@ namespace UnityEditor
 			this.asUpdateWin.DoUpdate(false);
 			this.selectedPage = ASMainWindow.Page.Update;
 		}
+
 		public void ShowHistory()
 		{
 			this.SwitchSelectedPage(ASMainWindow.Page.Overview);
 			this.isInitialUpdate = false;
 			this.SwitchSelectedPage(ASMainWindow.Page.History);
 		}
+
 		private void ActionRefresh()
 		{
 			switch (this.selectedPage)
@@ -468,10 +609,12 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private void ActionSwitchPage(object page)
 		{
-			this.SwitchSelectedPage((ASMainWindow.Page)((int)page));
+			this.SwitchSelectedPage((ASMainWindow.Page)page);
 		}
+
 		private void ActionDiscardChanges()
 		{
 			if (EditorUtility.DisplayDialog("Discard all changes", "Are you sure you want to discard all local changes made in the project?", "Discard", "Cancel"))
@@ -481,13 +624,16 @@ namespace UnityEditor
 				{
 					Debug.Log("Asset Server connection for current project is not set up");
 					this.error = true;
-					return;
 				}
-				this.error = false;
-				AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBDoDiscardChanges");
-				AssetServer.DoUpdateStatusOnNextTick();
+				else
+				{
+					this.error = false;
+					AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBDoDiscardChanges");
+					AssetServer.DoUpdateStatusOnNextTick();
+				}
 			}
 		}
+
 		private void SwitchSelectedPage(ASMainWindow.Page page)
 		{
 			ASMainWindow.Page page2 = this.selectedPage;
@@ -499,42 +645,52 @@ namespace UnityEditor
 				this.error = false;
 			}
 		}
+
 		private void InitiateUpdateStatusWithCallback(string callbackName)
 		{
 			if (!ASEditorBackend.SettingsIfNeeded())
 			{
 				Debug.Log("Asset Server connection for current project is not set up");
 				this.error = true;
-				return;
 			}
-			this.error = false;
-			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", callbackName);
-			AssetServer.DoUpdateStatusOnNextTick();
+			else
+			{
+				this.error = false;
+				AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", callbackName);
+				AssetServer.DoUpdateStatusOnNextTick();
+			}
 		}
+
 		private void InitiateRefreshAssetsWithCallback(string callbackName)
 		{
 			if (!ASEditorBackend.SettingsIfNeeded())
 			{
 				Debug.Log("Asset Server connection for current project is not set up");
 				this.error = true;
-				return;
 			}
-			this.error = false;
-			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", callbackName);
-			AssetServer.DoRefreshAssetsOnNextTick();
+			else
+			{
+				this.error = false;
+				AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", callbackName);
+				AssetServer.DoRefreshAssetsOnNextTick();
+			}
 		}
+
 		private void InitiateRefreshAssetsAndUpdateStatusWithCallback(string callbackName)
 		{
 			if (!ASEditorBackend.SettingsIfNeeded())
 			{
 				Debug.Log("Asset Server connection for current project is not set up");
 				this.error = true;
-				return;
 			}
-			this.error = false;
-			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", callbackName);
-			AssetServer.DoRefreshAssetsAndUpdateStatusOnNextTick();
+			else
+			{
+				this.error = false;
+				AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", callbackName);
+				AssetServer.DoRefreshAssetsAndUpdateStatusOnNextTick();
+			}
 		}
+
 		private void SelectedPageChanged()
 		{
 			AssetServer.ClearAssetServerError();
@@ -585,30 +741,35 @@ namespace UnityEditor
 				this.asAdminWin = new ASServerAdminWindow(this);
 				if (this.error)
 				{
-					return;
 				}
 				break;
 			}
 		}
+
 		public void InitUpdatePage(bool lastActionsResult)
 		{
 			if (!lastActionsResult)
 			{
 				this.Reinit();
-				return;
 			}
-			if (this.UpdateNeedsRefresh())
+			else
 			{
-				this.GetUpdates();
+				if (this.UpdateNeedsRefresh())
+				{
+					this.GetUpdates();
+				}
+				if (this.sharedChangesets == null)
+				{
+					this.Reinit();
+				}
+				else
+				{
+					this.asUpdateWin = new ASUpdateWindow(this, this.sharedChangesets);
+					this.asUpdateWin.SetSelectedRevisionLine(0);
+				}
 			}
-			if (this.sharedChangesets == null)
-			{
-				this.Reinit();
-				return;
-			}
-			this.asUpdateWin = new ASUpdateWindow(this, this.sharedChangesets);
-			this.asUpdateWin.SetSelectedRevisionLine(0);
 		}
+
 		private void InitCommits()
 		{
 			if (this.CommitNeedsRefresh())
@@ -632,6 +793,7 @@ namespace UnityEditor
 			this.pv.initialSelectedItem = -1;
 			AssetServer.ClearRefreshCommit();
 		}
+
 		private void GetUpdates()
 		{
 			AssetServer.ClearAssetServerError();
@@ -645,6 +807,7 @@ namespace UnityEditor
 				this.sharedChangesets = null;
 			}
 		}
+
 		public void DisplayedItemsChanged()
 		{
 			float[] array = new float[2];
@@ -666,6 +829,7 @@ namespace UnityEditor
 			}, null);
 			this.DoSelectionChange();
 		}
+
 		public void InitOverviewPage(bool lastActionsResult)
 		{
 			if (!lastActionsResult)
@@ -674,39 +838,44 @@ namespace UnityEditor
 				this.sharedChangesets = null;
 				this.sharedCommits = null;
 				this.sharedDeletedItems = null;
-				return;
 			}
-			PListConfig pListConfig = new PListConfig("Library/ServerPreferences.plist");
-			this.connectionString = string.Concat(new string[]
+			else
 			{
-				pListConfig["Maint UserName"],
-				" @ ",
-				pListConfig["Maint Server"],
-				" : ",
-				pListConfig["Maint project name"]
-			});
-			if (this.UpdateNeedsRefresh())
-			{
-				this.GetUpdates();
+				PListConfig pListConfig = new PListConfig("Library/ServerPreferences.plist");
+				this.connectionString = string.Concat(new string[]
+				{
+					pListConfig["Maint UserName"],
+					" @ ",
+					pListConfig["Maint Server"],
+					" : ",
+					pListConfig["Maint project name"]
+				});
+				if (this.UpdateNeedsRefresh())
+				{
+					this.GetUpdates();
+				}
+				this.needsSetup = (this.sharedChangesets == null || AssetServer.HasConnectionError());
+				this.InitCommits();
+				this.DisplayedItemsChanged();
 			}
-			this.needsSetup = (this.sharedChangesets == null || AssetServer.HasConnectionError());
-			this.InitCommits();
-			this.DisplayedItemsChanged();
 		}
+
 		public void InitHistoryPage(bool lastActionsResult)
 		{
 			if (!lastActionsResult)
 			{
 				this.Reinit();
-				return;
 			}
-			this.asHistoryWin = new ASHistoryWindow(this);
-			if (this.asHistoryWin == null)
+			else
 			{
-				this.Reinit();
-				return;
+				this.asHistoryWin = new ASHistoryWindow(this);
+				if (this.asHistoryWin == null)
+				{
+					this.Reinit();
+				}
 			}
 		}
+
 		private void OverviewPageGUI()
 		{
 			bool enabled = GUI.enabled;
@@ -715,12 +884,9 @@ namespace UnityEditor
 			{
 				this.wasHidingButtons = this.showSmallWindow;
 			}
-			else
+			else if (this.showSmallWindow != this.wasHidingButtons)
 			{
-				if (this.showSmallWindow != this.wasHidingButtons)
-				{
-					GUIUtility.ExitGUI();
-				}
+				GUIUtility.ExitGUI();
 			}
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			if (!this.showSmallWindow)
@@ -754,6 +920,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			GUI.enabled = enabled;
 		}
+
 		private void OtherServerCommands()
 		{
 			GUILayout.BeginVertical(ASMainWindow.constants.groupBox, new GUILayoutOption[0]);
@@ -772,6 +939,7 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndVertical();
 		}
+
 		private void ShortServerInfo()
 		{
 			GUILayout.BeginVertical(ASMainWindow.constants.groupBox, new GUILayoutOption[0]);
@@ -789,6 +957,7 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndVertical();
 		}
+
 		private void ServerAdministration()
 		{
 			GUILayout.BeginVertical(ASMainWindow.constants.groupBox, new GUILayoutOption[0]);
@@ -802,10 +971,12 @@ namespace UnityEditor
 			GUILayout.EndVertical();
 			GUILayout.EndVertical();
 		}
+
 		private bool HasFlag(ChangeFlags flags, ChangeFlags flagToCheck)
 		{
 			return (flagToCheck & flags) != ChangeFlags.None;
 		}
+
 		private void MySelectionToGlobalSelection()
 		{
 			this.mySelection = true;
@@ -818,6 +989,7 @@ namespace UnityEditor
 			this.pvHasSelection = this.pv.HasTrue();
 			this.somethingDiscardableSelected = ASCommitWindow.SomethingDiscardableSelected(this.pv);
 		}
+
 		private void DoCommitParentView()
 		{
 			bool shift = Event.current.shift;
@@ -826,33 +998,35 @@ namespace UnityEditor
 			int num = -1;
 			int num2 = -1;
 			bool flag = false;
-			foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.pv.lv, ASMainWindow.constants.background, new GUILayoutOption[0]))
+			IEnumerator enumerator = ListViewGUILayout.ListView(this.pv.lv, ASMainWindow.constants.background, new GUILayoutOption[0]).GetEnumerator();
+			try
 			{
-				if (GUIUtility.keyboardControl == this.pv.lv.ID && Event.current.type == EventType.KeyDown && actionKey)
+				while (enumerator.MoveNext())
 				{
-					Event.current.Use();
-				}
-				if (num == -1 && !this.pv.IndexToFolderAndFile(listViewElement.row, ref num, ref num2))
-				{
-					break;
-				}
-				ParentViewFolder parentViewFolder = this.pv.folders[num];
-				if (this.pv.selectedItems[listViewElement.row] && Event.current.type == EventType.Repaint)
-				{
-					ASMainWindow.constants.entrySelected.Draw(listViewElement.position, false, false, false, false);
-				}
-				if (!this.committing)
-				{
-					if (ListViewGUILayout.HasMouseUp(listViewElement.position))
+					ListViewElement listViewElement = (ListViewElement)enumerator.Current;
+					if (GUIUtility.keyboardControl == this.pv.lv.ID && Event.current.type == EventType.KeyDown && actionKey)
 					{
-						if (!shift && !actionKey)
-						{
-							flag |= ListViewGUILayout.MultiSelection(row, this.pv.lv.row, ref this.pv.initialSelectedItem, ref this.pv.selectedItems);
-						}
+						Event.current.Use();
 					}
-					else
+					if (num == -1 && !this.pv.IndexToFolderAndFile(listViewElement.row, ref num, ref num2))
 					{
-						if (ListViewGUILayout.HasMouseDown(listViewElement.position))
+						break;
+					}
+					ParentViewFolder parentViewFolder = this.pv.folders[num];
+					if (this.pv.selectedItems[listViewElement.row] && Event.current.type == EventType.Repaint)
+					{
+						ASMainWindow.constants.entrySelected.Draw(listViewElement.position, false, false, false, false);
+					}
+					if (!this.committing)
+					{
+						if (ListViewGUILayout.HasMouseUp(listViewElement.position))
+						{
+							if (!shift && !actionKey)
+							{
+								flag |= ListViewGUILayout.MultiSelection(row, this.pv.lv.row, ref this.pv.initialSelectedItem, ref this.pv.selectedItems);
+							}
+						}
+						else if (ListViewGUILayout.HasMouseDown(listViewElement.position))
 						{
 							if (Event.current.clickCount == 2)
 							{
@@ -870,70 +1044,69 @@ namespace UnityEditor
 								this.pv.lv.row = listViewElement.row;
 							}
 						}
-						else
+						else if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
 						{
-							if (ListViewGUILayout.HasMouseDown(listViewElement.position, 1))
+							if (!this.pv.selectedItems[listViewElement.row])
 							{
-								if (!this.pv.selectedItems[listViewElement.row])
-								{
-									flag = true;
-									this.pv.ClearSelection();
-									this.pv.selectedItems[listViewElement.row] = true;
-									this.pv.selectedFile = num2;
-									this.pv.selectedFolder = num;
-									this.pv.lv.row = listViewElement.row;
-								}
-								GUIUtility.hotControl = 0;
-								Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
-								EditorUtility.DisplayCustomMenu(position, this.commitDropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.CommitContextMenuClick), null);
-								Event.current.Use();
+								flag = true;
+								this.pv.ClearSelection();
+								this.pv.selectedItems[listViewElement.row] = true;
+								this.pv.selectedFile = num2;
+								this.pv.selectedFolder = num;
+								this.pv.lv.row = listViewElement.row;
 							}
+							GUIUtility.hotControl = 0;
+							Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
+							EditorUtility.DisplayCustomMenu(position, this.commitDropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.CommitContextMenuClick), null);
+							Event.current.Use();
 						}
 					}
-				}
-				ChangeFlags changeFlags;
-				if (num2 != -1)
-				{
-					Texture2D texture2D = AssetDatabase.GetCachedIcon(parentViewFolder.name + "/" + parentViewFolder.files[num2].name) as Texture2D;
-					if (texture2D == null)
+					ChangeFlags changeFlags;
+					if (num2 != -1)
 					{
-						texture2D = InternalEditorUtility.GetIconForFile(parentViewFolder.files[num2].name);
-					}
-					GUILayout.Label(new GUIContent(parentViewFolder.files[num2].name, texture2D), ASMainWindow.constants.element, new GUILayoutOption[0]);
-					changeFlags = parentViewFolder.files[num2].changeFlags;
-				}
-				else
-				{
-					GUILayout.Label(parentViewFolder.name, ASMainWindow.constants.header, new GUILayoutOption[0]);
-					changeFlags = parentViewFolder.changeFlags;
-				}
-				GUIContent gUIContent = null;
-				if (this.HasFlag(changeFlags, ChangeFlags.Undeleted) || this.HasFlag(changeFlags, ChangeFlags.Created))
-				{
-					gUIContent = ASMainWindow.constants.badgeNew;
-				}
-				else
-				{
-					if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
-					{
-						gUIContent = ASMainWindow.constants.badgeDelete;
+						Texture2D texture2D = AssetDatabase.GetCachedIcon(parentViewFolder.name + "/" + parentViewFolder.files[num2].name) as Texture2D;
+						if (texture2D == null)
+						{
+							texture2D = InternalEditorUtility.GetIconForFile(parentViewFolder.files[num2].name);
+						}
+						GUILayout.Label(new GUIContent(parentViewFolder.files[num2].name, texture2D), ASMainWindow.constants.element, new GUILayoutOption[0]);
+						changeFlags = parentViewFolder.files[num2].changeFlags;
 					}
 					else
 					{
-						if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
-						{
-							gUIContent = ASMainWindow.constants.badgeMove;
-						}
+						GUILayout.Label(parentViewFolder.name, ASMainWindow.constants.header, new GUILayoutOption[0]);
+						changeFlags = parentViewFolder.changeFlags;
 					}
+					GUIContent gUIContent = null;
+					if (this.HasFlag(changeFlags, ChangeFlags.Undeleted) || this.HasFlag(changeFlags, ChangeFlags.Created))
+					{
+						gUIContent = ASMainWindow.constants.badgeNew;
+					}
+					else if (this.HasFlag(changeFlags, ChangeFlags.Deleted))
+					{
+						gUIContent = ASMainWindow.constants.badgeDelete;
+					}
+					else if (this.HasFlag(changeFlags, ChangeFlags.Renamed) || this.HasFlag(changeFlags, ChangeFlags.Moved))
+					{
+						gUIContent = ASMainWindow.constants.badgeMove;
+					}
+					if (gUIContent != null && Event.current.type == EventType.Repaint)
+					{
+						Rect position2 = new Rect(listViewElement.position.x + listViewElement.position.width - (float)gUIContent.image.width - 5f, listViewElement.position.y + listViewElement.position.height / 2f - (float)(gUIContent.image.height / 2), (float)gUIContent.image.width, (float)gUIContent.image.height);
+						EditorGUIUtility.SetIconSize(Vector2.zero);
+						GUIStyle.none.Draw(position2, gUIContent, false, false, false, false);
+						EditorGUIUtility.SetIconSize(this.iconSize);
+					}
+					this.pv.NextFileFolder(ref num, ref num2);
 				}
-				if (gUIContent != null && Event.current.type == EventType.Repaint)
+			}
+			finally
+			{
+				IDisposable disposable;
+				if ((disposable = (enumerator as IDisposable)) != null)
 				{
-					Rect position2 = new Rect(listViewElement.position.x + listViewElement.position.width - (float)gUIContent.image.width - 5f, listViewElement.position.y + listViewElement.position.height / 2f - (float)(gUIContent.image.height / 2), (float)gUIContent.image.width, (float)gUIContent.image.height);
-					EditorGUIUtility.SetIconSize(Vector2.zero);
-					GUIStyle.none.Draw(position2, gUIContent, false, false, false, false);
-					EditorGUIUtility.SetIconSize(this.iconSize);
+					disposable.Dispose();
 				}
-				this.pv.NextFileFolder(ref num, ref num2);
 			}
 			if (!this.committing)
 			{
@@ -943,23 +1116,23 @@ namespace UnityEditor
 					{
 						Event.current.Use();
 					}
-					else
+					else if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
 					{
-						if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "SelectAll")
+						for (int i = 0; i < this.pv.selectedItems.Length; i++)
 						{
-							for (int i = 0; i < this.pv.selectedItems.Length; i++)
-							{
-								this.pv.selectedItems[i] = true;
-							}
-							flag = true;
-							Event.current.Use();
+							this.pv.selectedItems[i] = true;
 						}
+						flag = true;
+						Event.current.Use();
 					}
 				}
-				if (GUIUtility.keyboardControl == this.pv.lv.ID && !actionKey && this.pv.lv.selectionChanged)
+				if (GUIUtility.keyboardControl == this.pv.lv.ID && !actionKey)
 				{
-					flag |= ListViewGUILayout.MultiSelection(row, this.pv.lv.row, ref this.pv.initialSelectedItem, ref this.pv.selectedItems);
-					this.pv.IndexToFolderAndFile(this.pv.lv.row, ref this.pv.selectedFolder, ref this.pv.selectedFile);
+					if (this.pv.lv.selectionChanged)
+					{
+						flag |= ListViewGUILayout.MultiSelection(row, this.pv.lv.row, ref this.pv.initialSelectedItem, ref this.pv.selectedItems);
+						this.pv.IndexToFolderAndFile(this.pv.lv.row, ref this.pv.selectedFolder, ref this.pv.selectedFile);
+					}
 				}
 				if (this.pv.lv.selectionChanged || flag)
 				{
@@ -967,28 +1140,35 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DoCommit()
 		{
-			if (this.commitMessage == string.Empty && !EditorUtility.DisplayDialog("Commit without description", "Are you sure you want to commit with empty commit description message?", "Commit", "Cancel"))
+			if (this.commitMessage == string.Empty)
 			{
-				GUIUtility.ExitGUI();
+				if (!EditorUtility.DisplayDialog("Commit without description", "Are you sure you want to commit with empty commit description message?", "Commit", "Cancel"))
+				{
+					GUIUtility.ExitGUI();
+				}
 			}
 			bool refreshCommit = AssetServer.GetRefreshCommit();
 			ASCommitWindow aSCommitWindow = new ASCommitWindow(this, ASCommitWindow.GetParentViewSelectedItems(this.pv, true, false).ToArray());
 			aSCommitWindow.InitiateReinit();
-			if ((refreshCommit || aSCommitWindow.lastTransferMovedDependencies) && ((!refreshCommit && !EditorUtility.DisplayDialog("Committing with dependencies", "Assets selected for committing have dependencies that will also be committed. Press Details to view full changeset", "Commit", "Details")) || refreshCommit))
+			if (refreshCommit || aSCommitWindow.lastTransferMovedDependencies)
 			{
-				this.committing = false;
-				this.selectedPage = ASMainWindow.Page.Commit;
-				aSCommitWindow.description = this.commitMessage;
-				if (refreshCommit)
+				if ((!refreshCommit && !EditorUtility.DisplayDialog("Committing with dependencies", "Assets selected for committing have dependencies that will also be committed. Press Details to view full changeset", "Commit", "Details")) || refreshCommit)
 				{
-					aSCommitWindow.showReinitedWarning = 1;
+					this.committing = false;
+					this.selectedPage = ASMainWindow.Page.Commit;
+					aSCommitWindow.description = this.commitMessage;
+					if (refreshCommit)
+					{
+						aSCommitWindow.showReinitedWarning = 1;
+					}
+					this.asCommitWin = aSCommitWindow;
+					base.Repaint();
+					GUIUtility.ExitGUI();
+					return;
 				}
-				this.asCommitWin = aSCommitWindow;
-				base.Repaint();
-				GUIUtility.ExitGUI();
-				return;
 			}
 			string[] itemsToCommit = aSCommitWindow.GetItemsToCommit();
 			AssetServer.SetAfterActionFinishedCallback("ASEditorBackend", "CBOverviewsCommitFinished");
@@ -998,6 +1178,7 @@ namespace UnityEditor
 			this.committing = false;
 			GUIUtility.ExitGUI();
 		}
+
 		private void StartCommitting()
 		{
 			this.committing = true;
@@ -1005,6 +1186,7 @@ namespace UnityEditor
 			this.selectionChangedWhileCommitting = false;
 			this.focusCommitMessage = true;
 		}
+
 		internal void CommitFinished(bool actionResult)
 		{
 			if (actionResult)
@@ -1017,6 +1199,7 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
+
 		private void CancelCommit()
 		{
 			this.committing = false;
@@ -1025,6 +1208,7 @@ namespace UnityEditor
 				this.DoSelectionChange();
 			}
 		}
+
 		private void DoMyRevert(bool afterMarkingDependencies)
 		{
 			if (!afterMarkingDependencies)
@@ -1050,6 +1234,7 @@ namespace UnityEditor
 				ASCommitWindow.DoRevert(ASCommitWindow.GetParentViewSelectedItems(this.pv, true, true), "CBInitOverviewPage");
 			}
 		}
+
 		private void ShortCommitList()
 		{
 			bool enabled = GUI.enabled;
@@ -1111,9 +1296,9 @@ namespace UnityEditor
 					if (current.type == EventType.KeyDown)
 					{
 						KeyCode keyCode = current.keyCode;
-						if (keyCode != KeyCode.Return)
+						if (keyCode != KeyCode.Escape)
 						{
-							if (keyCode != KeyCode.Escape)
+							if (keyCode != KeyCode.Return)
 							{
 								if (current.character == '\n' || current.character == '\u0003')
 								{
@@ -1122,13 +1307,13 @@ namespace UnityEditor
 							}
 							else
 							{
-								this.CancelCommit();
+								this.DoCommit();
 								current.Use();
 							}
 						}
 						else
 						{
-							this.DoCommit();
+							this.CancelCommit();
 							current.Use();
 						}
 					}
@@ -1172,6 +1357,7 @@ namespace UnityEditor
 				base.Repaint();
 			}
 		}
+
 		private void ShortUpdateList()
 		{
 			GUILayout.BeginVertical((!this.showSmallWindow) ? ASMainWindow.constants.groupBox : ASMainWindow.constants.groupBoxNoMargin, new GUILayoutOption[0]);
@@ -1185,25 +1371,27 @@ namespace UnityEditor
 				GUILayout.Label("Could not retrieve changes", new GUILayoutOption[0]);
 				GUILayout.EndVertical();
 			}
+			else if (this.sharedChangesets.Length == 0)
+			{
+				GUILayout.BeginVertical(ASMainWindow.constants.contentBox, new GUILayoutOption[]
+				{
+					GUILayout.ExpandHeight(true)
+				});
+				GUILayout.Label("You are up to date", new GUILayoutOption[0]);
+				GUILayout.EndVertical();
+			}
 			else
 			{
-				if (this.sharedChangesets.Length == 0)
+				this.lv.totalRows = this.sharedChangesets.Length;
+				int num = (int)ASMainWindow.constants.entryNormal.CalcHeight(new GUIContent("X"), 100f);
+				ASMainWindow.constants.serverUpdateLog.alignment = TextAnchor.MiddleLeft;
+				ASMainWindow.constants.serverUpdateInfo.alignment = TextAnchor.MiddleLeft;
+				IEnumerator enumerator = ListViewGUILayout.ListView(this.lv, ASMainWindow.constants.background, new GUILayoutOption[0]).GetEnumerator();
+				try
 				{
-					GUILayout.BeginVertical(ASMainWindow.constants.contentBox, new GUILayoutOption[]
+					while (enumerator.MoveNext())
 					{
-						GUILayout.ExpandHeight(true)
-					});
-					GUILayout.Label("You are up to date", new GUILayoutOption[0]);
-					GUILayout.EndVertical();
-				}
-				else
-				{
-					this.lv.totalRows = this.sharedChangesets.Length;
-					int num = (int)ASMainWindow.constants.entryNormal.CalcHeight(new GUIContent("X"), 100f);
-					ASMainWindow.constants.serverUpdateLog.alignment = TextAnchor.MiddleLeft;
-					ASMainWindow.constants.serverUpdateInfo.alignment = TextAnchor.MiddleLeft;
-					foreach (ListViewElement listViewElement in ListViewGUILayout.ListView(this.lv, ASMainWindow.constants.background, new GUILayoutOption[0]))
-					{
+						ListViewElement listViewElement = (ListViewElement)enumerator.Current;
 						Rect rect = GUILayoutUtility.GetRect(GUIClip.visibleRect.width, (float)num, new GUILayoutOption[]
 						{
 							GUILayout.MinHeight((float)num)
@@ -1231,27 +1419,36 @@ namespace UnityEditor
 						position.x += position.width - (float)this.maxNickLength - 5f;
 						GUI.Label(position, this.sharedChangesets[listViewElement.row].owner, ASMainWindow.constants.serverUpdateInfo);
 					}
-					ASMainWindow.constants.serverUpdateLog.alignment = TextAnchor.UpperLeft;
-					ASMainWindow.constants.serverUpdateInfo.alignment = TextAnchor.UpperLeft;
-					GUILayout.BeginHorizontal(ASMainWindow.constants.contentBox, new GUILayoutOption[0]);
-					GUILayout.FlexibleSpace();
-					if (GUILayout.Button("Update", ASMainWindow.constants.smallButton, new GUILayoutOption[0]))
-					{
-						this.selectedPage = ASMainWindow.Page.Update;
-						this.InitUpdatePage(true);
-						this.asUpdateWin.DoUpdate(false);
-					}
-					if (GUILayout.Button("Details", ASMainWindow.constants.smallButton, new GUILayoutOption[0]))
-					{
-						this.SwitchSelectedPage(ASMainWindow.Page.Update);
-						base.Repaint();
-						GUIUtility.ExitGUI();
-					}
-					GUILayout.EndHorizontal();
 				}
+				finally
+				{
+					IDisposable disposable;
+					if ((disposable = (enumerator as IDisposable)) != null)
+					{
+						disposable.Dispose();
+					}
+				}
+				ASMainWindow.constants.serverUpdateLog.alignment = TextAnchor.UpperLeft;
+				ASMainWindow.constants.serverUpdateInfo.alignment = TextAnchor.UpperLeft;
+				GUILayout.BeginHorizontal(ASMainWindow.constants.contentBox, new GUILayoutOption[0]);
+				GUILayout.FlexibleSpace();
+				if (GUILayout.Button("Update", ASMainWindow.constants.smallButton, new GUILayoutOption[0]))
+				{
+					this.selectedPage = ASMainWindow.Page.Update;
+					this.InitUpdatePage(true);
+					this.asUpdateWin.DoUpdate(false);
+				}
+				if (GUILayout.Button("Details", ASMainWindow.constants.smallButton, new GUILayoutOption[0]))
+				{
+					this.SwitchSelectedPage(ASMainWindow.Page.Update);
+					base.Repaint();
+					GUIUtility.ExitGUI();
+				}
+				GUILayout.EndHorizontal();
 			}
 			GUILayout.EndVertical();
 		}
+
 		private void DoSelectedPageGUI()
 		{
 			switch (this.selectedPage)
@@ -1294,6 +1491,7 @@ namespace UnityEditor
 				break;
 			}
 		}
+
 		private void SetShownSearchField(ASMainWindow.ShowSearchField newShow)
 		{
 			EditorGUI.FocusTextInControl("SearchFilter");
@@ -1302,6 +1500,7 @@ namespace UnityEditor
 			this.m_SearchField.Show = true;
 			this.asHistoryWin.FilterItems(false);
 		}
+
 		private void DoSearchToggle(ASMainWindow.ShowSearchField field)
 		{
 			if (this.selectedPage == ASMainWindow.Page.History)
@@ -1313,10 +1512,12 @@ namespace UnityEditor
 				GUILayout.Space(10f);
 			}
 		}
+
 		private bool IsLastOne(int f, int fl, ParentViewState st)
 		{
 			return st.folders.Length - 1 == f && st.folders[f].files.Length - 1 == fl;
 		}
+
 		private void OnGUI()
 		{
 			if (EditorSettings.externalVersionControl != ExternalVersionControl.Disabled && EditorSettings.externalVersionControl != ExternalVersionControl.AssetServer)
@@ -1328,169 +1529,175 @@ namespace UnityEditor
 				GUILayout.FlexibleSpace();
 				GUILayout.EndHorizontal();
 				GUILayout.FlexibleSpace();
-				return;
 			}
-			if (ASMainWindow.constants == null)
+			else
 			{
-				ASMainWindow.constants = new ASMainWindow.Constants();
-			}
-			if (!this.m_CheckedMaint && Event.current.type != EventType.Layout)
-			{
-				if (!InternalEditorUtility.HasPro())
+				if (ASMainWindow.constants == null)
 				{
-					base.Close();
-					GUIUtility.ExitGUI();
+					ASMainWindow.constants = new ASMainWindow.Constants();
 				}
-				this.m_CheckedMaint = true;
-			}
-			if (this.maxNickLength == 1 && this.sharedChangesets != null)
-			{
-				for (int i = 0; i < this.sharedChangesets.Length; i++)
+				if (!this.m_CheckedMaint && Event.current.type != EventType.Layout)
 				{
-					int num = (int)ASMainWindow.constants.serverUpdateInfo.CalcSize(new GUIContent(this.sharedChangesets[i].owner)).x;
-					if (num > this.maxNickLength)
+					if (!InternalEditorUtility.HasTeamLicense())
 					{
-						this.maxNickLength = num;
+						base.Close();
+						GUIUtility.ExitGUI();
 					}
+					this.m_CheckedMaint = true;
 				}
-				this.changesetContents = new GUIContent[this.sharedChangesets.Length];
-				ParentViewState parentViewState = new ParentViewState();
-				for (int j = 0; j < this.changesetContents.Length; j++)
+				if (this.maxNickLength == 1 && this.sharedChangesets != null)
 				{
-					int num2 = 15;
-					Changeset changeset = this.sharedChangesets[j];
-					string text = changeset.message.Split(new char[]
+					for (int i = 0; i < this.sharedChangesets.Length; i++)
 					{
-						'\n'
-					})[0];
-					text = ((text.Length >= 45) ? (text.Substring(0, 42) + "...") : text);
-					string text2 = string.Format("[{0} {1}] {2}", changeset.date, changeset.owner, text);
-					num2--;
-					parentViewState.Clear();
-					parentViewState.AddAssetItems(changeset);
-					for (int k = 0; k < parentViewState.folders.Length; k++)
-					{
-						if (--num2 == 0 && !this.IsLastOne(k, 0, parentViewState))
+						int num = (int)ASMainWindow.constants.serverUpdateInfo.CalcSize(new GUIContent(this.sharedChangesets[i].owner)).x;
+						if (num > this.maxNickLength)
 						{
-							text2 += "\n(and more...)";
-							break;
+							this.maxNickLength = num;
 						}
-						text2 = text2 + "\n" + parentViewState.folders[k].name;
-						for (int l = 0; l < parentViewState.folders[k].files.Length; l++)
+					}
+					this.changesetContents = new GUIContent[this.sharedChangesets.Length];
+					ParentViewState parentViewState = new ParentViewState();
+					for (int j = 0; j < this.changesetContents.Length; j++)
+					{
+						int num2 = 15;
+						Changeset changeset = this.sharedChangesets[j];
+						string text = changeset.message.Split(new char[]
 						{
-							if (--num2 == 0 && !this.IsLastOne(k, l, parentViewState))
+							'\n'
+						})[0];
+						text = ((text.Length >= 45) ? (text.Substring(0, 42) + "...") : text);
+						string text2 = string.Format("[{0} {1}] {2}", changeset.date, changeset.owner, text);
+						num2--;
+						parentViewState.Clear();
+						parentViewState.AddAssetItems(changeset);
+						for (int k = 0; k < parentViewState.folders.Length; k++)
+						{
+							if (--num2 == 0 && !this.IsLastOne(k, 0, parentViewState))
 							{
 								text2 += "\n(and more...)";
 								break;
 							}
-							text2 = text2 + "\n\t" + parentViewState.folders[k].files[l].name;
+							text2 = text2 + "\n" + parentViewState.folders[k].name;
+							for (int l = 0; l < parentViewState.folders[k].files.Length; l++)
+							{
+								if (--num2 == 0 && !this.IsLastOne(k, l, parentViewState))
+								{
+									text2 += "\n(and more...)";
+									break;
+								}
+								text2 = text2 + "\n\t" + parentViewState.folders[k].files[l].name;
+							}
+							if (num2 == 0)
+							{
+								break;
+							}
 						}
-						if (num2 == 0)
+						this.changesetContents[j] = new GUIContent(this.sharedChangesets[j].message.Split(new char[]
 						{
-							break;
+							'\n'
+						})[0], text2);
+					}
+					if (this.maxNickLength == 1)
+					{
+						this.maxNickLength = 0;
+					}
+				}
+				if (AssetServer.IsControllerBusy() != 0)
+				{
+					base.Repaint();
+				}
+				else
+				{
+					if (this.isInitialUpdate)
+					{
+						this.isInitialUpdate = false;
+						this.SwitchSelectedPage(ASMainWindow.Page.Overview);
+					}
+					if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "Find")
+					{
+						this.SetShownSearchField(this.m_SearchToShow);
+						Event.current.Use();
+					}
+					GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
+					int num3 = -1;
+					bool enabled = GUI.enabled;
+					if (this.ToolbarToggle(this.selectedPage == ASMainWindow.Page.Overview, this.pageTitles[0], EditorStyles.toolbarButton))
+					{
+						num3 = 0;
+					}
+					GUI.enabled = (!this.needsSetup && this.sharedChangesets != null && this.sharedChangesets.Length != 0 && enabled);
+					if (this.ToolbarToggle(this.selectedPage == ASMainWindow.Page.Update, this.pageTitles[1], EditorStyles.toolbarButton))
+					{
+						num3 = 1;
+					}
+					GUI.enabled = (!this.needsSetup && this.pv.lv.totalRows != 0 && enabled);
+					if (this.selectedPage > ASMainWindow.Page.Commit)
+					{
+						if (this.ToolbarToggle(this.selectedPage == ASMainWindow.Page.Commit, this.pageTitles[2], EditorStyles.toolbarButton))
+						{
+							num3 = 2;
+						}
+						GUI.enabled = enabled;
+						if (this.ToolbarToggle(this.selectedPage > ASMainWindow.Page.Commit, this.pageTitles[3], EditorStyles.toolbarButton))
+						{
+							num3 = 3;
 						}
 					}
-					this.changesetContents[j] = new GUIContent(this.sharedChangesets[j].message.Split(new char[]
+					else
 					{
-						'\n'
-					})[0], text2);
-				}
-				if (this.maxNickLength == 1)
-				{
-					this.maxNickLength = 0;
-				}
-			}
-			if (AssetServer.IsControllerBusy() != 0)
-			{
-				base.Repaint();
-				return;
-			}
-			if (this.isInitialUpdate)
-			{
-				this.isInitialUpdate = false;
-				this.SwitchSelectedPage(ASMainWindow.Page.Overview);
-			}
-			if (Event.current.type == EventType.ExecuteCommand && Event.current.commandName == "Find")
-			{
-				this.SetShownSearchField(this.m_SearchToShow);
-				Event.current.Use();
-			}
-			GUILayout.BeginHorizontal(EditorStyles.toolbar, new GUILayoutOption[0]);
-			int num3 = -1;
-			bool enabled = GUI.enabled;
-			if (this.ToolbarToggle(this.selectedPage == ASMainWindow.Page.Overview, this.pageTitles[0], EditorStyles.toolbarButton))
-			{
-				num3 = 0;
-			}
-			GUI.enabled = (!this.needsSetup && this.sharedChangesets != null && this.sharedChangesets.Length != 0 && enabled);
-			if (this.ToolbarToggle(this.selectedPage == ASMainWindow.Page.Update, this.pageTitles[1], EditorStyles.toolbarButton))
-			{
-				num3 = 1;
-			}
-			GUI.enabled = (!this.needsSetup && this.pv.lv.totalRows != 0 && enabled);
-			if (this.selectedPage > ASMainWindow.Page.Commit)
-			{
-				if (this.ToolbarToggle(this.selectedPage == ASMainWindow.Page.Commit, this.pageTitles[2], EditorStyles.toolbarButton))
-				{
-					num3 = 2;
-				}
-				GUI.enabled = enabled;
-				if (this.ToolbarToggle(this.selectedPage > ASMainWindow.Page.Commit, this.pageTitles[3], EditorStyles.toolbarButton))
-				{
-					num3 = 3;
-				}
-			}
-			else
-			{
-				if (this.ToolbarToggle(this.selectedPage == ASMainWindow.Page.Commit, this.pageTitles[2], EditorStyles.toolbarButton))
-				{
-					num3 = 2;
-				}
-				GUI.enabled = enabled;
-			}
-			if (num3 != -1 && num3 != (int)this.selectedPage)
-			{
-				if (this.selectedPage == ASMainWindow.Page.Commit)
-				{
-					this.NotifyClosingCommit();
-				}
-				if (num3 <= 2)
-				{
-					this.SwitchSelectedPage((ASMainWindow.Page)num3);
-					GUIUtility.ExitGUI();
-				}
-			}
-			GUILayout.FlexibleSpace();
-			if (this.selectedPage == ASMainWindow.Page.History)
-			{
-				this.DoSearchToggle(ASMainWindow.ShowSearchField.HistoryList);
-			}
-			if (!this.needsSetup)
-			{
-				switch (this.selectedPage)
-				{
-				case ASMainWindow.Page.Overview:
-				case ASMainWindow.Page.Update:
-				case ASMainWindow.Page.History:
-					if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, new GUILayoutOption[0]))
-					{
-						this.ActionRefresh();
-						GUIUtility.ExitGUI();
+						if (this.ToolbarToggle(this.selectedPage == ASMainWindow.Page.Commit, this.pageTitles[2], EditorStyles.toolbarButton))
+						{
+							num3 = 2;
+						}
+						GUI.enabled = enabled;
 					}
-					break;
+					if (num3 != -1 && num3 != (int)this.selectedPage)
+					{
+						if (this.selectedPage == ASMainWindow.Page.Commit)
+						{
+							this.NotifyClosingCommit();
+						}
+						if (num3 <= 2)
+						{
+							this.SwitchSelectedPage((ASMainWindow.Page)num3);
+							GUIUtility.ExitGUI();
+						}
+					}
+					GUILayout.FlexibleSpace();
+					if (this.selectedPage == ASMainWindow.Page.History)
+					{
+						this.DoSearchToggle(ASMainWindow.ShowSearchField.HistoryList);
+					}
+					if (!this.needsSetup)
+					{
+						ASMainWindow.Page page = this.selectedPage;
+						if (page == ASMainWindow.Page.Overview || page == ASMainWindow.Page.Update || page == ASMainWindow.Page.History)
+						{
+							if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, new GUILayoutOption[0]))
+							{
+								this.ActionRefresh();
+								GUIUtility.ExitGUI();
+							}
+						}
+					}
+					GUILayout.EndHorizontal();
+					EditorGUIUtility.SetIconSize(this.iconSize);
+					this.DoSelectedPageGUI();
+					EditorGUIUtility.SetIconSize(Vector2.zero);
+					if (Event.current.type == EventType.ContextClick)
+					{
+						GUIUtility.hotControl = 0;
+						Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
+						EditorUtility.DisplayCustomMenu(position, (!this.needsSetup) ? this.dropDownMenuItems : this.unconfiguredDropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
+						Event.current.Use();
+					}
 				}
 			}
-			GUILayout.EndHorizontal();
-			EditorGUIUtility.SetIconSize(this.iconSize);
-			this.DoSelectedPageGUI();
-			EditorGUIUtility.SetIconSize(Vector2.zero);
-			if (Event.current.type == EventType.ContextClick)
-			{
-				GUIUtility.hotControl = 0;
-				Rect position = new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y, 1f, 1f);
-				EditorUtility.DisplayCustomMenu(position, (!this.needsSetup) ? this.dropDownMenuItems : this.unconfiguredDropDownMenuItems, null, new EditorUtility.SelectMenuItemFunction(this.ContextMenuClick), null);
-				Event.current.Use();
-			}
+		}
+
+		private void OnEnable()
+		{
+			base.titleContent = base.GetLocalizedTitleContent();
 		}
 	}
 }

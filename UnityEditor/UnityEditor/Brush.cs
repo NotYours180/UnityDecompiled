@@ -1,23 +1,35 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class Brush
 	{
-		internal const int kMinBrushSize = 3;
 		private float[] m_Strength;
+
 		private int m_Size;
+
 		private Texture2D m_Brush;
+
 		private Texture2D m_Preview;
+
 		private Projector m_BrushProjector;
+
+		internal const int kMinBrushSize = 3;
+
 		public bool Load(Texture2D brushTex, int size)
 		{
+			if (this.m_BrushProjector != null && this.m_Preview != null)
+			{
+				this.m_BrushProjector.material.mainTexture = this.m_Preview;
+			}
+			bool result;
 			if (this.m_Brush == brushTex && size == this.m_Size && this.m_Strength != null)
 			{
-				return true;
+				result = true;
 			}
-			if (brushTex != null)
+			else if (brushTex != null)
 			{
 				float num = (float)size;
 				this.m_Size = size;
@@ -40,7 +52,7 @@ namespace UnityEditor
 					}
 				}
 				UnityEngine.Object.DestroyImmediate(this.m_Preview);
-				this.m_Preview = new Texture2D(this.m_Size, this.m_Size, TextureFormat.ARGB32, false);
+				this.m_Preview = new Texture2D(this.m_Size, this.m_Size, TextureFormat.RGBA32, false);
 				this.m_Preview.hideFlags = HideFlags.HideAndDontSave;
 				this.m_Preview.wrapMode = TextureWrapMode.Repeat;
 				this.m_Preview.filterMode = FilterMode.Point;
@@ -57,19 +69,25 @@ namespace UnityEditor
 				}
 				this.m_BrushProjector.material.mainTexture = this.m_Preview;
 				this.m_Brush = brushTex;
-				return true;
+				result = true;
 			}
-			this.m_Strength = new float[1];
-			this.m_Strength[0] = 1f;
-			this.m_Size = 1;
-			return false;
+			else
+			{
+				this.m_Strength = new float[1];
+				this.m_Strength[0] = 1f;
+				this.m_Size = 1;
+				result = false;
+			}
+			return result;
 		}
+
 		public float GetStrengthInt(int ix, int iy)
 		{
 			ix = Mathf.Clamp(ix, 0, this.m_Size - 1);
 			iy = Mathf.Clamp(iy, 0, this.m_Size - 1);
 			return this.m_Strength[iy * this.m_Size + ix];
 		}
+
 		public void Dispose()
 		{
 			if (this.m_BrushProjector)
@@ -80,10 +98,12 @@ namespace UnityEditor
 			UnityEngine.Object.DestroyImmediate(this.m_Preview);
 			this.m_Preview = null;
 		}
+
 		public Projector GetPreviewProjector()
 		{
 			return this.m_BrushProjector;
 		}
+
 		private void CreatePreviewBrush()
 		{
 			GameObject gameObject = EditorUtility.CreateGameObjectWithHideFlags("TerrainInspectorBrushPreview", HideFlags.HideAndDontSave, new Type[]
@@ -100,7 +120,6 @@ namespace UnityEditor
 			Material material = EditorGUIUtility.LoadRequired("SceneView/TerrainBrushMaterial.mat") as Material;
 			material.SetTexture("_CutoutTex", (Texture2D)EditorGUIUtility.Load(EditorResourcesUtility.brushesPath + "brush_cutout.png"));
 			this.m_BrushProjector.material = material;
-			this.m_BrushProjector.enabled = false;
 		}
 	}
 }

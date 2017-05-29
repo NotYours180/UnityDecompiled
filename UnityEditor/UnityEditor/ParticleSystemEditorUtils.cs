@@ -2,110 +2,120 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	internal sealed class ParticleSystemEditorUtils
 	{
 		internal static extern float editorSimulationSpeed
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal static extern float editorPlaybackTime
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal static extern bool editorIsScrubbing
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal static extern bool editorIsPlaying
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal static extern bool editorIsPaused
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		internal static extern bool editorResimulation
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		internal static extern bool editorUpdateAll
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
+
 		internal static extern ParticleSystem lockedParticleSystem
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern string CheckCircularReferences(ParticleSystem subEmitter, ParticleSystem subEmitterParent, ParticleSystem root);
-		[WrapperlessIcall]
+		internal static extern string CheckCircularReferences(ParticleSystem subEmitter);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void PerformCompleteResimulation();
+
 		public static ParticleSystem GetRoot(ParticleSystem ps)
 		{
+			ParticleSystem result;
 			if (ps == null)
 			{
-				return null;
+				result = null;
 			}
-			Transform transform = ps.transform;
-			while (transform.parent && transform.parent.gameObject.GetComponent<ParticleSystem>() != null)
+			else
 			{
-				transform = transform.parent;
+				Transform transform = ps.transform;
+				while (transform.parent && transform.parent.gameObject.GetComponent<ParticleSystem>() != null)
+				{
+					transform = transform.parent;
+				}
+				result = transform.gameObject.GetComponent<ParticleSystem>();
 			}
-			return transform.gameObject.GetComponent<ParticleSystem>();
+			return result;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void StopEffect([DefaultValue("true")] bool stop, [DefaultValue("true")] bool clear);
+
 		[ExcludeFromDocs]
 		internal static void StopEffect(bool stop)
 		{
 			bool clear = true;
 			ParticleSystemEditorUtils.StopEffect(stop, clear);
 		}
+
 		[ExcludeFromDocs]
 		internal static void StopEffect()
 		{

@@ -1,36 +1,53 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class IconSelector : EditorWindow
 	{
+		public delegate void MonoScriptIconChangedCallback(MonoScript monoScript);
+
 		private class Styles
 		{
 			public GUIStyle background = "sv_iconselector_back";
+
 			public GUIStyle seperator = "sv_iconselector_sep";
+
 			public GUIStyle selection = "sv_iconselector_selection";
+
 			public GUIStyle selectionLabel = "sv_iconselector_labelselection";
+
 			public GUIStyle noneButton = "sv_iconselector_button";
 		}
-		public delegate void MonoScriptIconChangedCallback(MonoScript monoScript);
+
 		private static IconSelector s_IconSelector = null;
+
 		private static long s_LastClosedTime = 0L;
+
 		private static int s_LastInstanceID = -1;
+
 		private static int s_HashIconSelector = "IconSelector".GetHashCode();
+
 		private static IconSelector.Styles m_Styles;
+
 		private UnityEngine.Object m_TargetObject;
+
 		private Texture2D m_StartIcon;
+
 		private bool m_ShowLabelIcons;
+
 		private GUIContent[] m_LabelLargeIcons;
+
 		private GUIContent[] m_LabelIcons;
+
 		private GUIContent[] m_LargeIcons;
+
 		private GUIContent[] m_SmallIcons;
+
 		private GUIContent m_NoneButtonContent;
+
 		private IconSelector.MonoScriptIconChangedCallback m_MonoScriptIconChangedCallback;
-		private IconSelector()
-		{
-			base.hideFlags = HideFlags.DontSave;
-		}
+
 		private GUIContent[] GetTextures(string baseName, string postFix, int startIndex, int count)
 		{
 			GUIContent[] array = new GUIContent[count];
@@ -40,15 +57,19 @@ namespace UnityEditor
 			}
 			return array;
 		}
+
 		private void OnEnable()
 		{
+			base.hideFlags = HideFlags.DontSave;
 		}
+
 		private void OnDisable()
 		{
 			this.SaveIconChanges();
 			IconSelector.s_LastClosedTime = DateTime.Now.Ticks / 10000L;
 			IconSelector.s_IconSelector = null;
 		}
+
 		private void SaveIconChanges()
 		{
 			Texture2D iconForObject = EditorGUIUtility.GetIconForObject(this.m_TargetObject);
@@ -68,11 +89,13 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static bool ShowAtPosition(UnityEngine.Object targetObj, Rect activatorRect, bool showLabelIcons)
 		{
 			int instanceID = targetObj.GetInstanceID();
 			long num = DateTime.Now.Ticks / 10000L;
 			bool flag = num < IconSelector.s_LastClosedTime + 50L;
+			bool result;
 			if (instanceID != IconSelector.s_LastInstanceID || !flag)
 			{
 				Event.current.Use();
@@ -82,10 +105,15 @@ namespace UnityEditor
 					IconSelector.s_IconSelector = ScriptableObject.CreateInstance<IconSelector>();
 				}
 				IconSelector.s_IconSelector.Init(targetObj, activatorRect, showLabelIcons);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
+
 		internal static void SetMonoScriptIconChangedCallback(IconSelector.MonoScriptIconChangedCallback callback)
 		{
 			if (IconSelector.s_IconSelector != null)
@@ -97,6 +125,7 @@ namespace UnityEditor
 				Debug.Log("ERROR: setting callback on hidden IconSelector");
 			}
 		}
+
 		private void Init(UnityEngine.Object targetObj, Rect activatorRect, bool showLabelIcons)
 		{
 			this.m_TargetObject = targetObj;
@@ -104,8 +133,8 @@ namespace UnityEditor
 			this.m_ShowLabelIcons = showLabelIcons;
 			Rect buttonRect = GUIUtility.GUIToScreenRect(activatorRect);
 			GUIUtility.keyboardControl = 0;
-			this.m_LabelLargeIcons = this.GetTextures("sv_label_", string.Empty, 0, 8);
-			this.m_LabelIcons = this.GetTextures("sv_icon_name", string.Empty, 0, 8);
+			this.m_LabelLargeIcons = this.GetTextures("sv_label_", "", 0, 8);
+			this.m_LabelIcons = this.GetTextures("sv_icon_name", "", 0, 8);
 			this.m_SmallIcons = this.GetTextures("sv_icon_dot", "_sml", 0, 16);
 			this.m_LargeIcons = this.GetTextures("sv_icon_dot", "_pix16_gizmo", 0, 16);
 			this.m_NoneButtonContent = EditorGUIUtility.IconContent("sv_icon_none");
@@ -118,39 +147,50 @@ namespace UnityEditor
 			}
 			base.ShowAsDropDown(buttonRect, new Vector2(x, y));
 		}
+
 		private Texture2D ConvertLargeIconToSmallIcon(Texture2D largeIcon, ref bool isLabelIcon)
 		{
+			Texture2D result;
 			if (largeIcon == null)
 			{
-				return null;
+				result = null;
 			}
-			isLabelIcon = true;
-			for (int i = 0; i < this.m_LabelLargeIcons.Length; i++)
+			else
 			{
-				if (this.m_LabelLargeIcons[i].image == largeIcon)
+				isLabelIcon = true;
+				for (int i = 0; i < this.m_LabelLargeIcons.Length; i++)
 				{
-					return (Texture2D)this.m_LabelIcons[i].image;
+					if (this.m_LabelLargeIcons[i].image == largeIcon)
+					{
+						result = (Texture2D)this.m_LabelIcons[i].image;
+						return result;
+					}
 				}
-			}
-			isLabelIcon = false;
-			for (int j = 0; j < this.m_LargeIcons.Length; j++)
-			{
-				if (this.m_LargeIcons[j].image == largeIcon)
+				isLabelIcon = false;
+				for (int j = 0; j < this.m_LargeIcons.Length; j++)
 				{
-					return (Texture2D)this.m_SmallIcons[j].image;
+					if (this.m_LargeIcons[j].image == largeIcon)
+					{
+						result = (Texture2D)this.m_SmallIcons[j].image;
+						return result;
+					}
 				}
+				result = largeIcon;
 			}
-			return largeIcon;
+			return result;
 		}
+
 		private Texture2D ConvertSmallIconToLargeIcon(Texture2D smallIcon, bool labelIcon)
 		{
+			Texture2D result;
 			if (labelIcon)
 			{
 				for (int i = 0; i < this.m_LabelIcons.Length; i++)
 				{
 					if (this.m_LabelIcons[i].image == smallIcon)
 					{
-						return (Texture2D)this.m_LabelLargeIcons[i].image;
+						result = (Texture2D)this.m_LabelLargeIcons[i].image;
+						return result;
 					}
 				}
 			}
@@ -160,12 +200,15 @@ namespace UnityEditor
 				{
 					if (this.m_SmallIcons[j].image == smallIcon)
 					{
-						return (Texture2D)this.m_LargeIcons[j].image;
+						result = (Texture2D)this.m_LargeIcons[j].image;
+						return result;
 					}
 				}
 			}
-			return smallIcon;
+			result = smallIcon;
+			return result;
 		}
+
 		private void DoButton(GUIContent content, Texture2D selectedIcon, bool labelIcon)
 		{
 			int controlID = GUIUtility.GetControlID(IconSelector.s_HashIconSelector, FocusType.Keyboard);
@@ -191,11 +234,12 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void DoTopSection(bool anySelected)
 		{
 			Rect position = new Rect(6f, 4f, 110f, 20f);
 			GUI.Label(position, "Select Icon");
-			if (anySelected)
+			using (new EditorGUI.DisabledScope(!anySelected))
 			{
 				Rect position2 = new Rect(93f, 6f, 43f, 12f);
 				if (GUI.Button(position2, this.m_NoneButtonContent, IconSelector.m_Styles.noneButton))
@@ -206,12 +250,14 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private void CloseWindow()
 		{
 			base.Close();
 			GUI.changed = true;
 			GUIUtility.ExitGUI();
 		}
+
 		internal void OnGUI()
 		{
 			if (IconSelector.m_Styles == null)
@@ -236,7 +282,7 @@ namespace UnityEditor
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.Space(1f);
 			GUI.enabled = false;
-			GUILayout.Label(string.Empty, IconSelector.m_Styles.seperator, new GUILayoutOption[0]);
+			GUILayout.Label("", IconSelector.m_Styles.seperator, new GUILayoutOption[0]);
 			GUI.enabled = true;
 			GUILayout.Space(1f);
 			GUILayout.EndHorizontal();
@@ -262,7 +308,7 @@ namespace UnityEditor
 				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 				GUILayout.Space(1f);
 				GUI.enabled = false;
-				GUILayout.Label(string.Empty, IconSelector.m_Styles.seperator, new GUILayoutOption[0]);
+				GUILayout.Label("", IconSelector.m_Styles.seperator, new GUILayoutOption[0]);
 				GUI.enabled = true;
 				GUILayout.Space(1f);
 				GUILayout.EndHorizontal();
@@ -304,8 +350,7 @@ namespace UnityEditor
 				current.Use();
 				GUIUtility.ExitGUI();
 			}
-			EventType eventType = type;
-			if (eventType == EventType.ExecuteCommand)
+			if (type == EventType.ExecuteCommand)
 			{
 				string commandName = current.commandName;
 				if (commandName == "ObjectSelectorUpdated" && ObjectSelector.get.objectSelectorID == controlID && GUIUtility.keyboardControl == controlID)

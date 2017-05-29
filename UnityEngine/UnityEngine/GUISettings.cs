@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	[Serializable]
@@ -7,14 +9,19 @@ namespace UnityEngine
 	{
 		[SerializeField]
 		private bool m_DoubleClickSelectsWord = true;
+
 		[SerializeField]
 		private bool m_TripleClickSelectsLine = true;
+
 		[SerializeField]
 		private Color m_CursorColor = Color.white;
+
 		[SerializeField]
 		private float m_CursorFlashSpeed = -1f;
+
 		[SerializeField]
 		private Color m_SelectionColor = new Color(0.5f, 0.5f, 1f);
+
 		public bool doubleClickSelectsWord
 		{
 			get
@@ -26,6 +33,7 @@ namespace UnityEngine
 				this.m_DoubleClickSelectsWord = value;
 			}
 		}
+
 		public bool tripleClickSelectsLine
 		{
 			get
@@ -37,6 +45,7 @@ namespace UnityEngine
 				this.m_TripleClickSelectsLine = value;
 			}
 		}
+
 		public Color cursorColor
 		{
 			get
@@ -48,21 +57,28 @@ namespace UnityEngine
 				this.m_CursorColor = value;
 			}
 		}
+
 		public float cursorFlashSpeed
 		{
 			get
 			{
+				float result;
 				if (this.m_CursorFlashSpeed >= 0f)
 				{
-					return this.m_CursorFlashSpeed;
+					result = this.m_CursorFlashSpeed;
 				}
-				return GUISettings.Internal_GetCursorFlashSpeed();
+				else
+				{
+					result = GUISettings.Internal_GetCursorFlashSpeed();
+				}
+				return result;
 			}
 			set
 			{
 				this.m_CursorFlashSpeed = value;
 			}
 		}
+
 		public Color selectionColor
 		{
 			get
@@ -74,7 +90,8 @@ namespace UnityEngine
 				this.m_SelectionColor = value;
 			}
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float Internal_GetCursorFlashSpeed();
 	}

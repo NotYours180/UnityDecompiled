@@ -4,118 +4,191 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
+using System.Threading;
 using UnityEngine.Internal;
+using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public sealed class Application
 	{
+		public delegate void AdvertisingIdentifierCallback(string advertisingId, bool trackingEnabled, string errorMsg);
+
+		public delegate void LowMemoryCallback();
+
 		public delegate void LogCallback(string condition, string stackTrace, LogType type);
+
+		internal static Application.AdvertisingIdentifierCallback OnAdvertisingIdentifierCallback;
+
 		private static Application.LogCallback s_LogCallbackHandler;
+
 		private static Application.LogCallback s_LogCallbackHandlerThreaded;
+
 		private static volatile Application.LogCallback s_RegisterLogCallbackDeprecated;
+
+		public static event Application.LowMemoryCallback lowMemory
+		{
+			add
+			{
+				Application.LowMemoryCallback lowMemoryCallback = Application.lowMemory;
+				Application.LowMemoryCallback lowMemoryCallback2;
+				do
+				{
+					lowMemoryCallback2 = lowMemoryCallback;
+					lowMemoryCallback = Interlocked.CompareExchange<Application.LowMemoryCallback>(ref Application.lowMemory, (Application.LowMemoryCallback)Delegate.Combine(lowMemoryCallback2, value), lowMemoryCallback);
+				}
+				while (lowMemoryCallback != lowMemoryCallback2);
+			}
+			remove
+			{
+				Application.LowMemoryCallback lowMemoryCallback = Application.lowMemory;
+				Application.LowMemoryCallback lowMemoryCallback2;
+				do
+				{
+					lowMemoryCallback2 = lowMemoryCallback;
+					lowMemoryCallback = Interlocked.CompareExchange<Application.LowMemoryCallback>(ref Application.lowMemory, (Application.LowMemoryCallback)Delegate.Remove(lowMemoryCallback2, value), lowMemoryCallback);
+				}
+				while (lowMemoryCallback != lowMemoryCallback2);
+			}
+		}
+
 		public static event Application.LogCallback logMessageReceived
 		{
 			add
 			{
 				Application.s_LogCallbackHandler = (Application.LogCallback)Delegate.Combine(Application.s_LogCallbackHandler, value);
-				Application.SetLogCallbackDefined(true, Application.s_LogCallbackHandlerThreaded != null);
+				Application.SetLogCallbackDefined(true);
 			}
 			remove
 			{
 				Application.s_LogCallbackHandler = (Application.LogCallback)Delegate.Remove(Application.s_LogCallbackHandler, value);
 			}
 		}
+
 		public static event Application.LogCallback logMessageReceivedThreaded
 		{
 			add
 			{
 				Application.s_LogCallbackHandlerThreaded = (Application.LogCallback)Delegate.Combine(Application.s_LogCallbackHandlerThreaded, value);
-				Application.SetLogCallbackDefined(true, true);
+				Application.SetLogCallbackDefined(true);
 			}
 			remove
 			{
 				Application.s_LogCallbackHandlerThreaded = (Application.LogCallback)Delegate.Remove(Application.s_LogCallbackHandlerThreaded, value);
 			}
 		}
-		public static extern int loadedLevel
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string loadedLevelName
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
+
+		[Obsolete("This property is deprecated, please use LoadLevelAsync to detect if a specific scene is currently loading.")]
 		public static extern bool isLoadingLevel
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		public static extern int levelCount
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
+
 		public static extern int streamedBytes
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern bool isPlaying
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		public static extern bool isFocused
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		public static extern bool isEditor
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern bool isWebPlayer
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		[ThreadAndSerializationSafe]
 		public static extern RuntimePlatform platform
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
+		public static extern string buildGUID
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		public static bool isMobilePlatform
 		{
 			get
 			{
 				RuntimePlatform platform = Application.platform;
-				return platform == RuntimePlatform.IPhonePlayer || platform == RuntimePlatform.Android || platform == RuntimePlatform.WP8Player || platform == RuntimePlatform.BB10Player || platform == RuntimePlatform.TizenPlayer;
+				bool result;
+				switch (platform)
+				{
+				case RuntimePlatform.MetroPlayerX86:
+				case RuntimePlatform.MetroPlayerX64:
+				case RuntimePlatform.MetroPlayerARM:
+				case RuntimePlatform.TizenPlayer:
+					goto IL_45;
+				case RuntimePlatform.WP8Player:
+				case RuntimePlatform.BB10Player:
+					IL_28:
+					switch (platform)
+					{
+					case RuntimePlatform.IPhonePlayer:
+					case RuntimePlatform.Android:
+						goto IL_45;
+					}
+					result = false;
+					return result;
+				}
+				goto IL_28;
+				IL_45:
+				result = true;
+				return result;
 			}
 		}
+
 		public static bool isConsolePlatform
 		{
 			get
 			{
 				RuntimePlatform platform = Application.platform;
-				return platform == RuntimePlatform.PS3 || platform == RuntimePlatform.PS4 || platform == RuntimePlatform.XBOX360 || platform == RuntimePlatform.XboxOne;
+				return platform == RuntimePlatform.PS4 || platform == RuntimePlatform.XboxOne;
 			}
 		}
+
 		public static extern bool runInBackground
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		[Obsolete("use Application.isEditor instead")]
 		public static bool isPlayer
 		{
@@ -124,44 +197,253 @@ namespace UnityEngine
 				return !Application.isEditor;
 			}
 		}
+
+		internal static extern bool isBatchmode
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		internal static extern bool isTestRun
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		internal static extern bool isHumanControllingUs
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
 		public static extern string dataPath
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern string streamingAssetsPath
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		[SecurityCritical]
 		public static extern string persistentDataPath
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern string temporaryCachePath
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern string srcValue
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public static extern string absoluteURL
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
-		[Obsolete("absoluteUrl is deprecated (UnityUpgradable). Please use absoluteURL instead.", true)]
+
+		public static extern string unityVersion
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern string version
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern string installerName
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern string identifier
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern ApplicationInstallMode installMode
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern ApplicationSandboxType sandboxType
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern string productName
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern string companyName
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern string cloudProjectId
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		[Obsolete("Application.webSecurityEnabled is no longer supported, since the Unity Web Player is no longer supported by Unity."), ThreadAndSerializationSafe]
+		public static extern bool webSecurityEnabled
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		[Obsolete("Application.webSecurityHostUrl is no longer supported, since the Unity Web Player is no longer supported by Unity."), ThreadAndSerializationSafe]
+		public static extern string webSecurityHostUrl
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern int targetFrameRate
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern SystemLanguage systemLanguage
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		[Obsolete("Use SetStackTraceLogType/GetStackTraceLogType instead")]
+		public static extern StackTraceLogType stackTraceLogType
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern ThreadPriority backgroundLoadingPriority
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		public static extern NetworkReachability internetReachability
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern bool genuine
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public static extern bool genuineCheckAvailable
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		internal static extern bool submitAnalytics
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		[Obsolete("This property is deprecated, please use SplashScreen.isFinished instead")]
+		public static bool isShowingSplashScreen
+		{
+			get
+			{
+				return !SplashScreen.isFinished;
+			}
+		}
+
+		[Obsolete("Use SceneManager.sceneCountInBuildSettings")]
+		public static int levelCount
+		{
+			get
+			{
+				return SceneManager.sceneCountInBuildSettings;
+			}
+		}
+
+		[Obsolete("Use SceneManager to determine what scenes have been loaded")]
+		public static int loadedLevel
+		{
+			get
+			{
+				return SceneManager.GetActiveScene().buildIndex;
+			}
+		}
+
+		[Obsolete("Use SceneManager to determine what scenes have been loaded")]
+		public static string loadedLevelName
+		{
+			get
+			{
+				return SceneManager.GetActiveScene().name;
+			}
+		}
+
+		[Obsolete("absoluteUrl is deprecated. Please use absoluteURL instead (UnityUpgradable) -> absoluteURL", true)]
 		public static string absoluteUrl
 		{
 			get
@@ -169,258 +451,171 @@ namespace UnityEngine
 				return Application.absoluteURL;
 			}
 		}
-		public static extern string unityVersion
+
+		[Obsolete("bundleIdentifier is deprecated. Please use identifier instead (UnityUpgradable) -> identifier", true)]
+		public static string bundleIdentifier
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			get
+			{
+				return Application.identifier;
+			}
 		}
-		public static extern string version
+
+		[RequiredByNativeCode]
+		private static void CallLowMemory()
 		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
+			Application.LowMemoryCallback lowMemoryCallback = Application.lowMemory;
+			if (lowMemoryCallback != null)
+			{
+				lowMemoryCallback();
+			}
 		}
-		public static extern string bundleIdentifier
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern ApplicationInstallMode installMode
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern ApplicationSandboxType sandboxType
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string productName
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string companyName
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string cloudProjectId
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern bool webSecurityEnabled
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern string webSecurityHostUrl
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern int targetFrameRate
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public static extern SystemLanguage systemLanguage
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern ThreadPriority backgroundLoadingPriority
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			set;
-		}
-		public static extern NetworkReachability internetReachability
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern bool genuine
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public static extern bool genuineCheckAvailable
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		internal static extern bool submitAnalytics
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Quit();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CancelQuit();
-		public static void LoadLevel(int index)
-		{
-			Application.LoadLevelAsync(null, index, false, true);
-		}
-		public static void LoadLevel(string name)
-		{
-			Application.LoadLevelAsync(name, -1, false, true);
-		}
-		public static AsyncOperation LoadLevelAsync(int index)
-		{
-			return Application.LoadLevelAsync(null, index, false, false);
-		}
-		public static AsyncOperation LoadLevelAsync(string levelName)
-		{
-			return Application.LoadLevelAsync(levelName, -1, false, false);
-		}
-		public static AsyncOperation LoadLevelAdditiveAsync(int index)
-		{
-			return Application.LoadLevelAsync(null, index, true, false);
-		}
-		public static AsyncOperation LoadLevelAdditiveAsync(string levelName)
-		{
-			return Application.LoadLevelAsync(levelName, -1, true, false);
-		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern AsyncOperation LoadLevelAsync(string monoLevelName, int index, bool additive, bool mustCompleteNextFrame);
-		public static void LoadLevelAdditive(int index)
-		{
-			Application.LoadLevelAsync(null, index, true, true);
-		}
-		public static void LoadLevelAdditive(string name)
-		{
-			Application.LoadLevelAsync(name, -1, true, true);
-		}
-		[WrapperlessIcall]
+		public static extern void Unload();
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern float GetStreamProgressForLevelByName(string levelName);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern float GetStreamProgressForLevel(int levelIndex);
+
 		public static float GetStreamProgressForLevel(string levelName)
 		{
 			return Application.GetStreamProgressForLevelByName(levelName);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool CanStreamedLevelBeLoadedByName(string levelName);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool CanStreamedLevelBeLoaded(int levelIndex);
+
 		public static bool CanStreamedLevelBeLoaded(string levelName)
 		{
 			return Application.CanStreamedLevelBeLoadedByName(levelName);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string[] GetBuildTags();
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void CaptureScreenshot(string filename, [DefaultValue("0")] int superSize);
+
 		[ExcludeFromDocs]
 		public static void CaptureScreenshot(string filename)
 		{
 			int superSize = 0;
 			Application.CaptureScreenshot(filename, superSize);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasProLicense();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool HasAdvancedLicense();
-		[Obsolete("Use Object.DontDestroyOnLoad instead"), WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool HasARGV(string name);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern string GetValueForARGV(string name);
+
+		[Obsolete("Use Object.DontDestroyOnLoad instead"), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void DontDestroyOnLoad(Object mono);
+
 		private static string ObjectToJSString(object o)
 		{
+			string result;
 			if (o == null)
 			{
-				return "null";
+				result = "null";
 			}
-			if (o is string)
+			else if (o is string)
 			{
 				string text = o.ToString().Replace("\\", "\\\\");
 				text = text.Replace("\"", "\\\"");
 				text = text.Replace("\n", "\\n");
 				text = text.Replace("\r", "\\r");
-				text = text.Replace("\0", string.Empty);
-				text = text.Replace("\u2028", string.Empty);
-				text = text.Replace("\u2029", string.Empty);
-				return '"' + text + '"';
+				text = text.Replace("\0", "");
+				text = text.Replace("\u2028", "");
+				text = text.Replace("\u2029", "");
+				result = '"' + text + '"';
 			}
-			if (o is int || o is short || o is uint || o is ushort || o is byte)
+			else if (o is int || o is short || o is uint || o is ushort || o is byte)
 			{
-				return o.ToString();
+				result = o.ToString();
 			}
-			if (o is float)
+			else if (o is float)
 			{
 				NumberFormatInfo numberFormat = CultureInfo.InvariantCulture.NumberFormat;
-				return ((float)o).ToString(numberFormat);
+				result = ((float)o).ToString(numberFormat);
 			}
-			if (o is double)
+			else if (o is double)
 			{
 				NumberFormatInfo numberFormat2 = CultureInfo.InvariantCulture.NumberFormat;
-				return ((double)o).ToString(numberFormat2);
+				result = ((double)o).ToString(numberFormat2);
 			}
-			if (o is char)
+			else if (o is char)
 			{
 				if ((char)o == '"')
 				{
-					return "\"\\\"\"";
+					result = "\"\\\"\"";
 				}
-				return '"' + o.ToString() + '"';
+				else
+				{
+					result = '"' + o.ToString() + '"';
+				}
+			}
+			else if (o is IList)
+			{
+				IList list = (IList)o;
+				StringBuilder stringBuilder = new StringBuilder();
+				stringBuilder.Append("new Array(");
+				int count = list.Count;
+				for (int i = 0; i < count; i++)
+				{
+					if (i != 0)
+					{
+						stringBuilder.Append(", ");
+					}
+					stringBuilder.Append(Application.ObjectToJSString(list[i]));
+				}
+				stringBuilder.Append(")");
+				result = stringBuilder.ToString();
 			}
 			else
 			{
-				if (o is IList)
-				{
-					IList list = (IList)o;
-					StringBuilder stringBuilder = new StringBuilder();
-					stringBuilder.Append("new Array(");
-					int count = list.Count;
-					for (int i = 0; i < count; i++)
-					{
-						if (i != 0)
-						{
-							stringBuilder.Append(", ");
-						}
-						stringBuilder.Append(Application.ObjectToJSString(list[i]));
-					}
-					stringBuilder.Append(")");
-					return stringBuilder.ToString();
-				}
-				return Application.ObjectToJSString(o.ToString());
+				result = Application.ObjectToJSString(o.ToString());
 			}
+			return result;
 		}
+
 		public static void ExternalCall(string functionName, params object[] args)
 		{
 			Application.Internal_ExternalCall(Application.BuildInvocationForArguments(functionName, args));
 		}
+
 		private static string BuildInvocationForArguments(string functionName, params object[] args)
 		{
 			StringBuilder stringBuilder = new StringBuilder();
@@ -439,6 +634,7 @@ namespace UnityEngine
 			stringBuilder.Append(';');
 			return stringBuilder.ToString();
 		}
+
 		public static void ExternalEval(string script)
 		{
 			if (script.Length > 0 && script[script.Length - 1] != ';')
@@ -447,21 +643,32 @@ namespace UnityEngine
 			}
 			Application.Internal_ExternalCall(script);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_ExternalCall(string script);
-		[WrapperlessIcall]
+
+		internal static void InvokeOnAdvertisingIdentifierCallback(string advertisingId, bool trackingEnabled)
+		{
+			if (Application.OnAdvertisingIdentifierCallback != null)
+			{
+				Application.OnAdvertisingIdentifierCallback(advertisingId, trackingEnabled, string.Empty);
+			}
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetBuildUnityVersion();
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern int GetNumericUnityVersion(string version);
-		[WrapperlessIcall]
+		public static extern bool RequestAdvertisingIdentifierAsync(Application.AdvertisingIdentifierCallback delegateMethod);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void OpenURL(string url);
-		[Obsolete("For internal use only"), WrapperlessIcall]
+
+		[Obsolete("For internal use only"), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern void CommitSuicide(int mode);
+		public static extern void ForceCrash(int mode);
+
+		[RequiredByNativeCode]
 		private static void CallLogCallback(string logString, string stackTrace, LogType type, bool invokedOnMainThread)
 		{
 			if (invokedOnMainThread)
@@ -472,50 +679,45 @@ namespace UnityEngine
 					logCallback(logString, stackTrace, type);
 				}
 			}
-			if (!invokedOnMainThread)
+			Application.LogCallback logCallback2 = Application.s_LogCallbackHandlerThreaded;
+			if (logCallback2 != null)
 			{
-				Application.LogCallback logCallback2 = Application.s_LogCallbackHandlerThreaded;
-				if (logCallback2 != null)
-				{
-					logCallback2(logString, stackTrace, type);
-				}
+				logCallback2(logString, stackTrace, type);
 			}
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern void SetLogCallbackDefined(bool defined, bool threaded);
-		[WrapperlessIcall]
+		private static extern void SetLogCallbackDefined(bool defined);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern StackTraceLogType GetStackTraceLogType(LogType logType);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern void SetStackTraceLogType(LogType logType, StackTraceLogType stackTraceType);
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern AsyncOperation RequestUserAuthorization(UserAuthorization mode);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool HasUserAuthorization(UserAuthorization mode);
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void ReplyToUserAuthorizationRequest(bool reply, [DefaultValue("false")] bool remember);
-		[ExcludeFromDocs]
-		internal static void ReplyToUserAuthorizationRequest(bool reply)
-		{
-			bool remember = false;
-			Application.ReplyToUserAuthorizationRequest(reply, remember);
-		}
-		[WrapperlessIcall]
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern int GetUserAuthorizationRequestMode_Internal();
-		internal static UserAuthorization GetUserAuthorizationRequestMode()
-		{
-			return (UserAuthorization)Application.GetUserAuthorizationRequestMode_Internal();
-		}
+
 		[Obsolete("Application.RegisterLogCallback is deprecated. Use Application.logMessageReceived instead.")]
 		public static void RegisterLogCallback(Application.LogCallback handler)
 		{
 			Application.RegisterLogCallback(handler, false);
 		}
+
 		[Obsolete("Application.RegisterLogCallbackThreaded is deprecated. Use Application.logMessageReceivedThreaded instead.")]
 		public static void RegisterLogCallbackThreaded(Application.LogCallback handler)
 		{
 			Application.RegisterLogCallback(handler, true);
 		}
+
 		private static void RegisterLogCallback(Application.LogCallback handler, bool threaded)
 		{
 			if (Application.s_RegisterLogCallbackDeprecated != null)
@@ -535,6 +737,66 @@ namespace UnityEngine
 					Application.logMessageReceived += handler;
 				}
 			}
+		}
+
+		[Obsolete("Use SceneManager.LoadScene")]
+		public static void LoadLevel(int index)
+		{
+			SceneManager.LoadScene(index, LoadSceneMode.Single);
+		}
+
+		[Obsolete("Use SceneManager.LoadScene")]
+		public static void LoadLevel(string name)
+		{
+			SceneManager.LoadScene(name, LoadSceneMode.Single);
+		}
+
+		[Obsolete("Use SceneManager.LoadScene")]
+		public static void LoadLevelAdditive(int index)
+		{
+			SceneManager.LoadScene(index, LoadSceneMode.Additive);
+		}
+
+		[Obsolete("Use SceneManager.LoadScene")]
+		public static void LoadLevelAdditive(string name)
+		{
+			SceneManager.LoadScene(name, LoadSceneMode.Additive);
+		}
+
+		[Obsolete("Use SceneManager.LoadSceneAsync")]
+		public static AsyncOperation LoadLevelAsync(int index)
+		{
+			return SceneManager.LoadSceneAsync(index, LoadSceneMode.Single);
+		}
+
+		[Obsolete("Use SceneManager.LoadSceneAsync")]
+		public static AsyncOperation LoadLevelAsync(string levelName)
+		{
+			return SceneManager.LoadSceneAsync(levelName, LoadSceneMode.Single);
+		}
+
+		[Obsolete("Use SceneManager.LoadSceneAsync")]
+		public static AsyncOperation LoadLevelAdditiveAsync(int index)
+		{
+			return SceneManager.LoadSceneAsync(index, LoadSceneMode.Additive);
+		}
+
+		[Obsolete("Use SceneManager.LoadSceneAsync")]
+		public static AsyncOperation LoadLevelAdditiveAsync(string levelName)
+		{
+			return SceneManager.LoadSceneAsync(levelName, LoadSceneMode.Additive);
+		}
+
+		[Obsolete("Use SceneManager.UnloadScene")]
+		public static bool UnloadLevel(int index)
+		{
+			return SceneManager.UnloadScene(index);
+		}
+
+		[Obsolete("Use SceneManager.UnloadScene")]
+		public static bool UnloadLevel(string scenePath)
+		{
+			return SceneManager.UnloadScene(scenePath);
 		}
 	}
 }

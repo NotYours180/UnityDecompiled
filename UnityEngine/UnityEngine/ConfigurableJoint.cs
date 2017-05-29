@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public sealed class ConfigurableJoint : Joint
@@ -17,60 +19,67 @@ namespace UnityEngine
 				this.INTERNAL_set_secondaryAxis(ref value);
 			}
 		}
+
 		public extern ConfigurableJointMotion xMotion
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ConfigurableJointMotion yMotion
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ConfigurableJointMotion zMotion
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ConfigurableJointMotion angularXMotion
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ConfigurableJointMotion angularYMotion
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern ConfigurableJointMotion angularZMotion
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public SoftJointLimitSpring linearLimitSpring
 		{
 			get
@@ -84,6 +93,7 @@ namespace UnityEngine
 				this.INTERNAL_set_linearLimitSpring(ref value);
 			}
 		}
+
 		public SoftJointLimitSpring angularXLimitSpring
 		{
 			get
@@ -97,6 +107,7 @@ namespace UnityEngine
 				this.INTERNAL_set_angularXLimitSpring(ref value);
 			}
 		}
+
 		public SoftJointLimitSpring angularYZLimitSpring
 		{
 			get
@@ -110,6 +121,7 @@ namespace UnityEngine
 				this.INTERNAL_set_angularYZLimitSpring(ref value);
 			}
 		}
+
 		public SoftJointLimit linearLimit
 		{
 			get
@@ -123,6 +135,7 @@ namespace UnityEngine
 				this.INTERNAL_set_linearLimit(ref value);
 			}
 		}
+
 		public SoftJointLimit lowAngularXLimit
 		{
 			get
@@ -136,6 +149,7 @@ namespace UnityEngine
 				this.INTERNAL_set_lowAngularXLimit(ref value);
 			}
 		}
+
 		public SoftJointLimit highAngularXLimit
 		{
 			get
@@ -149,6 +163,7 @@ namespace UnityEngine
 				this.INTERNAL_set_highAngularXLimit(ref value);
 			}
 		}
+
 		public SoftJointLimit angularYLimit
 		{
 			get
@@ -162,6 +177,7 @@ namespace UnityEngine
 				this.INTERNAL_set_angularYLimit(ref value);
 			}
 		}
+
 		public SoftJointLimit angularZLimit
 		{
 			get
@@ -175,6 +191,7 @@ namespace UnityEngine
 				this.INTERNAL_set_angularZLimit(ref value);
 			}
 		}
+
 		public Vector3 targetPosition
 		{
 			get
@@ -188,6 +205,7 @@ namespace UnityEngine
 				this.INTERNAL_set_targetPosition(ref value);
 			}
 		}
+
 		public Vector3 targetVelocity
 		{
 			get
@@ -201,6 +219,7 @@ namespace UnityEngine
 				this.INTERNAL_set_targetVelocity(ref value);
 			}
 		}
+
 		public JointDrive xDrive
 		{
 			get
@@ -214,6 +233,7 @@ namespace UnityEngine
 				this.INTERNAL_set_xDrive(ref value);
 			}
 		}
+
 		public JointDrive yDrive
 		{
 			get
@@ -227,6 +247,7 @@ namespace UnityEngine
 				this.INTERNAL_set_yDrive(ref value);
 			}
 		}
+
 		public JointDrive zDrive
 		{
 			get
@@ -240,6 +261,7 @@ namespace UnityEngine
 				this.INTERNAL_set_zDrive(ref value);
 			}
 		}
+
 		public Quaternion targetRotation
 		{
 			get
@@ -253,6 +275,7 @@ namespace UnityEngine
 				this.INTERNAL_set_targetRotation(ref value);
 			}
 		}
+
 		public Vector3 targetAngularVelocity
 		{
 			get
@@ -266,15 +289,17 @@ namespace UnityEngine
 				this.INTERNAL_set_targetAngularVelocity(ref value);
 			}
 		}
+
 		public extern RotationDriveMode rotationDriveMode
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public JointDrive angularXDrive
 		{
 			get
@@ -288,6 +313,7 @@ namespace UnityEngine
 				this.INTERNAL_set_angularXDrive(ref value);
 			}
 		}
+
 		public JointDrive angularYZDrive
 		{
 			get
@@ -301,6 +327,7 @@ namespace UnityEngine
 				this.INTERNAL_set_angularYZDrive(ref value);
 			}
 		}
+
 		public JointDrive slerpDrive
 		{
 			get
@@ -314,163 +341,206 @@ namespace UnityEngine
 				this.INTERNAL_set_slerpDrive(ref value);
 			}
 		}
+
 		public extern JointProjectionMode projectionMode
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float projectionDistance
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern float projectionAngle
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool configuredInWorldSpace
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public extern bool swapBodies
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_secondaryAxis(out Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_secondaryAxis(ref Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_linearLimitSpring(out SoftJointLimitSpring value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_linearLimitSpring(ref SoftJointLimitSpring value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_angularXLimitSpring(out SoftJointLimitSpring value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_angularXLimitSpring(ref SoftJointLimitSpring value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_angularYZLimitSpring(out SoftJointLimitSpring value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_angularYZLimitSpring(ref SoftJointLimitSpring value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_linearLimit(out SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_linearLimit(ref SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_lowAngularXLimit(out SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_lowAngularXLimit(ref SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_highAngularXLimit(out SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_highAngularXLimit(ref SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_angularYLimit(out SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_angularYLimit(ref SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_angularZLimit(out SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_angularZLimit(ref SoftJointLimit value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_targetPosition(out Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_targetPosition(ref Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_targetVelocity(out Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_targetVelocity(ref Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_xDrive(out JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_xDrive(ref JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_yDrive(out JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_yDrive(ref JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_zDrive(out JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_zDrive(ref JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_targetRotation(out Quaternion value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_targetRotation(ref Quaternion value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_targetAngularVelocity(out Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_targetAngularVelocity(ref Vector3 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_angularXDrive(out JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_angularXDrive(ref JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_angularYZDrive(out JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_angularYZDrive(ref JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_slerpDrive(out JointDrive value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_slerpDrive(ref JointDrive value);
 	}

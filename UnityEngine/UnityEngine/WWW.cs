@@ -1,16 +1,20 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine.Internal;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public sealed class WWW : IDisposable
 	{
+		[RequiredByNativeCode]
 		internal IntPtr m_Ptr;
+
 		private static readonly char[] forbiddenCharacters = new char[]
 		{
 			'\0',
@@ -47,10 +51,12 @@ namespace UnityEngine
 			'\u001f',
 			'\u007f'
 		};
+
 		private static readonly char[] forbiddenCharactersForNames = new char[]
 		{
 			' '
 		};
+
 		private static readonly string[] forbiddenHeaderKeys = new string[]
 		{
 			"Accept-Charset",
@@ -76,6 +82,7 @@ namespace UnityEngine
 			"Via",
 			"X-Unity-Version"
 		};
+
 		public Dictionary<string, string> responseHeaders
 		{
 			get
@@ -87,12 +94,14 @@ namespace UnityEngine
 				return WWW.ParseHTTPHeaderString(this.responseHeadersString);
 			}
 		}
+
 		private extern string responseHeadersString
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public string text
 		{
 			get
@@ -105,6 +114,7 @@ namespace UnityEngine
 				return this.GetTextEncoder().GetString(bytes, 0, bytes.Length);
 			}
 		}
+
 		internal static Encoding DefaultEncoding
 		{
 			get
@@ -112,6 +122,7 @@ namespace UnityEngine
 				return Encoding.ASCII;
 			}
 		}
+
 		[Obsolete("Please use WWW.text instead")]
 		public string data
 		{
@@ -120,24 +131,28 @@ namespace UnityEngine
 				return this.text;
 			}
 		}
+
 		public extern byte[] bytes
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern int size
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern string error
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public Texture2D texture
 		{
 			get
@@ -145,6 +160,7 @@ namespace UnityEngine
 				return this.GetTexture(false);
 			}
 		}
+
 		public Texture2D textureNonReadable
 		{
 			get
@@ -152,76 +168,91 @@ namespace UnityEngine
 				return this.GetTexture(true);
 			}
 		}
-		public AudioClip audioClip
-		{
-			get
-			{
-				return this.GetAudioClip(true);
-			}
-		}
-		public extern MovieTexture movie
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern bool isDone
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern float progress
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern float uploadProgress
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		public extern int bytesDownloaded
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
-		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Property WWW.oggVorbis has been deprecated. Use WWW.audioClip instead (UnityUpgradable).", true)]
-		public AudioClip oggVorbis
+
+		[Obsolete("Obsolete msg (UnityUpgradable) -> * UnityEngine.WWWAudioExtensions.GetAudioClip(UnityEngine.WWW)", true)]
+		public Object audioClip
 		{
 			get
 			{
 				return null;
 			}
 		}
+
+		[Obsolete("Obsolete msg (UnityUpgradable) -> * UnityEngine.WWWAudioExtensions.GetMovieTexture(UnityEngine.WWW)", true)]
+		public Object movie
+		{
+			get
+			{
+				return null;
+			}
+		}
+
+		public extern bool isDone
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern float progress
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern float uploadProgress
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public extern int bytesDownloaded
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Obsolete msg (UnityUpgradable) -> * UnityEngine.WWWAudioExtensions.GetAudioClip(UnityEngine.WWW)", true)]
+		public Object oggVorbis
+		{
+			get
+			{
+				return null;
+			}
+		}
+
 		public extern string url
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern AssetBundle assetBundle
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
+
 		public extern ThreadPriority threadPriority
 		{
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
-			[WrapperlessIcall]
+			[GeneratedByOldBindingsGenerator]
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			set;
 		}
+
 		public WWW(string url)
 		{
 			this.InitWWW(url, null, null);
 		}
+
 		public WWW(string url, WWWForm form)
 		{
 			string[] array = WWW.FlattenedHeadersFrom(form.headers);
@@ -231,15 +262,12 @@ namespace UnityEngine
 			}
 			this.InitWWW(url, form.data, array);
 		}
+
 		public WWW(string url, byte[] postData)
 		{
 			this.InitWWW(url, postData, null);
 		}
-		[Obsolete("This overload is deprecated. Use the one with Dictionary argument.", true)]
-		public WWW(string url, byte[] postData, Hashtable headers)
-		{
-			Debug.LogError("This overload is deprecated. Use the one with Dictionary argument.");
-		}
+
 		public WWW(string url, byte[] postData, Dictionary<string, string> headers)
 		{
 			string[] array = WWW.FlattenedHeadersFrom(headers);
@@ -249,70 +277,92 @@ namespace UnityEngine
 			}
 			this.InitWWW(url, postData, array);
 		}
+
 		internal WWW(string url, Hash128 hash, uint crc)
 		{
 			WWW.INTERNAL_CALL_WWW(this, url, ref hash, crc);
 		}
+
 		public void Dispose()
 		{
 			this.DestroyWWW(true);
 		}
+
 		~WWW()
 		{
 			this.DestroyWWW(false);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator, ThreadAndSerializationSafe]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void DestroyWWW(bool cancel);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void InitWWW(string url, byte[] postData, string[] iHeaders);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal extern bool enforceWebSecurityRestrictions();
+
 		[ExcludeFromDocs]
 		public static string EscapeURL(string s)
 		{
 			Encoding uTF = Encoding.UTF8;
 			return WWW.EscapeURL(s, uTF);
 		}
+
 		public static string EscapeURL(string s, [UnityEngine.Internal.DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
 		{
+			string result;
 			if (s == null)
 			{
-				return null;
+				result = null;
 			}
-			if (s == string.Empty)
+			else if (s == "")
 			{
-				return string.Empty;
+				result = "";
 			}
-			if (e == null)
+			else if (e == null)
 			{
-				return null;
+				result = null;
 			}
-			return WWWTranscoder.URLEncode(s, e);
+			else
+			{
+				result = WWWTranscoder.URLEncode(s, e);
+			}
+			return result;
 		}
+
 		[ExcludeFromDocs]
 		public static string UnEscapeURL(string s)
 		{
 			Encoding uTF = Encoding.UTF8;
 			return WWW.UnEscapeURL(s, uTF);
 		}
+
 		public static string UnEscapeURL(string s, [UnityEngine.Internal.DefaultValue("System.Text.Encoding.UTF8")] Encoding e)
 		{
+			string result;
 			if (s == null)
 			{
-				return null;
+				result = null;
 			}
-			if (s.IndexOf('%') == -1 && s.IndexOf('+') == -1)
+			else if (s.IndexOf('%') == -1 && s.IndexOf('+') == -1)
 			{
-				return s;
+				result = s;
 			}
-			return WWWTranscoder.URLDecode(s, e);
+			else
+			{
+				result = WWWTranscoder.URLDecode(s, e);
+			}
+			return result;
 		}
+
 		private Encoding GetTextEncoder()
 		{
 			string text = null;
+			Encoding result;
 			if (this.responseHeaders.TryGetValue("CONTENT-TYPE", out text))
 			{
 				int num = text.IndexOf("charset", StringComparison.OrdinalIgnoreCase);
@@ -333,7 +383,8 @@ namespace UnityEngine
 						}
 						try
 						{
-							return Encoding.GetEncoding(text2);
+							result = Encoding.GetEncoding(text2);
+							return result;
 						}
 						catch (Exception)
 						{
@@ -342,80 +393,72 @@ namespace UnityEngine
 					}
 				}
 			}
-			return Encoding.UTF8;
+			result = Encoding.UTF8;
+			return result;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern Texture2D GetTexture(bool markNonReadable);
-		public AudioClip GetAudioClip(bool threeD)
-		{
-			return this.GetAudioClip(threeD, false);
-		}
-		public AudioClip GetAudioClip(bool threeD, bool stream)
-		{
-			return this.GetAudioClip(threeD, stream, AudioType.UNKNOWN);
-		}
-		public AudioClip GetAudioClip(bool threeD, bool stream, AudioType audioType)
-		{
-			return this.GetAudioClipInternal(threeD, stream, false, audioType);
-		}
-		public AudioClip GetAudioClipCompressed()
-		{
-			return this.GetAudioClipCompressed(true);
-		}
-		public AudioClip GetAudioClipCompressed(bool threeD)
-		{
-			return this.GetAudioClipCompressed(threeD, AudioType.UNKNOWN);
-		}
-		public AudioClip GetAudioClipCompressed(bool threeD, AudioType audioType)
-		{
-			return this.GetAudioClipInternal(threeD, false, true, audioType);
-		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private extern AudioClip GetAudioClipInternal(bool threeD, bool stream, bool compressed, AudioType audioType);
-		[WrapperlessIcall]
+		internal extern Object GetAudioClipInternal(bool threeD, bool stream, bool compressed, AudioType audioType);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal extern Object GetMovieTextureInternal();
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public extern void LoadImageIntoTexture(Texture2D tex);
-		[Obsolete("All blocking WWW functions have been deprecated, please use one of the asynchronous functions instead.", true), WrapperlessIcall]
+
+		[Obsolete("All blocking WWW functions have been deprecated, please use one of the asynchronous functions instead.", true), GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string GetURL(string url);
+
 		[Obsolete("All blocking WWW functions have been deprecated, please use one of the asynchronous functions instead.", true)]
 		public static Texture2D GetTextureFromURL(string url)
 		{
 			return new WWW(url).texture;
 		}
+
 		[Obsolete("LoadUnityWeb is no longer supported. Please use javascript to reload the web player on a different url instead", true)]
 		public void LoadUnityWeb()
 		{
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void INTERNAL_CALL_WWW(WWW self, string url, ref Hash128 hash, uint crc);
+
 		[ExcludeFromDocs]
 		public static WWW LoadFromCacheOrDownload(string url, int version)
 		{
 			uint crc = 0u;
 			return WWW.LoadFromCacheOrDownload(url, version, crc);
 		}
+
 		public static WWW LoadFromCacheOrDownload(string url, int version, [UnityEngine.Internal.DefaultValue("0")] uint crc)
 		{
 			Hash128 hash = new Hash128(0u, 0u, 0u, (uint)version);
 			return WWW.LoadFromCacheOrDownload(url, hash, crc);
 		}
+
 		[ExcludeFromDocs]
 		public static WWW LoadFromCacheOrDownload(string url, Hash128 hash)
 		{
 			uint crc = 0u;
 			return WWW.LoadFromCacheOrDownload(url, hash, crc);
 		}
+
 		public static WWW LoadFromCacheOrDownload(string url, Hash128 hash, [UnityEngine.Internal.DefaultValue("0")] uint crc)
 		{
 			return new WWW(url, hash, crc);
 		}
+
 		private static void CheckSecurityOnHeaders(string[] headers)
 		{
-			bool flag = Application.GetBuildUnityVersion() >= Application.GetNumericUnityVersion("4.3.0b1");
 			for (int i = 0; i < headers.Length; i += 2)
 			{
 				string[] array = WWW.forbiddenHeaderKeys;
@@ -424,53 +467,48 @@ namespace UnityEngine
 					string b = array[j];
 					if (string.Equals(headers[i], b, StringComparison.CurrentCultureIgnoreCase))
 					{
-						if (flag)
-						{
-							throw new ArgumentException("Cannot overwrite header: " + headers[i]);
-						}
-						Debug.LogError("Illegal header overwrite, this will fail in 4.3 and above: " + headers[i]);
+						throw new ArgumentException("Cannot overwrite header: " + headers[i]);
 					}
 				}
 				if (headers[i].StartsWith("Sec-") || headers[i].StartsWith("Proxy-"))
 				{
-					if (flag)
-					{
-						throw new ArgumentException("Cannot overwrite header: " + headers[i]);
-					}
-					Debug.LogError("Illegal header overwrite, this will fail in 4.3 and above: " + headers[i]);
+					throw new ArgumentException("Cannot overwrite header: " + headers[i]);
 				}
 				if (headers[i].IndexOfAny(WWW.forbiddenCharacters) > -1 || headers[i].IndexOfAny(WWW.forbiddenCharactersForNames) > -1 || headers[i + 1].IndexOfAny(WWW.forbiddenCharacters) > -1)
 				{
-					if (flag)
-					{
-						throw new ArgumentException("Cannot include control characters in a HTTP header, either as key or value.");
-					}
-					Debug.LogError("Illegal control characters in header, this will fail in 4.3 and above");
+					throw new ArgumentException("Cannot include control characters in a HTTP header, either as key or value.");
 				}
 			}
 		}
+
 		private static string[] FlattenedHeadersFrom(Dictionary<string, string> headers)
 		{
+			string[] result;
 			if (headers == null)
 			{
-				return null;
+				result = null;
 			}
-			string[] array = new string[headers.Count * 2];
-			int num = 0;
-			foreach (KeyValuePair<string, string> current in headers)
+			else
 			{
-				array[num++] = current.Key.ToString();
-				array[num++] = current.Value.ToString();
+				string[] array = new string[headers.Count * 2];
+				int num = 0;
+				foreach (KeyValuePair<string, string> current in headers)
+				{
+					array[num++] = current.Key.ToString();
+					array[num++] = current.Value.ToString();
+				}
+				result = array;
 			}
-			return array;
+			return result;
 		}
+
 		internal static Dictionary<string, string> ParseHTTPHeaderString(string input)
 		{
 			if (input == null)
 			{
 				throw new ArgumentException("input was null to ParseHTTPHeaderString");
 			}
-			Dictionary<string, string> dictionary = new Dictionary<string, string>();
+			Dictionary<string, string> dictionary = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 			StringReader stringReader = new StringReader(input);
 			int num = 0;
 			while (true)
@@ -490,8 +528,13 @@ namespace UnityEngine
 					if (num2 != -1)
 					{
 						string key = text.Substring(0, num2).ToUpper();
-						string value = text.Substring(num2 + 2);
-						dictionary[key] = value;
+						string text2 = text.Substring(num2 + 2);
+						string str;
+						if (dictionary.TryGetValue(key, out str))
+						{
+							text2 = str + "," + text2;
+						}
+						dictionary[key] = text2;
 					}
 				}
 			}

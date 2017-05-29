@@ -1,18 +1,34 @@
 using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+using UnityEditor;
+using UnityEngine.Scripting;
+
 namespace UnityEditorInternal
 {
 	internal sealed class ModuleMetadata
 	{
-		[WrapperlessIcall]
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern string[] GetModuleNames();
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern bool GetModuleStrippable(string moduleName);
-		[WrapperlessIcall]
+
+		public static UnityType[] GetModuleTypes(string moduleName)
+		{
+			int[] moduleClasses = ModuleMetadata.GetModuleClasses(moduleName);
+			return (from id in moduleClasses
+			select UnityType.FindTypeByPersistentTypeID(id)).ToArray<UnityType>();
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern int[] GetModuleClasses(string moduleName);
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static extern string GetICallModule(string icall);
 	}
 }

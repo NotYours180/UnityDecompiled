@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEditor
 {
 	internal enum ShowMode
@@ -8,6 +9,7 @@ namespace UnityEditor
 		Utility,
 		NoShadow,
 		MainWindow,
-		AuxWindow
+		AuxWindow,
+		PopupMenuWithKeyboardFocus
 	}
 }

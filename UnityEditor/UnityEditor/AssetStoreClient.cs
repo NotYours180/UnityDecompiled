@@ -5,6 +5,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class AssetStoreClient
@@ -16,19 +17,30 @@ namespace UnityEditor
 			LOGGED_IN,
 			LOGIN_ERROR
 		}
+
+		public delegate void DoneCallback(AssetStoreResponse response);
+
+		public delegate void DoneLoginCallback(string errorMessage);
+
 		internal struct SearchCount
 		{
 			public string name;
+
 			public int offset;
+
 			public int limit;
 		}
-		public delegate void DoneCallback(AssetStoreResponse response);
-		public delegate void DoneLoginCallback(string errorMessage);
+
 		private const string kUnauthSessionID = "26c4202eb475d02864b40827dfff11a14657aa41";
+
 		private static string s_AssetStoreUrl;
+
 		private static string s_AssetStoreSearchUrl;
+
 		private static AssetStoreClient.LoginState sLoginState;
+
 		private static string sLoginErrorMessage;
+
 		public static string LoginErrorMessage
 		{
 			get
@@ -36,6 +48,7 @@ namespace UnityEditor
 				return AssetStoreClient.sLoginErrorMessage;
 			}
 		}
+
 		private static string VersionParams
 		{
 			get
@@ -43,6 +56,7 @@ namespace UnityEditor
 				return "unityversion=" + Uri.EscapeDataString(Application.unityVersion) + "&skip_terms=1";
 			}
 		}
+
 		private static string AssetStoreUrl
 		{
 			get
@@ -54,6 +68,7 @@ namespace UnityEditor
 				return AssetStoreClient.s_AssetStoreUrl;
 			}
 		}
+
 		private static string AssetStoreSearchUrl
 		{
 			get
@@ -65,21 +80,28 @@ namespace UnityEditor
 				return AssetStoreClient.s_AssetStoreSearchUrl;
 			}
 		}
+
 		private static string SavedSessionID
 		{
 			get
 			{
+				string result;
 				if (AssetStoreClient.RememberSession)
 				{
-					return EditorPrefs.GetString("kharma.sessionid", string.Empty);
+					result = EditorPrefs.GetString("kharma.sessionid", "");
 				}
-				return string.Empty;
+				else
+				{
+					result = "";
+				}
+				return result;
 			}
 			set
 			{
 				EditorPrefs.SetString("kharma.sessionid", value);
 			}
 		}
+
 		public static bool HasSavedSessionID
 		{
 			get
@@ -87,21 +109,28 @@ namespace UnityEditor
 				return !string.IsNullOrEmpty(AssetStoreClient.SavedSessionID);
 			}
 		}
+
 		internal static string ActiveSessionID
 		{
 			get
 			{
+				string result;
 				if (AssetStoreContext.SessionHasString("kharma.active_sessionid"))
 				{
-					return AssetStoreContext.SessionGetString("kharma.active_sessionid");
+					result = AssetStoreContext.SessionGetString("kharma.active_sessionid");
 				}
-				return string.Empty;
+				else
+				{
+					result = "";
+				}
+				return result;
 			}
 			set
 			{
 				AssetStoreContext.SessionSetString("kharma.active_sessionid", value);
 			}
 		}
+
 		public static bool HasActiveSessionID
 		{
 			get
@@ -109,18 +138,25 @@ namespace UnityEditor
 				return !string.IsNullOrEmpty(AssetStoreClient.ActiveSessionID);
 			}
 		}
+
 		private static string ActiveOrUnauthSessionID
 		{
 			get
 			{
 				string activeSessionID = AssetStoreClient.ActiveSessionID;
-				if (activeSessionID == string.Empty)
+				string result;
+				if (activeSessionID == "")
 				{
-					return "26c4202eb475d02864b40827dfff11a14657aa41";
+					result = "26c4202eb475d02864b40827dfff11a14657aa41";
 				}
-				return activeSessionID;
+				else
+				{
+					result = activeSessionID;
+				}
+				return result;
 			}
 		}
+
 		public static bool RememberSession
 		{
 			get
@@ -132,74 +168,93 @@ namespace UnityEditor
 				EditorPrefs.SetString("kharma.remember_session", (!value) ? "0" : "1");
 			}
 		}
+
 		static AssetStoreClient()
 		{
+			AssetStoreClient.s_AssetStoreUrl = null;
+			AssetStoreClient.s_AssetStoreSearchUrl = null;
+			AssetStoreClient.sLoginState = AssetStoreClient.LoginState.LOGGED_OUT;
+			AssetStoreClient.sLoginErrorMessage = null;
 			ServicePointManager.ServerCertificateValidationCallback = ((object obj, X509Certificate x509Certificate, X509Chain x509Chain, SslPolicyErrors sslPolicyErrors) => true);
 		}
+
 		private static string APIUrl(string path)
 		{
 			return string.Format("{0}/api{2}.json?{1}", AssetStoreClient.AssetStoreUrl, AssetStoreClient.VersionParams, path);
 		}
+
 		private static string APISearchUrl(string path)
 		{
 			return string.Format("{0}/public-api{2}.json?{1}", AssetStoreClient.AssetStoreSearchUrl, AssetStoreClient.VersionParams, path);
 		}
+
 		private static string GetToken()
 		{
 			return InternalEditorUtility.GetAuthToken();
 		}
+
 		public static bool LoggedIn()
 		{
 			return !string.IsNullOrEmpty(AssetStoreClient.ActiveSessionID);
 		}
+
 		public static bool LoggedOut()
 		{
 			return string.IsNullOrEmpty(AssetStoreClient.ActiveSessionID);
 		}
+
 		public static bool LoginError()
 		{
 			return AssetStoreClient.sLoginState == AssetStoreClient.LoginState.LOGIN_ERROR;
 		}
+
 		public static bool LoginInProgress()
 		{
 			return AssetStoreClient.sLoginState == AssetStoreClient.LoginState.IN_PROGRESS;
 		}
+
 		internal static void LoginWithCredentials(string username, string password, bool rememberMe, AssetStoreClient.DoneLoginCallback callback)
 		{
 			if (AssetStoreClient.sLoginState == AssetStoreClient.LoginState.IN_PROGRESS)
 			{
 				Debug.LogError("Tried to login with credentials while already in progress of logging in");
-				return;
 			}
-			AssetStoreClient.sLoginState = AssetStoreClient.LoginState.IN_PROGRESS;
-			AssetStoreClient.RememberSession = rememberMe;
-			string text = AssetStoreClient.AssetStoreUrl + "/login?skip_terms=1";
-			AssetStoreClient.sLoginErrorMessage = null;
-			AsyncHTTPClient asyncHTTPClient = new AsyncHTTPClient(text.Replace("http://", "https://"));
-			asyncHTTPClient.postData = "user=" + username + "&pass=" + password;
-			asyncHTTPClient.header["X-Unity-Session"] = "26c4202eb475d02864b40827dfff11a14657aa41" + AssetStoreClient.GetToken();
-			asyncHTTPClient.doneCallback = AssetStoreClient.WrapLoginCallback(callback);
-			asyncHTTPClient.Begin();
+			else
+			{
+				AssetStoreClient.sLoginState = AssetStoreClient.LoginState.IN_PROGRESS;
+				AssetStoreClient.RememberSession = rememberMe;
+				string text = AssetStoreClient.AssetStoreUrl + "/login?skip_terms=1";
+				AssetStoreClient.sLoginErrorMessage = null;
+				AsyncHTTPClient asyncHTTPClient = new AsyncHTTPClient(text.Replace("http://", "https://"));
+				asyncHTTPClient.postData = "user=" + username + "&pass=" + password;
+				asyncHTTPClient.header["X-Unity-Session"] = "26c4202eb475d02864b40827dfff11a14657aa41" + AssetStoreClient.GetToken();
+				asyncHTTPClient.doneCallback = AssetStoreClient.WrapLoginCallback(callback);
+				asyncHTTPClient.Begin();
+			}
 		}
+
 		internal static void LoginWithRememberedSession(AssetStoreClient.DoneLoginCallback callback)
 		{
 			if (AssetStoreClient.sLoginState == AssetStoreClient.LoginState.IN_PROGRESS)
 			{
 				Debug.LogError("Tried to login with remembered session while already in progress of logging in");
-				return;
 			}
-			AssetStoreClient.sLoginState = AssetStoreClient.LoginState.IN_PROGRESS;
-			if (!AssetStoreClient.RememberSession)
+			else
 			{
-				AssetStoreClient.SavedSessionID = string.Empty;
+				AssetStoreClient.sLoginState = AssetStoreClient.LoginState.IN_PROGRESS;
+				if (!AssetStoreClient.RememberSession)
+				{
+					AssetStoreClient.SavedSessionID = "";
+				}
+				string toUrl = AssetStoreClient.AssetStoreUrl + "/login?skip_terms=1&reuse_session=" + AssetStoreClient.SavedSessionID;
+				AssetStoreClient.sLoginErrorMessage = null;
+				AsyncHTTPClient asyncHTTPClient = new AsyncHTTPClient(toUrl);
+				asyncHTTPClient.header["X-Unity-Session"] = "26c4202eb475d02864b40827dfff11a14657aa41" + AssetStoreClient.GetToken();
+				asyncHTTPClient.doneCallback = AssetStoreClient.WrapLoginCallback(callback);
+				asyncHTTPClient.Begin();
 			}
-			string toUrl = AssetStoreClient.AssetStoreUrl + "/login?skip_terms=1&reuse_session=" + AssetStoreClient.SavedSessionID;
-			AssetStoreClient.sLoginErrorMessage = null;
-			AsyncHTTPClient asyncHTTPClient = new AsyncHTTPClient(toUrl);
-			asyncHTTPClient.header["X-Unity-Session"] = "26c4202eb475d02864b40827dfff11a14657aa41" + AssetStoreClient.GetToken();
-			asyncHTTPClient.doneCallback = AssetStoreClient.WrapLoginCallback(callback);
-			asyncHTTPClient.Begin();
 		}
+
 		private static AsyncHTTPClient.DoneCallback WrapLoginCallback(AssetStoreClient.DoneLoginCallback callback)
 		{
 			return delegate(AsyncHTTPClient job)
@@ -210,39 +265,38 @@ namespace UnityEditor
 					AssetStoreClient.sLoginState = AssetStoreClient.LoginState.LOGIN_ERROR;
 					AssetStoreClient.sLoginErrorMessage = ((job.responseCode < 200 || job.responseCode >= 300) ? "Failed to login - please retry" : text);
 				}
+				else if (text.StartsWith("<!DOCTYPE"))
+				{
+					AssetStoreClient.sLoginState = AssetStoreClient.LoginState.LOGIN_ERROR;
+					AssetStoreClient.sLoginErrorMessage = "Failed to login";
+				}
 				else
 				{
-					if (text.StartsWith("<!DOCTYPE"))
+					AssetStoreClient.sLoginState = AssetStoreClient.LoginState.LOGGED_IN;
+					if (text.Contains("@"))
 					{
-						AssetStoreClient.sLoginState = AssetStoreClient.LoginState.LOGIN_ERROR;
-						AssetStoreClient.sLoginErrorMessage = "Failed to login";
+						AssetStoreClient.ActiveSessionID = AssetStoreClient.SavedSessionID;
 					}
 					else
 					{
-						AssetStoreClient.sLoginState = AssetStoreClient.LoginState.LOGGED_IN;
-						if (text.Contains("@"))
-						{
-							AssetStoreClient.ActiveSessionID = AssetStoreClient.SavedSessionID;
-						}
-						else
-						{
-							AssetStoreClient.ActiveSessionID = text;
-						}
-						if (AssetStoreClient.RememberSession)
-						{
-							AssetStoreClient.SavedSessionID = AssetStoreClient.ActiveSessionID;
-						}
+						AssetStoreClient.ActiveSessionID = text;
+					}
+					if (AssetStoreClient.RememberSession)
+					{
+						AssetStoreClient.SavedSessionID = AssetStoreClient.ActiveSessionID;
 					}
 				}
 				callback(AssetStoreClient.sLoginErrorMessage);
 			};
 		}
+
 		public static void Logout()
 		{
-			AssetStoreClient.ActiveSessionID = string.Empty;
-			AssetStoreClient.SavedSessionID = string.Empty;
+			AssetStoreClient.ActiveSessionID = "";
+			AssetStoreClient.SavedSessionID = "";
 			AssetStoreClient.sLoginState = AssetStoreClient.LoginState.LOGGED_OUT;
 		}
+
 		private static AsyncHTTPClient CreateJSONRequest(string url, AssetStoreClient.DoneCallback callback)
 		{
 			AsyncHTTPClient asyncHTTPClient = new AsyncHTTPClient(url);
@@ -251,6 +305,7 @@ namespace UnityEditor
 			asyncHTTPClient.Begin();
 			return asyncHTTPClient;
 		}
+
 		private static AsyncHTTPClient CreateJSONRequestPost(string url, Dictionary<string, string> param, AssetStoreClient.DoneCallback callback)
 		{
 			AsyncHTTPClient asyncHTTPClient = new AsyncHTTPClient(url);
@@ -260,6 +315,7 @@ namespace UnityEditor
 			asyncHTTPClient.Begin();
 			return asyncHTTPClient;
 		}
+
 		private static AsyncHTTPClient CreateJSONRequestPost(string url, string postData, AssetStoreClient.DoneCallback callback)
 		{
 			AsyncHTTPClient asyncHTTPClient = new AsyncHTTPClient(url);
@@ -269,6 +325,7 @@ namespace UnityEditor
 			asyncHTTPClient.Begin();
 			return asyncHTTPClient;
 		}
+
 		private static AsyncHTTPClient CreateJSONRequestDelete(string url, AssetStoreClient.DoneCallback callback)
 		{
 			AsyncHTTPClient asyncHTTPClient = new AsyncHTTPClient(url, "DELETE");
@@ -277,6 +334,7 @@ namespace UnityEditor
 			asyncHTTPClient.Begin();
 			return asyncHTTPClient;
 		}
+
 		private static AsyncHTTPClient.DoneCallback WrapJsonCallback(AssetStoreClient.DoneCallback callback)
 		{
 			return delegate(AsyncHTTPClient job)
@@ -296,6 +354,7 @@ namespace UnityEditor
 				}
 			};
 		}
+
 		private static AssetStoreResponse ParseContent(AsyncHTTPClient job)
 		{
 			AssetStoreResponse assetStoreResponse = new AssetStoreResponse();
@@ -304,27 +363,37 @@ namespace UnityEditor
 			assetStoreResponse.ok = false;
 			AsyncHTTPClient.State state = job.state;
 			string text = job.text;
+			AssetStoreResponse result;
 			if (!AsyncHTTPClient.IsSuccess(state))
 			{
 				Console.WriteLine(text);
-				return assetStoreResponse;
+				result = assetStoreResponse;
 			}
-			string text2;
-			string str;
-			assetStoreResponse.dict = AssetStoreClient.ParseJSON(text, out text2, out str);
-			if (text2 == "error")
+			else
 			{
-				Debug.LogError("Request error (" + text2 + "): " + str);
-				return assetStoreResponse;
+				string text2;
+				string str;
+				assetStoreResponse.dict = AssetStoreClient.ParseJSON(text, out text2, out str);
+				if (text2 == "error")
+				{
+					Debug.LogError("Request error (" + text2 + "): " + str);
+					result = assetStoreResponse;
+				}
+				else
+				{
+					assetStoreResponse.ok = true;
+					result = assetStoreResponse;
+				}
 			}
-			assetStoreResponse.ok = true;
-			return assetStoreResponse;
+			return result;
 		}
+
 		private static Dictionary<string, JSONValue> ParseJSON(string content, out string status, out string message)
 		{
 			message = null;
 			status = null;
 			JSONValue jSONValue;
+			Dictionary<string, JSONValue> result;
 			try
 			{
 				JSONParser jSONParser = new JSONParser(content);
@@ -334,7 +403,7 @@ namespace UnityEditor
 			{
 				Debug.Log("Error parsing server reply: " + content);
 				Debug.Log(ex.Message);
-				Dictionary<string, JSONValue> result = null;
+				result = null;
 				return result;
 			}
 			Dictionary<string, JSONValue> dictionary;
@@ -344,7 +413,7 @@ namespace UnityEditor
 				if (dictionary == null)
 				{
 					Debug.Log("Error parsing server message: " + content);
-					Dictionary<string, JSONValue> result = null;
+					result = null;
 					return result;
 				}
 				if (dictionary.ContainsKey("result") && dictionary["result"].IsDict())
@@ -359,37 +428,36 @@ namespace UnityEditor
 				{
 					status = dictionary["status"].AsString(true);
 				}
-				else
+				else if (dictionary.ContainsKey("error"))
 				{
-					if (dictionary.ContainsKey("error"))
-					{
-						status = dictionary["error"].AsString(true);
-						if (status == string.Empty)
-						{
-							status = "ok";
-						}
-					}
-					else
+					status = dictionary["error"].AsString(true);
+					if (status == "")
 					{
 						status = "ok";
 					}
+				}
+				else
+				{
+					status = "ok";
 				}
 			}
 			catch (JSONTypeException ex2)
 			{
 				Debug.Log("Error parsing server reply. " + content);
 				Debug.Log(ex2.Message);
-				Dictionary<string, JSONValue> result = null;
+				result = null;
 				return result;
 			}
-			return dictionary;
+			result = dictionary;
+			return result;
 		}
+
 		internal static AsyncHTTPClient SearchAssets(string searchString, string[] requiredClassNames, string[] assetLabels, List<AssetStoreClient.SearchCount> counts, AssetStoreResultBase<AssetStoreSearchResults>.Callback callback)
 		{
-			string text = string.Empty;
-			string text2 = string.Empty;
-			string text3 = string.Empty;
-			string text4 = string.Empty;
+			string text = "";
+			string text2 = "";
+			string text3 = "";
+			string text4 = "";
 			foreach (AssetStoreClient.SearchCount current in counts)
 			{
 				text = text + text4 + current.offset;
@@ -418,6 +486,7 @@ namespace UnityEditor
 				r.Parse(ar);
 			});
 		}
+
 		internal static AsyncHTTPClient AssetsInfo(List<AssetStoreAsset> assets, AssetStoreResultBase<AssetStoreAssetsInfo>.Callback callback)
 		{
 			string text = AssetStoreClient.APIUrl("/assets/list");
@@ -431,6 +500,7 @@ namespace UnityEditor
 				r.Parse(ar);
 			});
 		}
+
 		internal static AsyncHTTPClient DirectPurchase(int packageID, string password, AssetStoreResultBase<PurchaseResult>.Callback callback)
 		{
 			string url = AssetStoreClient.APIUrl(string.Format("/purchase/direct/{0}", packageID.ToString()));
@@ -442,6 +512,7 @@ namespace UnityEditor
 				r.Parse(ar);
 			});
 		}
+
 		internal static AsyncHTTPClient BuildPackage(AssetStoreAsset asset, AssetStoreResultBase<BuildPackageResult>.Callback callback)
 		{
 			string url = AssetStoreClient.APIUrl("/content/download/" + asset.packageID.ToString());

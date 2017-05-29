@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor.Animations
 {
 	public sealed class AnimatorTransition : AnimatorTransitionBase
@@ -9,7 +10,8 @@ namespace UnityEditor.Animations
 		{
 			AnimatorTransition.Internal_Create(this);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern void Internal_Create(AnimatorTransition mono);
 	}

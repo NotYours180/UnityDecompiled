@@ -1,25 +1,75 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
+	[UsedByNativeCode]
 	public struct Matrix4x4
 	{
 		public float m00;
+
 		public float m10;
+
 		public float m20;
+
 		public float m30;
+
 		public float m01;
+
 		public float m11;
+
 		public float m21;
+
 		public float m31;
+
 		public float m02;
+
 		public float m12;
+
 		public float m22;
+
 		public float m32;
+
 		public float m03;
+
 		public float m13;
+
 		public float m23;
+
 		public float m33;
+
+		public Matrix4x4 inverse
+		{
+			get
+			{
+				return Matrix4x4.Inverse(this);
+			}
+		}
+
+		public Matrix4x4 transpose
+		{
+			get
+			{
+				return Matrix4x4.Transpose(this);
+			}
+		}
+
+		public extern bool isIdentity
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+		}
+
+		public float determinant
+		{
+			get
+			{
+				return Matrix4x4.Determinant(this);
+			}
+		}
+
 		public float this[int row, int column]
 		{
 			get
@@ -31,47 +81,66 @@ namespace UnityEngine
 				this[row + column * 4] = value;
 			}
 		}
+
 		public float this[int index]
 		{
 			get
 			{
+				float result;
 				switch (index)
 				{
 				case 0:
-					return this.m00;
+					result = this.m00;
+					break;
 				case 1:
-					return this.m10;
+					result = this.m10;
+					break;
 				case 2:
-					return this.m20;
+					result = this.m20;
+					break;
 				case 3:
-					return this.m30;
+					result = this.m30;
+					break;
 				case 4:
-					return this.m01;
+					result = this.m01;
+					break;
 				case 5:
-					return this.m11;
+					result = this.m11;
+					break;
 				case 6:
-					return this.m21;
+					result = this.m21;
+					break;
 				case 7:
-					return this.m31;
+					result = this.m31;
+					break;
 				case 8:
-					return this.m02;
+					result = this.m02;
+					break;
 				case 9:
-					return this.m12;
+					result = this.m12;
+					break;
 				case 10:
-					return this.m22;
+					result = this.m22;
+					break;
 				case 11:
-					return this.m32;
+					result = this.m32;
+					break;
 				case 12:
-					return this.m03;
+					result = this.m03;
+					break;
 				case 13:
-					return this.m13;
+					result = this.m13;
+					break;
 				case 14:
-					return this.m23;
+					result = this.m23;
+					break;
 				case 15:
-					return this.m33;
+					result = this.m33;
+					break;
 				default:
 					throw new IndexOutOfRangeException("Invalid matrix index!");
 				}
+				return result;
 			}
 			set
 			{
@@ -130,26 +199,7 @@ namespace UnityEngine
 				}
 			}
 		}
-		public Matrix4x4 inverse
-		{
-			get
-			{
-				return Matrix4x4.Inverse(this);
-			}
-		}
-		public Matrix4x4 transpose
-		{
-			get
-			{
-				return Matrix4x4.Transpose(this);
-			}
-		}
-		public extern bool isIdentity
-		{
-			[WrapperlessIcall]
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
+
 		public static Matrix4x4 zero
 		{
 			get
@@ -175,6 +225,7 @@ namespace UnityEngine
 				};
 			}
 		}
+
 		public static Matrix4x4 identity
 		{
 			get
@@ -200,174 +251,117 @@ namespace UnityEngine
 				};
 			}
 		}
-		public override int GetHashCode()
-		{
-			return this.GetColumn(0).GetHashCode() ^ this.GetColumn(1).GetHashCode() << 2 ^ this.GetColumn(2).GetHashCode() >> 2 ^ this.GetColumn(3).GetHashCode() >> 1;
-		}
-		public override bool Equals(object other)
-		{
-			if (!(other is Matrix4x4))
-			{
-				return false;
-			}
-			Matrix4x4 matrix4x = (Matrix4x4)other;
-			return this.GetColumn(0).Equals(matrix4x.GetColumn(0)) && this.GetColumn(1).Equals(matrix4x.GetColumn(1)) && this.GetColumn(2).Equals(matrix4x.GetColumn(2)) && this.GetColumn(3).Equals(matrix4x.GetColumn(3));
-		}
+
+		[ThreadAndSerializationSafe]
 		public static Matrix4x4 Inverse(Matrix4x4 m)
 		{
-			return Matrix4x4.INTERNAL_CALL_Inverse(ref m);
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_Inverse(ref m, out result);
+			return result;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Matrix4x4 INTERNAL_CALL_Inverse(ref Matrix4x4 m);
+		private static extern void INTERNAL_CALL_Inverse(ref Matrix4x4 m, out Matrix4x4 value);
+
 		public static Matrix4x4 Transpose(Matrix4x4 m)
 		{
-			return Matrix4x4.INTERNAL_CALL_Transpose(ref m);
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_Transpose(ref m, out result);
+			return result;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Matrix4x4 INTERNAL_CALL_Transpose(ref Matrix4x4 m);
+		private static extern void INTERNAL_CALL_Transpose(ref Matrix4x4 m, out Matrix4x4 value);
+
 		internal static bool Invert(Matrix4x4 inMatrix, out Matrix4x4 dest)
 		{
 			return Matrix4x4.INTERNAL_CALL_Invert(ref inMatrix, out dest);
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private static extern bool INTERNAL_CALL_Invert(ref Matrix4x4 inMatrix, out Matrix4x4 dest);
-		public Vector4 GetColumn(int i)
+
+		public static float Determinant(Matrix4x4 m)
 		{
-			return new Vector4(this[0, i], this[1, i], this[2, i], this[3, i]);
+			return Matrix4x4.INTERNAL_CALL_Determinant(ref m);
 		}
-		public Vector4 GetRow(int i)
-		{
-			return new Vector4(this[i, 0], this[i, 1], this[i, 2], this[i, 3]);
-		}
-		public void SetColumn(int i, Vector4 v)
-		{
-			this[0, i] = v.x;
-			this[1, i] = v.y;
-			this[2, i] = v.z;
-			this[3, i] = v.w;
-		}
-		public void SetRow(int i, Vector4 v)
-		{
-			this[i, 0] = v.x;
-			this[i, 1] = v.y;
-			this[i, 2] = v.z;
-			this[i, 3] = v.w;
-		}
-		public Vector3 MultiplyPoint(Vector3 v)
-		{
-			Vector3 result;
-			result.x = this.m00 * v.x + this.m01 * v.y + this.m02 * v.z + this.m03;
-			result.y = this.m10 * v.x + this.m11 * v.y + this.m12 * v.z + this.m13;
-			result.z = this.m20 * v.x + this.m21 * v.y + this.m22 * v.z + this.m23;
-			float num = this.m30 * v.x + this.m31 * v.y + this.m32 * v.z + this.m33;
-			num = 1f / num;
-			result.x *= num;
-			result.y *= num;
-			result.z *= num;
-			return result;
-		}
-		public Vector3 MultiplyPoint3x4(Vector3 v)
-		{
-			Vector3 result;
-			result.x = this.m00 * v.x + this.m01 * v.y + this.m02 * v.z + this.m03;
-			result.y = this.m10 * v.x + this.m11 * v.y + this.m12 * v.z + this.m13;
-			result.z = this.m20 * v.x + this.m21 * v.y + this.m22 * v.z + this.m23;
-			return result;
-		}
-		public Vector3 MultiplyVector(Vector3 v)
-		{
-			Vector3 result;
-			result.x = this.m00 * v.x + this.m01 * v.y + this.m02 * v.z;
-			result.y = this.m10 * v.x + this.m11 * v.y + this.m12 * v.z;
-			result.z = this.m20 * v.x + this.m21 * v.y + this.m22 * v.z;
-			return result;
-		}
-		public static Matrix4x4 Scale(Vector3 v)
-		{
-			return new Matrix4x4
-			{
-				m00 = v.x,
-				m01 = 0f,
-				m02 = 0f,
-				m03 = 0f,
-				m10 = 0f,
-				m11 = v.y,
-				m12 = 0f,
-				m13 = 0f,
-				m20 = 0f,
-				m21 = 0f,
-				m22 = v.z,
-				m23 = 0f,
-				m30 = 0f,
-				m31 = 0f,
-				m32 = 0f,
-				m33 = 1f
-			};
-		}
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern float INTERNAL_CALL_Determinant(ref Matrix4x4 m);
+
 		public void SetTRS(Vector3 pos, Quaternion q, Vector3 s)
 		{
 			this = Matrix4x4.TRS(pos, q, s);
 		}
+
 		public static Matrix4x4 TRS(Vector3 pos, Quaternion q, Vector3 s)
 		{
-			return Matrix4x4.INTERNAL_CALL_TRS(ref pos, ref q, ref s);
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_TRS(ref pos, ref q, ref s, out result);
+			return result;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		private static extern Matrix4x4 INTERNAL_CALL_TRS(ref Vector3 pos, ref Quaternion q, ref Vector3 s);
-		public override string ToString()
+		private static extern void INTERNAL_CALL_TRS(ref Vector3 pos, ref Quaternion q, ref Vector3 s, out Matrix4x4 value);
+
+		public static Matrix4x4 Ortho(float left, float right, float bottom, float top, float zNear, float zFar)
 		{
-			return UnityString.Format("{0:F5}\t{1:F5}\t{2:F5}\t{3:F5}\n{4:F5}\t{5:F5}\t{6:F5}\t{7:F5}\n{8:F5}\t{9:F5}\t{10:F5}\t{11:F5}\n{12:F5}\t{13:F5}\t{14:F5}\t{15:F5}\n", new object[]
-			{
-				this.m00,
-				this.m01,
-				this.m02,
-				this.m03,
-				this.m10,
-				this.m11,
-				this.m12,
-				this.m13,
-				this.m20,
-				this.m21,
-				this.m22,
-				this.m23,
-				this.m30,
-				this.m31,
-				this.m32,
-				this.m33
-			});
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_Ortho(left, right, bottom, top, zNear, zFar, out result);
+			return result;
 		}
-		public string ToString(string format)
+
+		[GeneratedByOldBindingsGenerator]
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private static extern void INTERNAL_CALL_Ortho(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4x4 value);
+
+		public static Matrix4x4 Perspective(float fov, float aspect, float zNear, float zFar)
 		{
-			return UnityString.Format("{0}\t{1}\t{2}\t{3}\n{4}\t{5}\t{6}\t{7}\n{8}\t{9}\t{10}\t{11}\n{12}\t{13}\t{14}\t{15}\n", new object[]
-			{
-				this.m00.ToString(format),
-				this.m01.ToString(format),
-				this.m02.ToString(format),
-				this.m03.ToString(format),
-				this.m10.ToString(format),
-				this.m11.ToString(format),
-				this.m12.ToString(format),
-				this.m13.ToString(format),
-				this.m20.ToString(format),
-				this.m21.ToString(format),
-				this.m22.ToString(format),
-				this.m23.ToString(format),
-				this.m30.ToString(format),
-				this.m31.ToString(format),
-				this.m32.ToString(format),
-				this.m33.ToString(format)
-			});
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_Perspective(fov, aspect, zNear, zFar, out result);
+			return result;
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Matrix4x4 Ortho(float left, float right, float bottom, float top, float zNear, float zFar);
-		[WrapperlessIcall]
+		private static extern void INTERNAL_CALL_Perspective(float fov, float aspect, float zNear, float zFar, out Matrix4x4 value);
+
+		public static Matrix4x4 LookAt(Vector3 from, Vector3 to, Vector3 up)
+		{
+			Matrix4x4 result;
+			Matrix4x4.INTERNAL_CALL_LookAt(ref from, ref to, ref up, out result);
+			return result;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public static extern Matrix4x4 Perspective(float fov, float aspect, float zNear, float zFar);
+		private static extern void INTERNAL_CALL_LookAt(ref Vector3 from, ref Vector3 to, ref Vector3 up, out Matrix4x4 value);
+
+		public override int GetHashCode()
+		{
+			return this.GetColumn(0).GetHashCode() ^ this.GetColumn(1).GetHashCode() << 2 ^ this.GetColumn(2).GetHashCode() >> 2 ^ this.GetColumn(3).GetHashCode() >> 1;
+		}
+
+		public override bool Equals(object other)
+		{
+			bool result;
+			if (!(other is Matrix4x4))
+			{
+				result = false;
+			}
+			else
+			{
+				Matrix4x4 matrix4x = (Matrix4x4)other;
+				result = (this.GetColumn(0).Equals(matrix4x.GetColumn(0)) && this.GetColumn(1).Equals(matrix4x.GetColumn(1)) && this.GetColumn(2).Equals(matrix4x.GetColumn(2)) && this.GetColumn(3).Equals(matrix4x.GetColumn(3)));
+			}
+			return result;
+		}
+
 		public static Matrix4x4 operator *(Matrix4x4 lhs, Matrix4x4 rhs)
 		{
 			return new Matrix4x4
@@ -390,6 +384,7 @@ namespace UnityEngine
 				m33 = lhs.m30 * rhs.m03 + lhs.m31 * rhs.m13 + lhs.m32 * rhs.m23 + lhs.m33 * rhs.m33
 			};
 		}
+
 		public static Vector4 operator *(Matrix4x4 lhs, Vector4 v)
 		{
 			Vector4 result;
@@ -399,13 +394,165 @@ namespace UnityEngine
 			result.w = lhs.m30 * v.x + lhs.m31 * v.y + lhs.m32 * v.z + lhs.m33 * v.w;
 			return result;
 		}
+
 		public static bool operator ==(Matrix4x4 lhs, Matrix4x4 rhs)
 		{
 			return lhs.GetColumn(0) == rhs.GetColumn(0) && lhs.GetColumn(1) == rhs.GetColumn(1) && lhs.GetColumn(2) == rhs.GetColumn(2) && lhs.GetColumn(3) == rhs.GetColumn(3);
 		}
+
 		public static bool operator !=(Matrix4x4 lhs, Matrix4x4 rhs)
 		{
 			return !(lhs == rhs);
+		}
+
+		public Vector4 GetColumn(int i)
+		{
+			return new Vector4(this[0, i], this[1, i], this[2, i], this[3, i]);
+		}
+
+		public Vector4 GetRow(int i)
+		{
+			return new Vector4(this[i, 0], this[i, 1], this[i, 2], this[i, 3]);
+		}
+
+		public void SetColumn(int i, Vector4 v)
+		{
+			this[0, i] = v.x;
+			this[1, i] = v.y;
+			this[2, i] = v.z;
+			this[3, i] = v.w;
+		}
+
+		public void SetRow(int i, Vector4 v)
+		{
+			this[i, 0] = v.x;
+			this[i, 1] = v.y;
+			this[i, 2] = v.z;
+			this[i, 3] = v.w;
+		}
+
+		public Vector3 MultiplyPoint(Vector3 v)
+		{
+			Vector3 result;
+			result.x = this.m00 * v.x + this.m01 * v.y + this.m02 * v.z + this.m03;
+			result.y = this.m10 * v.x + this.m11 * v.y + this.m12 * v.z + this.m13;
+			result.z = this.m20 * v.x + this.m21 * v.y + this.m22 * v.z + this.m23;
+			float num = this.m30 * v.x + this.m31 * v.y + this.m32 * v.z + this.m33;
+			num = 1f / num;
+			result.x *= num;
+			result.y *= num;
+			result.z *= num;
+			return result;
+		}
+
+		public Vector3 MultiplyPoint3x4(Vector3 v)
+		{
+			Vector3 result;
+			result.x = this.m00 * v.x + this.m01 * v.y + this.m02 * v.z + this.m03;
+			result.y = this.m10 * v.x + this.m11 * v.y + this.m12 * v.z + this.m13;
+			result.z = this.m20 * v.x + this.m21 * v.y + this.m22 * v.z + this.m23;
+			return result;
+		}
+
+		public Vector3 MultiplyVector(Vector3 v)
+		{
+			Vector3 result;
+			result.x = this.m00 * v.x + this.m01 * v.y + this.m02 * v.z;
+			result.y = this.m10 * v.x + this.m11 * v.y + this.m12 * v.z;
+			result.z = this.m20 * v.x + this.m21 * v.y + this.m22 * v.z;
+			return result;
+		}
+
+		public static Matrix4x4 Scale(Vector3 v)
+		{
+			return new Matrix4x4
+			{
+				m00 = v.x,
+				m01 = 0f,
+				m02 = 0f,
+				m03 = 0f,
+				m10 = 0f,
+				m11 = v.y,
+				m12 = 0f,
+				m13 = 0f,
+				m20 = 0f,
+				m21 = 0f,
+				m22 = v.z,
+				m23 = 0f,
+				m30 = 0f,
+				m31 = 0f,
+				m32 = 0f,
+				m33 = 1f
+			};
+		}
+
+		public static Matrix4x4 Translate(Vector3 v)
+		{
+			return new Matrix4x4
+			{
+				m00 = 1f,
+				m01 = 0f,
+				m02 = 0f,
+				m03 = v.x,
+				m10 = 0f,
+				m11 = 1f,
+				m12 = 0f,
+				m13 = v.y,
+				m20 = 0f,
+				m21 = 0f,
+				m22 = 1f,
+				m23 = v.z,
+				m30 = 0f,
+				m31 = 0f,
+				m32 = 0f,
+				m33 = 1f
+			};
+		}
+
+		public override string ToString()
+		{
+			return UnityString.Format("{0:F5}\t{1:F5}\t{2:F5}\t{3:F5}\n{4:F5}\t{5:F5}\t{6:F5}\t{7:F5}\n{8:F5}\t{9:F5}\t{10:F5}\t{11:F5}\n{12:F5}\t{13:F5}\t{14:F5}\t{15:F5}\n", new object[]
+			{
+				this.m00,
+				this.m01,
+				this.m02,
+				this.m03,
+				this.m10,
+				this.m11,
+				this.m12,
+				this.m13,
+				this.m20,
+				this.m21,
+				this.m22,
+				this.m23,
+				this.m30,
+				this.m31,
+				this.m32,
+				this.m33
+			});
+		}
+
+		public string ToString(string format)
+		{
+			return UnityString.Format("{0}\t{1}\t{2}\t{3}\n{4}\t{5}\t{6}\t{7}\n{8}\t{9}\t{10}\t{11}\n{12}\t{13}\t{14}\t{15}\n", new object[]
+			{
+				this.m00.ToString(format),
+				this.m01.ToString(format),
+				this.m02.ToString(format),
+				this.m03.ToString(format),
+				this.m10.ToString(format),
+				this.m11.ToString(format),
+				this.m12.ToString(format),
+				this.m13.ToString(format),
+				this.m20.ToString(format),
+				this.m21.ToString(format),
+				this.m22.ToString(format),
+				this.m23.ToString(format),
+				this.m30.ToString(format),
+				this.m31.ToString(format),
+				this.m32.ToString(format),
+				this.m33.ToString(format)
+			});
 		}
 	}
 }

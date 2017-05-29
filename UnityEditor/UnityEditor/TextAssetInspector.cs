@@ -1,13 +1,16 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(TextAsset))]
 	internal class TextAssetInspector : Editor
 	{
 		private const int kMaxChars = 7000;
+
 		[NonSerialized]
 		private GUIStyle m_TextStyle;
+
 		public override void OnInspectorGUI()
 		{
 			if (this.m_TextStyle == null)
@@ -16,7 +19,7 @@ namespace UnityEditor
 			}
 			bool enabled = GUI.enabled;
 			GUI.enabled = true;
-			TextAsset textAsset = this.target as TextAsset;
+			TextAsset textAsset = base.target as TextAsset;
 			if (textAsset != null)
 			{
 				string text;

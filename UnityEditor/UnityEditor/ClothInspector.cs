@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(Cloth))]
@@ -11,52 +12,72 @@ namespace UnityEditor
 			MaxDistance = 1,
 			CollisionSphereDistance
 		}
+
 		public enum ToolMode
 		{
 			Select,
 			Paint
 		}
+
 		private enum RectSelectionMode
 		{
 			Replace,
 			Add,
 			Substract
 		}
-		private const float kDisabledValue = 3.40282347E+38f;
+
 		private bool[] m_Selection;
+
 		private bool[] m_RectSelection;
+
 		private int m_MouseOver = -1;
-		private int m_MeshVerticesPerSelectionVertex;
+
+		private int m_MeshVerticesPerSelectionVertex = 0;
+
 		private Mesh[] m_SelectionMesh;
+
 		private Mesh[] m_SelectedMesh;
+
 		private Mesh m_VertexMesh;
+
 		private Mesh m_VertexMeshSelected;
+
 		private Vector3[] m_LastVertices;
+
 		private Vector2 m_SelectStartPoint;
+
 		private Vector2 m_SelectMousePoint;
-		private bool m_RectSelecting;
-		private bool m_DidSelect;
+
+		private bool m_RectSelecting = false;
+
+		private bool m_DidSelect = false;
+
 		private float[] m_MaxVisualizedValue = new float[3];
+
 		private float[] m_MinVisualizedValue = new float[3];
+
 		private ClothInspector.RectSelectionMode m_RectSelectionMode = ClothInspector.RectSelectionMode.Add;
+
 		private static Color s_SelectionColor;
+
 		private static Material s_SelectionMaterial = null;
+
 		private static Material s_SelectionMaterialBackfaces = null;
+
 		private static Material s_SelectedMaterial = null;
+
 		private static Texture2D s_ColorTexture = null;
+
 		private static int s_MaxVertices;
-		private static GUIContent[] s_ToolIcons = new GUIContent[]
-		{
-			EditorGUIUtility.TextContent("ClothInspector.SelectTool"),
-			EditorGUIUtility.TextContent("ClothInspector.PaintTool")
-		};
-		private static GUIContent[] s_ModeStrings = new GUIContent[]
-		{
-			EditorGUIUtility.TextContent("Fixed"),
-			EditorGUIUtility.TextContent("Max Distance"),
-			EditorGUIUtility.TextContent("Surface Penetration")
-		};
-		private static GUIContent s_PaintIcon = EditorGUIUtility.IconContent("ClothInspector.PaintValue", "Change this vertex coefficient value by painting in the scene view.");
+
+		private const float kDisabledValue = 3.40282347E+38f;
+
+		private static GUIContent[] s_ToolIcons = null;
+
+		private static GUIContent[] s_ModeStrings = null;
+
+		private static GUIContent s_PaintIcon = null;
+
 		private ClothInspectorState state
 		{
 			get
@@ -64,6 +85,7 @@ namespace UnityEditor
 				return ScriptableSingleton<ClothInspectorState>.instance;
 			}
 		}
+
 		private ClothInspector.DrawMode drawMode
 		{
 			get
@@ -80,13 +102,15 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		private Cloth cloth
 		{
 			get
 			{
-				return (Cloth)this.target;
+				return (Cloth)base.target;
 			}
 		}
+
 		public bool editing
 		{
 			get
@@ -94,13 +118,15 @@ namespace UnityEditor
 				return EditMode.editMode == EditMode.SceneViewEditMode.Cloth && EditMode.IsOwner(this);
 			}
 		}
+
 		private GUIContent GetModeString(ClothInspector.DrawMode mode)
 		{
 			return ClothInspector.s_ModeStrings[(int)mode];
 		}
+
 		private Texture2D GenerateColorTexture(int width)
 		{
-			Texture2D texture2D = new Texture2D(width, 1, TextureFormat.ARGB32, false);
+			Texture2D texture2D = new Texture2D(width, 1, TextureFormat.RGBA32, false);
 			texture2D.hideFlags = HideFlags.HideAndDontSave;
 			texture2D.wrapMode = TextureWrapMode.Clamp;
 			texture2D.hideFlags = HideFlags.DontSave;
@@ -113,43 +139,63 @@ namespace UnityEditor
 			texture2D.Apply();
 			return texture2D;
 		}
+
 		public override void OnInspectorGUI()
 		{
+			EditorGUI.BeginDisabledGroup(base.targets.Length > 1);
 			EditMode.DoEditModeInspectorModeButton(EditMode.SceneViewEditMode.Cloth, "Edit Constraints", EditorGUIUtility.IconContent("EditCollider"), this.GetClothBounds(), this);
+			EditorGUI.EndDisabledGroup();
 			base.OnInspectorGUI();
+			MeshRenderer component = this.cloth.GetComponent<MeshRenderer>();
+			if (component != null)
+			{
+				Debug.LogWarning("MeshRenderer will not work with a cloth component! Use only SkinnedMeshRenderer. Any MeshRenderer's attached to a cloth component will be deleted at runtime.");
+			}
 		}
+
 		private Bounds GetClothBounds()
 		{
-			if (this.target is Cloth)
+			Bounds result;
+			if (base.target is Cloth)
 			{
-				Cloth cloth = (Cloth)this.target;
+				Cloth cloth = (Cloth)base.target;
 				SkinnedMeshRenderer component = cloth.GetComponent<SkinnedMeshRenderer>();
 				if (component != null)
 				{
-					return component.bounds;
+					result = component.bounds;
+					return result;
 				}
 			}
-			return default(Bounds);
+			result = default(Bounds);
+			return result;
 		}
+
 		private bool SelectionMeshDirty()
 		{
 			SkinnedMeshRenderer component = this.cloth.GetComponent<SkinnedMeshRenderer>();
 			Vector3[] vertices = this.cloth.vertices;
 			Transform actualRootBone = component.actualRootBone;
+			bool result;
 			if (this.m_LastVertices.Length != vertices.Length)
 			{
-				return true;
+				result = true;
 			}
-			for (int i = 0; i < this.m_LastVertices.Length; i++)
+			else
 			{
-				Vector3 rhs = actualRootBone.rotation * vertices[i] + actualRootBone.position;
-				if (!(this.m_LastVertices[i] == rhs))
+				for (int i = 0; i < this.m_LastVertices.Length; i++)
 				{
-					return true;
+					Vector3 rhs = actualRootBone.rotation * vertices[i] + actualRootBone.position;
+					if (!(this.m_LastVertices[i] == rhs))
+					{
+						result = true;
+						return result;
+					}
 				}
+				result = false;
 			}
-			return false;
+			return result;
 		}
+
 		private void GenerateSelectionMesh()
 		{
 			SkinnedMeshRenderer component = this.cloth.GetComponent<SkinnedMeshRenderer>();
@@ -206,6 +252,7 @@ namespace UnityEditor
 			}
 			this.SetupSelectionMeshColors();
 		}
+
 		private void OnEnable()
 		{
 			if (ClothInspector.s_SelectionMaterial == null)
@@ -217,6 +264,23 @@ namespace UnityEditor
 			if (ClothInspector.s_ColorTexture == null)
 			{
 				ClothInspector.s_ColorTexture = this.GenerateColorTexture(100);
+			}
+			if (ClothInspector.s_ToolIcons == null)
+			{
+				ClothInspector.s_ToolIcons = new GUIContent[2];
+				ClothInspector.s_ToolIcons[0] = EditorGUIUtility.TextContent("Select|Select vertices and edit their cloth coefficients in the inspector.");
+				ClothInspector.s_ToolIcons[1] = EditorGUIUtility.TextContent("Paint|Paint cloth coefficients on to vertices.");
+			}
+			if (ClothInspector.s_ModeStrings == null)
+			{
+				ClothInspector.s_ModeStrings = new GUIContent[3];
+				ClothInspector.s_ModeStrings[0] = EditorGUIUtility.TextContent("Fixed");
+				ClothInspector.s_ModeStrings[1] = EditorGUIUtility.TextContent("Max Distance");
+				ClothInspector.s_ModeStrings[2] = EditorGUIUtility.TextContent("Surface Penetration");
+			}
+			if (ClothInspector.s_PaintIcon == null)
+			{
+				ClothInspector.s_PaintIcon = EditorGUIUtility.IconContent("ClothInspector.PaintValue", "|Change this vertex coefficient value by painting in the scene view.");
 			}
 			this.m_VertexMesh = new Mesh();
 			this.m_VertexMesh.hideFlags |= HideFlags.DontSave;
@@ -244,32 +308,49 @@ namespace UnityEditor
 			ClothInspector.s_MaxVertices = 65536 / this.m_VertexMesh.vertices.Length;
 			this.GenerateSelectionMesh();
 			this.SetupSelectedMeshColors();
+			SceneView.onPreSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Combine(SceneView.onPreSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnPreSceneGUICallback));
 		}
+
 		private float GetCoefficient(ClothSkinningCoefficient coefficient)
 		{
 			ClothInspector.DrawMode drawMode = this.drawMode;
-			if (drawMode == ClothInspector.DrawMode.MaxDistance)
+			float result;
+			if (drawMode != ClothInspector.DrawMode.MaxDistance)
 			{
-				return coefficient.maxDistance;
+				if (drawMode != ClothInspector.DrawMode.CollisionSphereDistance)
+				{
+					result = 0f;
+				}
+				else
+				{
+					result = coefficient.collisionSphereDistance;
+				}
 			}
-			if (drawMode != ClothInspector.DrawMode.CollisionSphereDistance)
+			else
 			{
-				return 0f;
+				result = coefficient.maxDistance;
 			}
-			return coefficient.collisionSphereDistance;
+			return result;
 		}
+
 		private Color GetGradientColor(float val)
 		{
+			Color result;
 			if (val < 0.3f)
 			{
-				return Color.Lerp(Color.red, Color.magenta, val / 0.2f);
+				result = Color.Lerp(Color.red, Color.magenta, val / 0.2f);
 			}
-			if (val < 0.7f)
+			else if (val < 0.7f)
 			{
-				return Color.Lerp(Color.magenta, Color.yellow, (val - 0.2f) / 0.5f);
+				result = Color.Lerp(Color.magenta, Color.yellow, (val - 0.2f) / 0.5f);
 			}
-			return Color.Lerp(Color.yellow, Color.green, (val - 0.7f) / 0.3f);
+			else
+			{
+				result = Color.Lerp(Color.yellow, Color.green, (val - 0.7f) / 0.3f);
+			}
+			return result;
 		}
+
 		private void AssignColorsToMeshArray(Color[] colors, Mesh[] meshArray)
 		{
 			int num = colors.Length / this.m_MeshVerticesPerSelectionVertex;
@@ -286,6 +367,7 @@ namespace UnityEditor
 				meshArray[i].colors = array;
 			}
 		}
+
 		private void SetupSelectionMeshColors()
 		{
 			ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
@@ -337,6 +419,7 @@ namespace UnityEditor
 			this.m_MinVisualizedValue[(int)this.drawMode] = num2;
 			this.AssignColorsToMeshArray(array, this.m_SelectionMesh);
 		}
+
 		private void SetupSelectedMeshColors()
 		{
 			int num = this.cloth.coefficients.Length;
@@ -346,17 +429,24 @@ namespace UnityEditor
 				bool flag = this.m_Selection[i];
 				if (this.m_RectSelecting)
 				{
-					switch (this.m_RectSelectionMode)
+					ClothInspector.RectSelectionMode rectSelectionMode = this.m_RectSelectionMode;
+					if (rectSelectionMode != ClothInspector.RectSelectionMode.Replace)
 					{
-					case ClothInspector.RectSelectionMode.Replace:
+						if (rectSelectionMode != ClothInspector.RectSelectionMode.Add)
+						{
+							if (rectSelectionMode == ClothInspector.RectSelectionMode.Substract)
+							{
+								flag = (flag && !this.m_RectSelection[i]);
+							}
+						}
+						else
+						{
+							flag |= this.m_RectSelection[i];
+						}
+					}
+					else
+					{
 						flag = this.m_RectSelection[i];
-						break;
-					case ClothInspector.RectSelectionMode.Add:
-						flag |= this.m_RectSelection[i];
-						break;
-					case ClothInspector.RectSelectionMode.Substract:
-						flag = (flag && !this.m_RectSelection[i]);
-						break;
 					}
 				}
 				Color color = (!flag) ? Color.clear : ClothInspector.s_SelectionColor;
@@ -367,8 +457,10 @@ namespace UnityEditor
 			}
 			this.AssignColorsToMeshArray(array, this.m_SelectedMesh);
 		}
+
 		private void OnDisable()
 		{
+			SceneView.onPreSceneGUIDelegate = (SceneView.OnSceneFunc)Delegate.Remove(SceneView.onPreSceneGUIDelegate, new SceneView.OnSceneFunc(this.OnPreSceneGUICallback));
 			if (this.m_SelectionMesh != null)
 			{
 				Mesh[] selectionMesh = this.m_SelectionMesh;
@@ -387,56 +479,59 @@ namespace UnityEditor
 			UnityEngine.Object.DestroyImmediate(this.m_VertexMesh);
 			UnityEngine.Object.DestroyImmediate(this.m_VertexMeshSelected);
 		}
+
 		private float CoefficientField(float value, float useValue, bool enabled, ClothInspector.DrawMode mode)
 		{
 			GUIContent modeString = this.GetModeString(mode);
-			EditorGUI.BeginDisabledGroup(!enabled);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			EditorGUI.showMixedValue = (useValue < 0f);
-			EditorGUI.BeginChangeCheck();
-			useValue = (float)((!EditorGUILayout.Toggle(GUIContent.none, useValue != 0f, new GUILayoutOption[0])) ? 0 : 1);
-			if (EditorGUI.EndChangeCheck())
+			using (new EditorGUI.DisabledScope(!enabled))
 			{
-				if (useValue > 0f)
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				EditorGUI.showMixedValue = (useValue < 0f);
+				EditorGUI.BeginChangeCheck();
+				useValue = (float)((!EditorGUILayout.Toggle(GUIContent.none, useValue != 0f, new GUILayoutOption[0])) ? 0 : 1);
+				if (EditorGUI.EndChangeCheck())
 				{
-					value = 0f;
+					if (useValue > 0f)
+					{
+						value = 0f;
+					}
+					else
+					{
+						value = 3.40282347E+38f;
+					}
+					this.drawMode = mode;
 				}
-				else
+				GUILayout.Space(-152f);
+				EditorGUI.showMixedValue = false;
+				using (new EditorGUI.DisabledScope(useValue != 1f))
 				{
-					value = 3.40282347E+38f;
+					float num = value;
+					EditorGUI.showMixedValue = (value < 0f);
+					EditorGUI.BeginChangeCheck();
+					int keyboardControl = GUIUtility.keyboardControl;
+					if (useValue > 0f)
+					{
+						num = EditorGUILayout.FloatField(modeString, value, new GUILayoutOption[0]);
+					}
+					else
+					{
+						EditorGUILayout.FloatField(modeString, 0f, new GUILayoutOption[0]);
+					}
+					bool flag = EditorGUI.EndChangeCheck();
+					if (flag)
+					{
+						value = num;
+						if (value < 0f)
+						{
+							value = 0f;
+						}
+					}
+					if (flag || keyboardControl != GUIUtility.keyboardControl)
+					{
+						this.drawMode = mode;
+					}
 				}
-				this.drawMode = mode;
 			}
-			GUILayout.Space(-152f);
-			EditorGUI.showMixedValue = false;
-			EditorGUI.BeginDisabledGroup(useValue != 1f);
-			float num = value;
-			EditorGUI.showMixedValue = (value < 0f);
-			EditorGUI.BeginChangeCheck();
-			int keyboardControl = GUIUtility.keyboardControl;
-			if (useValue > 0f)
-			{
-				num = EditorGUILayout.FloatField(modeString, value, new GUILayoutOption[0]);
-			}
-			else
-			{
-				EditorGUILayout.FloatField(modeString, 0f, new GUILayoutOption[0]);
-			}
-			bool flag = EditorGUI.EndChangeCheck();
-			if (flag)
-			{
-				value = num;
-				if (value < 0f)
-				{
-					value = 0f;
-				}
-			}
-			if (flag || keyboardControl != GUIUtility.keyboardControl)
-			{
-				this.drawMode = mode;
-			}
-			EditorGUI.EndDisabledGroup();
-			EditorGUI.EndDisabledGroup();
 			if (useValue > 0f)
 			{
 				float num2 = this.m_MinVisualizedValue[(int)mode];
@@ -458,6 +553,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			return value;
 		}
+
 		private float PaintField(float value, ref bool enabled, ClothInspector.DrawMode mode)
 		{
 			GUIContent modeString = this.GetModeString(mode);
@@ -466,44 +562,48 @@ namespace UnityEditor
 			{
 				GUILayout.ExpandWidth(false)
 			});
-			EditorGUI.BeginDisabledGroup(!enabled);
-			EditorGUI.BeginChangeCheck();
-			bool flag = EditorGUILayout.Toggle(GUIContent.none, value < 3.40282347E+38f, new GUILayoutOption[0]);
-			if (EditorGUI.EndChangeCheck())
+			bool flag;
+			float num;
+			using (new EditorGUI.DisabledScope(!enabled))
 			{
-				if (flag)
+				EditorGUI.BeginChangeCheck();
+				flag = EditorGUILayout.Toggle(GUIContent.none, value < 3.40282347E+38f, new GUILayoutOption[0]);
+				if (EditorGUI.EndChangeCheck())
 				{
-					value = 0f;
+					if (flag)
+					{
+						value = 0f;
+					}
+					else
+					{
+						value = 3.40282347E+38f;
+					}
+					this.drawMode = mode;
 				}
-				else
+				GUILayout.Space(-162f);
+				using (new EditorGUI.DisabledScope(!flag))
 				{
-					value = 3.40282347E+38f;
+					num = value;
+					int keyboardControl = GUIUtility.keyboardControl;
+					EditorGUI.BeginChangeCheck();
+					if (flag)
+					{
+						num = EditorGUILayout.FloatField(modeString, value, new GUILayoutOption[0]);
+					}
+					else
+					{
+						EditorGUILayout.FloatField(modeString, 0f, new GUILayoutOption[0]);
+					}
+					if (num < 0f)
+					{
+						num = 0f;
+					}
+					if (EditorGUI.EndChangeCheck() || keyboardControl != GUIUtility.keyboardControl)
+					{
+						this.drawMode = mode;
+					}
 				}
-				this.drawMode = mode;
 			}
-			GUILayout.Space(-162f);
-			EditorGUI.BeginDisabledGroup(!flag);
-			float num = value;
-			int keyboardControl = GUIUtility.keyboardControl;
-			EditorGUI.BeginChangeCheck();
-			if (flag)
-			{
-				num = EditorGUILayout.FloatField(modeString, value, new GUILayoutOption[0]);
-			}
-			else
-			{
-				EditorGUILayout.FloatField(modeString, 0f, new GUILayoutOption[0]);
-			}
-			if (num < 0f)
-			{
-				num = 0f;
-			}
-			if (EditorGUI.EndChangeCheck() || keyboardControl != GUIUtility.keyboardControl)
-			{
-				this.drawMode = mode;
-			}
-			EditorGUI.EndDisabledGroup();
-			EditorGUI.EndDisabledGroup();
 			if (flag)
 			{
 				float num2 = this.m_MinVisualizedValue[(int)mode];
@@ -524,6 +624,7 @@ namespace UnityEditor
 			GUILayout.EndHorizontal();
 			return num;
 		}
+
 		private void SelectionGUI()
 		{
 			ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
@@ -576,7 +677,7 @@ namespace UnityEditor
 				}
 				this.cloth.coefficients = coefficients;
 				this.SetupSelectionMeshColors();
-				Undo.RegisterCompleteObjectUndo(this.target, "Change Cloth Coefficients");
+				Undo.RegisterCompleteObjectUndo(base.target, "Change Cloth Coefficients");
 			}
 			float num7 = this.CoefficientField(num3, num4, num5 > 0, ClothInspector.DrawMode.CollisionSphereDistance);
 			if (num7 != num3)
@@ -590,22 +691,23 @@ namespace UnityEditor
 				}
 				this.cloth.coefficients = coefficients;
 				this.SetupSelectionMeshColors();
-				Undo.RegisterCompleteObjectUndo(this.target, "Change Cloth Coefficients");
+				Undo.RegisterCompleteObjectUndo(base.target, "Change Cloth Coefficients");
 			}
-			EditorGUI.BeginDisabledGroup(true);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			if (num5 > 0)
+			using (new EditorGUI.DisabledScope(true))
 			{
-				GUILayout.FlexibleSpace();
-				GUILayout.Label(num5 + " selected", new GUILayoutOption[0]);
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				if (num5 > 0)
+				{
+					GUILayout.FlexibleSpace();
+					GUILayout.Label(num5 + " selected", new GUILayoutOption[0]);
+				}
+				else
+				{
+					GUILayout.Label("Select cloth vertices to edit their constraints.", new GUILayoutOption[0]);
+					GUILayout.FlexibleSpace();
+				}
+				GUILayout.EndHorizontal();
 			}
-			else
-			{
-				GUILayout.Label("Select cloth vertices to edit their constraints.", new GUILayoutOption[0]);
-				GUILayout.FlexibleSpace();
-			}
-			GUILayout.EndHorizontal();
-			EditorGUI.EndDisabledGroup();
 			if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Backspace)
 			{
 				for (int l = 0; l < coefficients.Length; l++)
@@ -630,6 +732,7 @@ namespace UnityEditor
 				this.SetupSelectionMeshColors();
 			}
 		}
+
 		private void PaintGUI()
 		{
 			this.state.PaintMaxDistance = this.PaintField(this.state.PaintMaxDistance, ref this.state.PaintMaxDistanceEnabled, ClothInspector.DrawMode.MaxDistance);
@@ -638,45 +741,50 @@ namespace UnityEditor
 			{
 				this.drawMode = ClothInspector.DrawMode.MaxDistance;
 			}
-			else
+			else if (!this.state.PaintMaxDistanceEnabled && this.state.PaintCollisionSphereDistanceEnabled)
 			{
-				if (!this.state.PaintMaxDistanceEnabled && this.state.PaintCollisionSphereDistanceEnabled)
-				{
-					this.drawMode = ClothInspector.DrawMode.CollisionSphereDistance;
-				}
+				this.drawMode = ClothInspector.DrawMode.CollisionSphereDistance;
 			}
-			EditorGUI.BeginDisabledGroup(true);
-			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			GUILayout.Label("Set constraints to paint onto cloth vertices.", new GUILayoutOption[0]);
-			GUILayout.FlexibleSpace();
-			GUILayout.EndHorizontal();
-			EditorGUI.EndDisabledGroup();
+			using (new EditorGUI.DisabledScope(true))
+			{
+				GUILayout.BeginHorizontal(new GUILayoutOption[0]);
+				GUILayout.Label("Set constraints to paint onto cloth vertices.", new GUILayoutOption[0]);
+				GUILayout.FlexibleSpace();
+				GUILayout.EndHorizontal();
+			}
 		}
+
 		private int GetMouseVertex(Event e)
 		{
+			int result;
 			if (Tools.current != Tool.None)
 			{
-				return -1;
+				result = -1;
 			}
-			SkinnedMeshRenderer component = this.cloth.GetComponent<SkinnedMeshRenderer>();
-			Vector3[] normals = this.cloth.normals;
-			ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
-			Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
-			float num = 1000f;
-			int result = -1;
-			Quaternion rotation = component.actualRootBone.rotation;
-			for (int i = 0; i < coefficients.Length; i++)
+			else
 			{
-				Vector3 lhs = this.m_LastVertices[i] - ray.origin;
-				float sqrMagnitude = Vector3.Cross(lhs, ray.direction).sqrMagnitude;
-				if ((Vector3.Dot(rotation * normals[i], Camera.current.transform.forward) <= 0f || this.state.ManipulateBackfaces) && sqrMagnitude < num && sqrMagnitude < 0.00250000018f)
+				SkinnedMeshRenderer component = this.cloth.GetComponent<SkinnedMeshRenderer>();
+				Vector3[] normals = this.cloth.normals;
+				ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
+				Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
+				float num = 1000f;
+				int num2 = -1;
+				Quaternion rotation = component.actualRootBone.rotation;
+				for (int i = 0; i < coefficients.Length; i++)
 				{
-					num = sqrMagnitude;
-					result = i;
+					Vector3 lhs = this.m_LastVertices[i] - ray.origin;
+					float sqrMagnitude = Vector3.Cross(lhs, ray.direction).sqrMagnitude;
+					if ((Vector3.Dot(rotation * normals[i], Camera.current.transform.forward) <= 0f || this.state.ManipulateBackfaces) && sqrMagnitude < num && sqrMagnitude < 0.00250000018f)
+					{
+						num = sqrMagnitude;
+						num2 = i;
+					}
 				}
+				result = num2;
 			}
 			return result;
 		}
+
 		private void DrawVertices()
 		{
 			if (this.SelectionMeshDirty())
@@ -729,6 +837,7 @@ namespace UnityEditor
 				material.color = Color.white;
 			}
 		}
+
 		private bool UpdateRectSelection()
 		{
 			bool result = false;
@@ -762,25 +871,34 @@ namespace UnityEditor
 			}
 			return result;
 		}
+
 		private void ApplyRectSelection()
 		{
 			ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
 			for (int i = 0; i < coefficients.Length; i++)
 			{
-				switch (this.m_RectSelectionMode)
+				ClothInspector.RectSelectionMode rectSelectionMode = this.m_RectSelectionMode;
+				if (rectSelectionMode != ClothInspector.RectSelectionMode.Replace)
 				{
-				case ClothInspector.RectSelectionMode.Replace:
+					if (rectSelectionMode != ClothInspector.RectSelectionMode.Add)
+					{
+						if (rectSelectionMode == ClothInspector.RectSelectionMode.Substract)
+						{
+							this.m_Selection[i] = (this.m_Selection[i] && !this.m_RectSelection[i]);
+						}
+					}
+					else
+					{
+						this.m_Selection[i] |= this.m_RectSelection[i];
+					}
+				}
+				else
+				{
 					this.m_Selection[i] = this.m_RectSelection[i];
-					break;
-				case ClothInspector.RectSelectionMode.Add:
-					this.m_Selection[i] |= this.m_RectSelection[i];
-					break;
-				case ClothInspector.RectSelectionMode.Substract:
-					this.m_Selection[i] = (this.m_Selection[i] && !this.m_RectSelection[i]);
-					break;
 				}
 			}
 		}
+
 		private bool RectSelectionModeFromEvent()
 		{
 			Event current = Event.current;
@@ -793,17 +911,24 @@ namespace UnityEditor
 			{
 				rectSelectionMode = ClothInspector.RectSelectionMode.Substract;
 			}
+			bool result;
 			if (this.m_RectSelectionMode != rectSelectionMode)
 			{
 				this.m_RectSelectionMode = rectSelectionMode;
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
+
 		internal void SendCommandsOnModifierKeys()
 		{
 			SceneView.lastActiveSceneView.SendEvent(EditorGUIUtility.CommandEvent("ModifierKeysChanged"));
 		}
+
 		private void SelectionPreSceneGUI(int id)
 		{
 			Event current = Event.current;
@@ -855,9 +980,9 @@ namespace UnityEditor
 						this.RectSelectionModeFromEvent();
 						this.ApplyRectSelection();
 					}
-					else
+					else if (!this.m_DidSelect)
 					{
-						if (!this.m_DidSelect && !current.alt && !current.control && !current.command)
+						if (!current.alt && !current.control && !current.command)
 						{
 							ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
 							for (int j = 0; j < coefficients.Length; j++)
@@ -872,25 +997,31 @@ namespace UnityEditor
 				}
 				return;
 			case EventType.MouseMove:
-				IL_26:
+				IL_25:
 				if (typeForControl != EventType.ExecuteCommand)
 				{
 					return;
 				}
-				if (this.m_RectSelecting && current.commandName == "ModifierKeysChanged" && (this.RectSelectionModeFromEvent() || this.UpdateRectSelection()))
+				if (this.m_RectSelecting && current.commandName == "ModifierKeysChanged")
 				{
-					this.SetupSelectedMeshColors();
+					if (this.RectSelectionModeFromEvent() || this.UpdateRectSelection())
+					{
+						this.SetupSelectedMeshColors();
+					}
 				}
 				return;
 			case EventType.MouseDrag:
 				if (GUIUtility.hotControl == id)
 				{
-					if (!this.m_RectSelecting && (current.mousePosition - this.m_SelectStartPoint).magnitude > 2f && !current.alt && !current.control && !current.command)
+					if (!this.m_RectSelecting && (current.mousePosition - this.m_SelectStartPoint).magnitude > 2f)
 					{
-						EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(this.SendCommandsOnModifierKeys));
-						this.m_RectSelecting = true;
-						this.RectSelectionModeFromEvent();
-						this.SetupSelectedMeshColors();
+						if (!current.alt && !current.control && !current.command)
+						{
+							EditorApplication.modifierKeysChanged = (EditorApplication.CallbackFunction)Delegate.Combine(EditorApplication.modifierKeysChanged, new EditorApplication.CallbackFunction(this.SendCommandsOnModifierKeys));
+							this.m_RectSelecting = true;
+							this.RectSelectionModeFromEvent();
+							this.SetupSelectedMeshColors();
+						}
 					}
 					if (this.m_RectSelecting)
 					{
@@ -904,8 +1035,9 @@ namespace UnityEditor
 				}
 				return;
 			}
-			goto IL_26;
+			goto IL_25;
 		}
+
 		private void PaintPreSceneGUI(int id)
 		{
 			Event current = Event.current;
@@ -913,140 +1045,142 @@ namespace UnityEditor
 			if (typeForControl == EventType.MouseDown || typeForControl == EventType.MouseDrag)
 			{
 				ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
-				if (GUIUtility.hotControl != id && (current.alt || current.control || current.command || current.button != 0))
+				if (GUIUtility.hotControl == id || (!current.alt && !current.control && !current.command && current.button == 0))
 				{
-					return;
-				}
-				if (typeForControl == EventType.MouseDown)
-				{
-					GUIUtility.hotControl = id;
-				}
-				int mouseVertex = this.GetMouseVertex(current);
-				if (mouseVertex != -1)
-				{
-					bool flag = false;
-					if (this.state.PaintMaxDistanceEnabled && coefficients[mouseVertex].maxDistance != this.state.PaintMaxDistance)
+					if (typeForControl == EventType.MouseDown)
 					{
-						coefficients[mouseVertex].maxDistance = this.state.PaintMaxDistance;
-						flag = true;
+						GUIUtility.hotControl = id;
 					}
-					if (this.state.PaintCollisionSphereDistanceEnabled && coefficients[mouseVertex].collisionSphereDistance != this.state.PaintCollisionSphereDistance)
+					int mouseVertex = this.GetMouseVertex(current);
+					if (mouseVertex != -1)
 					{
-						coefficients[mouseVertex].collisionSphereDistance = this.state.PaintCollisionSphereDistance;
-						flag = true;
+						bool flag = false;
+						if (this.state.PaintMaxDistanceEnabled && coefficients[mouseVertex].maxDistance != this.state.PaintMaxDistance)
+						{
+							coefficients[mouseVertex].maxDistance = this.state.PaintMaxDistance;
+							flag = true;
+						}
+						if (this.state.PaintCollisionSphereDistanceEnabled && coefficients[mouseVertex].collisionSphereDistance != this.state.PaintCollisionSphereDistance)
+						{
+							coefficients[mouseVertex].collisionSphereDistance = this.state.PaintCollisionSphereDistance;
+							flag = true;
+						}
+						if (flag)
+						{
+							Undo.RegisterCompleteObjectUndo(base.target, "Paint Cloth");
+							this.cloth.coefficients = coefficients;
+							this.SetupSelectionMeshColors();
+							base.Repaint();
+						}
 					}
-					if (flag)
-					{
-						Undo.RegisterCompleteObjectUndo(this.target, "Paint Cloth");
-						this.cloth.coefficients = coefficients;
-						this.SetupSelectionMeshColors();
-						base.Repaint();
-					}
+					current.Use();
 				}
-				current.Use();
 			}
-			else
+			else if (typeForControl == EventType.MouseUp)
 			{
-				if (typeForControl == EventType.MouseUp && GUIUtility.hotControl == id && current.button == 0)
+				if (GUIUtility.hotControl == id && current.button == 0)
 				{
 					GUIUtility.hotControl = 0;
 					current.Use();
 				}
 			}
 		}
-		public void OnPreSceneGUI()
+
+		private void OnPreSceneGUICallback(SceneView sceneView)
 		{
-			if (!this.editing)
+			if (this.editing)
 			{
-				return;
-			}
-			Tools.current = Tool.None;
-			if (this.state.ToolMode == (ClothInspector.ToolMode)(-1))
-			{
-				this.state.ToolMode = ClothInspector.ToolMode.Select;
-			}
-			ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
-			if (this.m_Selection.Length != coefficients.Length && this.m_Selection.Length != ClothInspector.s_MaxVertices)
-			{
-				this.OnEnable();
-			}
-			Handles.BeginGUI();
-			int controlID = GUIUtility.GetControlID(FocusType.Passive);
-			Event current = Event.current;
-			EventType typeForControl = current.GetTypeForControl(controlID);
-			if (typeForControl != EventType.MouseMove && typeForControl != EventType.MouseDrag)
-			{
-				if (typeForControl == EventType.Layout)
+				if (base.targets.Length <= 1)
 				{
-					HandleUtility.AddDefaultControl(controlID);
+					Tools.current = Tool.None;
+					if (this.state.ToolMode == (ClothInspector.ToolMode)(-1))
+					{
+						this.state.ToolMode = ClothInspector.ToolMode.Select;
+					}
+					ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
+					if (this.m_Selection.Length != coefficients.Length && this.m_Selection.Length != ClothInspector.s_MaxVertices)
+					{
+						this.OnEnable();
+					}
+					Handles.BeginGUI();
+					int controlID = GUIUtility.GetControlID(FocusType.Passive);
+					Event current = Event.current;
+					EventType typeForControl = current.GetTypeForControl(controlID);
+					if (typeForControl != EventType.Layout)
+					{
+						if (typeForControl == EventType.MouseMove || typeForControl == EventType.MouseDrag)
+						{
+							int mouseOver = this.m_MouseOver;
+							this.m_MouseOver = this.GetMouseVertex(current);
+							if (this.m_MouseOver != mouseOver)
+							{
+								SceneView.RepaintAll();
+							}
+						}
+					}
+					else
+					{
+						HandleUtility.AddDefaultControl(controlID);
+					}
+					ClothInspector.ToolMode toolMode = this.state.ToolMode;
+					if (toolMode != ClothInspector.ToolMode.Select)
+					{
+						if (toolMode == ClothInspector.ToolMode.Paint)
+						{
+							this.PaintPreSceneGUI(controlID);
+						}
+					}
+					else
+					{
+						this.SelectionPreSceneGUI(controlID);
+					}
+					Handles.EndGUI();
 				}
 			}
-			else
-			{
-				int mouseOver = this.m_MouseOver;
-				this.m_MouseOver = this.GetMouseVertex(current);
-				if (this.m_MouseOver != mouseOver)
-				{
-					SceneView.RepaintAll();
-				}
-			}
-			ClothInspector.ToolMode toolMode = this.state.ToolMode;
-			if (toolMode != ClothInspector.ToolMode.Select)
-			{
-				if (toolMode == ClothInspector.ToolMode.Paint)
-				{
-					this.PaintPreSceneGUI(controlID);
-				}
-			}
-			else
-			{
-				this.SelectionPreSceneGUI(controlID);
-			}
-			Handles.EndGUI();
 		}
+
 		public void OnSceneGUI()
 		{
-			if (!this.editing)
+			if (this.editing)
 			{
-				return;
-			}
-			if (Selection.gameObjects.Length > 1)
-			{
-				return;
-			}
-			ClothInspector.s_SelectionColor = GUI.skin.settings.selectionColor;
-			if (Event.current.type == EventType.Repaint)
-			{
-				this.DrawVertices();
-			}
-			Event current = Event.current;
-			if (current.commandName == "SelectAll")
-			{
-				if (current.type == EventType.ValidateCommand)
+				if (Selection.gameObjects.Length <= 1)
 				{
-					current.Use();
-				}
-				if (current.type == EventType.ExecuteCommand)
-				{
-					int num = this.cloth.vertices.Length;
-					for (int i = 0; i < num; i++)
+					ClothInspector.s_SelectionColor = GUI.skin.settings.selectionColor;
+					if (Event.current.type == EventType.Repaint)
 					{
-						this.m_Selection[i] = true;
+						this.DrawVertices();
 					}
-					this.SetupSelectedMeshColors();
-					SceneView.RepaintAll();
-					this.state.ToolMode = ClothInspector.ToolMode.Select;
-					current.Use();
+					Event current = Event.current;
+					if (current.commandName == "SelectAll")
+					{
+						if (current.type == EventType.ValidateCommand)
+						{
+							current.Use();
+						}
+						if (current.type == EventType.ExecuteCommand)
+						{
+							int num = this.cloth.vertices.Length;
+							for (int i = 0; i < num; i++)
+							{
+								this.m_Selection[i] = true;
+							}
+							this.SetupSelectedMeshColors();
+							SceneView.RepaintAll();
+							this.state.ToolMode = ClothInspector.ToolMode.Select;
+							current.Use();
+						}
+					}
+					Handles.BeginGUI();
+					if (this.m_RectSelecting && this.state.ToolMode == ClothInspector.ToolMode.Select && Event.current.type == EventType.Repaint)
+					{
+						EditorStyles.selectionRect.Draw(EditorGUIExt.FromToRect(this.m_SelectStartPoint, this.m_SelectMousePoint), GUIContent.none, false, false, false, false);
+					}
+					Handles.EndGUI();
+					SceneViewOverlay.Window(new GUIContent("Cloth Constraints"), new SceneViewOverlay.WindowFunction(this.VertexEditing), 0, SceneViewOverlay.WindowDisplayOption.OneWindowPerTarget);
 				}
 			}
-			Handles.BeginGUI();
-			if (this.m_RectSelecting && this.state.ToolMode == ClothInspector.ToolMode.Select && Event.current.type == EventType.Repaint)
-			{
-				EditorStyles.selectionRect.Draw(EditorGUIExt.FromToRect(this.m_SelectStartPoint, this.m_SelectMousePoint), GUIContent.none, false, false, false, false);
-			}
-			Handles.EndGUI();
-			SceneViewOverlay.Window(new GUIContent("Cloth Constraints"), new SceneViewOverlay.WindowFunction(this.VertexEditing), 0, SceneViewOverlay.WindowDisplayOption.OneWindowPerTarget);
 		}
+
 		public void VisualizationMenuSetMaxDistanceMode()
 		{
 			this.drawMode = ClothInspector.DrawMode.MaxDistance;
@@ -1056,6 +1190,7 @@ namespace UnityEditor
 				this.state.PaintMaxDistanceEnabled = true;
 			}
 		}
+
 		public void VisualizationMenuSetCollisionSphereMode()
 		{
 			this.drawMode = ClothInspector.DrawMode.CollisionSphereDistance;
@@ -1065,10 +1200,12 @@ namespace UnityEditor
 				this.state.PaintMaxDistanceEnabled = false;
 			}
 		}
+
 		public void VisualizationMenuToggleManipulateBackfaces()
 		{
 			this.state.ManipulateBackfaces = !this.state.ManipulateBackfaces;
 		}
+
 		public void DrawColorBox(Texture gradientTex, Color col)
 		{
 			if (!GUI.enabled)
@@ -1095,24 +1232,35 @@ namespace UnityEditor
 			}
 			GUILayout.EndVertical();
 		}
+
 		private bool IsConstrained()
 		{
 			ClothSkinningCoefficient[] coefficients = this.cloth.coefficients;
 			ClothSkinningCoefficient[] array = coefficients;
-			for (int i = 0; i < array.Length; i++)
+			int i = 0;
+			bool result;
+			while (i < array.Length)
 			{
 				ClothSkinningCoefficient clothSkinningCoefficient = array[i];
 				if (clothSkinningCoefficient.maxDistance < 3.40282347E+38f)
 				{
-					return true;
+					result = true;
 				}
-				if (clothSkinningCoefficient.collisionSphereDistance < 3.40282347E+38f)
+				else
 				{
-					return true;
+					if (clothSkinningCoefficient.collisionSphereDistance >= 3.40282347E+38f)
+					{
+						i++;
+						continue;
+					}
+					result = true;
 				}
+				return result;
 			}
-			return false;
+			result = false;
+			return result;
 		}
+
 		private void VertexEditing(UnityEngine.Object unused, SceneView sceneView)
 		{
 			GUILayout.BeginVertical(new GUILayoutOption[]
@@ -1125,13 +1273,13 @@ namespace UnityEditor
 				GUILayout.ExpandWidth(false)
 			});
 			GUILayout.BeginVertical(new GUILayoutOption[0]);
-			if (EditorGUILayout.ButtonMouseDown(this.GetModeString(this.drawMode), FocusType.Passive, EditorStyles.toolbarDropDown, new GUILayoutOption[0]))
+			if (EditorGUILayout.DropdownButton(this.GetModeString(this.drawMode), FocusType.Passive, EditorStyles.toolbarDropDown, new GUILayoutOption[0]))
 			{
 				Rect last = GUILayoutUtility.topLevel.GetLast();
 				GenericMenu genericMenu = new GenericMenu();
 				genericMenu.AddItem(this.GetModeString(ClothInspector.DrawMode.MaxDistance), this.drawMode == ClothInspector.DrawMode.MaxDistance, new GenericMenu.MenuFunction(this.VisualizationMenuSetMaxDistanceMode));
 				genericMenu.AddItem(this.GetModeString(ClothInspector.DrawMode.CollisionSphereDistance), this.drawMode == ClothInspector.DrawMode.CollisionSphereDistance, new GenericMenu.MenuFunction(this.VisualizationMenuSetCollisionSphereMode));
-				genericMenu.AddSeparator(string.Empty);
+				genericMenu.AddSeparator("");
 				genericMenu.AddItem(new GUIContent("Manipulate Backfaces"), this.state.ManipulateBackfaces, new GenericMenu.MenuFunction(this.VisualizationMenuToggleManipulateBackfaces));
 				genericMenu.DropDown(last);
 			}

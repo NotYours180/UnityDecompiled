@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Scripting;
+
 namespace UnityEditor
 {
 	public sealed class MeshUtility
@@ -19,23 +21,30 @@ namespace UnityEditor
 					num2,
 					" uvs are provided"
 				}));
-				return;
 			}
-			MeshUtility.SetPerTriangleUV2NoCheck(src, triUV);
+			else
+			{
+				MeshUtility.SetPerTriangleUV2NoCheck(src, triUV);
+			}
 		}
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void SetPerTriangleUV2NoCheck(Mesh src, Vector2[] triUV);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern Vector2[] ComputeTextureBoundingHull(Texture texture, int vertexCount);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void SetMeshCompression(Mesh mesh, ModelImporterMeshCompression compression);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern ModelImporterMeshCompression GetMeshCompression(Mesh mesh);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		public static extern void Optimize(Mesh mesh);
 	}

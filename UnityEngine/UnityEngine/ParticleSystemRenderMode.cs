@@ -1,4 +1,5 @@
 using System;
+
 namespace UnityEngine
 {
 	public enum ParticleSystemRenderMode
@@ -7,6 +8,7 @@ namespace UnityEngine
 		Stretch,
 		HorizontalBillboard,
 		VerticalBillboard,
-		Mesh
+		Mesh,
+		None
 	}
 }

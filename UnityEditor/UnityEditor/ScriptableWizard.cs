@@ -2,22 +2,32 @@ using System;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Internal;
+
 namespace UnityEditor
 {
 	public class ScriptableWizard : EditorWindow
 	{
-		private sealed class Styles
+		private class Styles
 		{
 			public static string errorText = "Wizard Error";
+
 			public static string box = "Wizard Box";
 		}
+
 		private GenericInspector m_Inspector;
-		private string m_HelpString = string.Empty;
-		private string m_ErrorString = string.Empty;
+
+		private string m_HelpString = "";
+
+		private string m_ErrorString = "";
+
 		private bool m_IsValid = true;
+
 		private Vector2 m_ScrollPosition;
+
 		private string m_CreateButton = "Create";
-		private string m_OtherButton = string.Empty;
+
+		private string m_OtherButton = "";
+
 		public string helpString
 		{
 			get
@@ -26,20 +36,15 @@ namespace UnityEditor
 			}
 			set
 			{
-				if (this.m_HelpString != value)
+				string text = value ?? string.Empty;
+				if (this.m_HelpString != text)
 				{
+					this.m_HelpString = text;
 					base.Repaint();
-				}
-				if (this.m_HelpString != null)
-				{
-					this.m_HelpString = value;
-				}
-				else
-				{
-					this.m_HelpString = string.Empty;
 				}
 			}
 		}
+
 		public string errorString
 		{
 			get
@@ -48,20 +53,49 @@ namespace UnityEditor
 			}
 			set
 			{
-				if (this.m_ErrorString != value)
+				string text = value ?? string.Empty;
+				if (this.m_ErrorString != text)
 				{
+					this.m_ErrorString = text;
 					base.Repaint();
-				}
-				if (this.m_ErrorString != null)
-				{
-					this.m_ErrorString = value;
-				}
-				else
-				{
-					this.m_ErrorString = string.Empty;
 				}
 			}
 		}
+
+		public string createButtonName
+		{
+			get
+			{
+				return this.m_CreateButton;
+			}
+			set
+			{
+				string text = value ?? string.Empty;
+				if (this.m_CreateButton != text)
+				{
+					this.m_CreateButton = text;
+					base.Repaint();
+				}
+			}
+		}
+
+		public string otherButtonName
+		{
+			get
+			{
+				return this.m_OtherButton;
+			}
+			set
+			{
+				string text = value ?? string.Empty;
+				if (this.m_OtherButton != text)
+				{
+					this.m_OtherButton = text;
+					base.Repaint();
+				}
+			}
+		}
+
 		public bool isValid
 		{
 			get
@@ -73,10 +107,12 @@ namespace UnityEditor
 				this.m_IsValid = value;
 			}
 		}
+
 		private void OnDestroy()
 		{
 			UnityEngine.Object.DestroyImmediate(this.m_Inspector);
 		}
+
 		private void InvokeWizardUpdate()
 		{
 			MethodInfo method = base.GetType().GetMethod("OnWizardUpdate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
@@ -85,10 +121,11 @@ namespace UnityEditor
 				method.Invoke(this, null);
 			}
 		}
+
 		private void OnGUI()
 		{
 			EditorGUIUtility.labelWidth = 150f;
-			GUILayout.Label(this.m_HelpString, new GUILayoutOption[]
+			GUILayout.Label(this.m_HelpString, EditorStyles.wordWrappedLabel, new GUILayoutOption[]
 			{
 				GUILayout.ExpandHeight(true)
 			});
@@ -115,7 +152,7 @@ namespace UnityEditor
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
 			GUILayout.FlexibleSpace();
 			GUI.enabled = this.m_IsValid;
-			if (this.m_OtherButton != string.Empty && GUILayout.Button(this.m_OtherButton, new GUILayoutOption[]
+			if (this.m_OtherButton != "" && GUILayout.Button(this.m_OtherButton, new GUILayoutOption[]
 			{
 				GUILayout.MinWidth(100f)
 			}))
@@ -131,7 +168,7 @@ namespace UnityEditor
 					Debug.LogError("OnWizardOtherButton has not been implemented in script");
 				}
 			}
-			if (this.m_CreateButton != string.Empty && GUILayout.Button(this.m_CreateButton, new GUILayoutOption[]
+			if (this.m_CreateButton != "" && GUILayout.Button(this.m_CreateButton, new GUILayoutOption[]
 			{
 				GUILayout.MinWidth(100f)
 			}))
@@ -156,6 +193,7 @@ namespace UnityEditor
 				this.InvokeWizardUpdate();
 			}
 		}
+
 		protected virtual bool DrawWizardGUI()
 		{
 			if (this.m_Inspector == null)
@@ -169,37 +207,43 @@ namespace UnityEditor
 			}
 			return this.m_Inspector.DrawDefaultInspector();
 		}
+
 		public static T DisplayWizard<T>(string title) where T : ScriptableWizard
 		{
-			return ScriptableWizard.DisplayWizard<T>(title, "Create", string.Empty);
+			return ScriptableWizard.DisplayWizard<T>(title, "Create", "");
 		}
+
 		public static T DisplayWizard<T>(string title, string createButtonName) where T : ScriptableWizard
 		{
-			return ScriptableWizard.DisplayWizard<T>(title, createButtonName, string.Empty);
+			return ScriptableWizard.DisplayWizard<T>(title, createButtonName, "");
 		}
+
 		public static T DisplayWizard<T>(string title, string createButtonName, string otherButtonName) where T : ScriptableWizard
 		{
 			return (T)((object)ScriptableWizard.DisplayWizard(title, typeof(T), createButtonName, otherButtonName));
 		}
+
 		[ExcludeFromDocs]
 		public static ScriptableWizard DisplayWizard(string title, Type klass, string createButtonName)
 		{
-			string empty = string.Empty;
-			return ScriptableWizard.DisplayWizard(title, klass, createButtonName, empty);
+			string otherButtonName = "";
+			return ScriptableWizard.DisplayWizard(title, klass, createButtonName, otherButtonName);
 		}
+
 		[ExcludeFromDocs]
 		public static ScriptableWizard DisplayWizard(string title, Type klass)
 		{
-			string empty = string.Empty;
+			string otherButtonName = "";
 			string createButtonName = "Create";
-			return ScriptableWizard.DisplayWizard(title, klass, createButtonName, empty);
+			return ScriptableWizard.DisplayWizard(title, klass, createButtonName, otherButtonName);
 		}
+
 		public static ScriptableWizard DisplayWizard(string title, Type klass, [DefaultValue("\"Create\"")] string createButtonName, [DefaultValue("\"\"")] string otherButtonName)
 		{
 			ScriptableWizard scriptableWizard = ScriptableObject.CreateInstance(klass) as ScriptableWizard;
 			scriptableWizard.m_CreateButton = createButtonName;
 			scriptableWizard.m_OtherButton = otherButtonName;
-			scriptableWizard.title = title;
+			scriptableWizard.titleContent = new GUIContent(title);
 			if (scriptableWizard != null)
 			{
 				scriptableWizard.InvokeWizardUpdate();

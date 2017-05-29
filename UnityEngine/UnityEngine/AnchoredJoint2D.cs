@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public class AnchoredJoint2D : Joint2D
@@ -17,6 +19,7 @@ namespace UnityEngine
 				this.INTERNAL_set_anchor(ref value);
 			}
 		}
+
 		public Vector2 connectedAnchor
 		{
 			get
@@ -30,16 +33,30 @@ namespace UnityEngine
 				this.INTERNAL_set_connectedAnchor(ref value);
 			}
 		}
-		[WrapperlessIcall]
+
+		public extern bool autoConfigureConnectedAnchor
+		{
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			get;
+			[GeneratedByOldBindingsGenerator]
+			[MethodImpl(MethodImplOptions.InternalCall)]
+			set;
+		}
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_anchor(out Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_anchor(ref Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_get_connectedAnchor(out Vector2 value);
-		[WrapperlessIcall]
+
+		[GeneratedByOldBindingsGenerator]
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		private extern void INTERNAL_set_connectedAnchor(ref Vector2 value);
 	}

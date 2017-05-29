@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Scripting;
+
 namespace UnityEngine
 {
 	public class TextEditor
@@ -9,6 +11,7 @@ namespace UnityEngine
 			WORDS,
 			PARAGRAPHS
 		}
+
 		private enum CharacterType
 		{
 			LetterLike,
@@ -16,6 +19,7 @@ namespace UnityEngine
 			Symbol2,
 			WhiteSpace
 		}
+
 		private enum TextEditOp
 		{
 			MoveLeft,
@@ -69,70 +73,176 @@ namespace UnityEngine
 			ScrollPageUp,
 			ScrollPageDown
 		}
-		public int pos;
-		public int selectPos;
-		public int controlID;
-		public GUIContent content = new GUIContent();
+
+		public TouchScreenKeyboard keyboardOnScreen = null;
+
+		public int controlID = 0;
+
 		public GUIStyle style = GUIStyle.none;
-		public Rect position;
-		public bool multiline;
-		public bool hasHorizontalCursorPos;
-		public bool isPasswordField;
+
+		public bool multiline = false;
+
+		public bool hasHorizontalCursorPos = false;
+
+		public bool isPasswordField = false;
+
 		internal bool m_HasFocus;
+
 		public Vector2 scrollOffset = Vector2.zero;
-		private bool m_TextHeightPotentiallyChanged;
+
+		private GUIContent m_Content = new GUIContent();
+
+		private Rect m_Position;
+
+		private int m_CursorIndex = 0;
+
+		private int m_SelectIndex = 0;
+
+		private bool m_RevealCursor = false;
+
 		public Vector2 graphicalCursorPos;
+
 		public Vector2 graphicalSelectCursorPos;
-		private bool m_MouseDragSelectsWholeWords;
-		private int m_DblClickInitPos;
-		private TextEditor.DblClickSnapping m_DblClickSnap;
-		private bool m_bJustSelected;
+
+		private bool m_MouseDragSelectsWholeWords = false;
+
+		private int m_DblClickInitPos = 0;
+
+		private TextEditor.DblClickSnapping m_DblClickSnap = TextEditor.DblClickSnapping.WORDS;
+
+		private bool m_bJustSelected = false;
+
 		private int m_iAltCursorPos = -1;
+
 		private string oldText;
+
 		private int oldPos;
+
 		private int oldSelectPos;
+
 		private static Dictionary<Event, TextEditor.TextEditOp> s_Keyactions;
+
+		[Obsolete("Please use 'text' instead of 'content'", false)]
+		public GUIContent content
+		{
+			get
+			{
+				return this.m_Content;
+			}
+			set
+			{
+				this.m_Content = value;
+			}
+		}
+
+		public string text
+		{
+			get
+			{
+				return this.m_Content.text;
+			}
+			set
+			{
+				this.m_Content.text = value;
+				this.ClampTextIndex(ref this.m_CursorIndex);
+				this.ClampTextIndex(ref this.m_SelectIndex);
+			}
+		}
+
+		public Rect position
+		{
+			get
+			{
+				return this.m_Position;
+			}
+			set
+			{
+				if (!(this.m_Position == value))
+				{
+					this.m_Position = value;
+					this.UpdateScrollOffset();
+				}
+			}
+		}
+
+		public int cursorIndex
+		{
+			get
+			{
+				return this.m_CursorIndex;
+			}
+			set
+			{
+				int cursorIndex = this.m_CursorIndex;
+				this.m_CursorIndex = value;
+				this.ClampTextIndex(ref this.m_CursorIndex);
+				if (this.m_CursorIndex != cursorIndex)
+				{
+					this.m_RevealCursor = true;
+				}
+			}
+		}
+
+		public int selectIndex
+		{
+			get
+			{
+				return this.m_SelectIndex;
+			}
+			set
+			{
+				this.m_SelectIndex = value;
+				this.ClampTextIndex(ref this.m_SelectIndex);
+			}
+		}
+
 		public bool hasSelection
 		{
 			get
 			{
-				return this.pos != this.selectPos;
+				return this.cursorIndex != this.selectIndex;
 			}
 		}
+
 		public string SelectedText
 		{
 			get
 			{
-				int length = this.content.text.Length;
-				if (this.pos > length)
+				string result;
+				if (this.cursorIndex == this.selectIndex)
 				{
-					this.pos = length;
+					result = "";
 				}
-				if (this.selectPos > length)
+				else if (this.cursorIndex < this.selectIndex)
 				{
-					this.selectPos = length;
+					result = this.text.Substring(this.cursorIndex, this.selectIndex - this.cursorIndex);
 				}
-				if (this.pos == this.selectPos)
+				else
 				{
-					return string.Empty;
+					result = this.text.Substring(this.selectIndex, this.cursorIndex - this.selectIndex);
 				}
-				if (this.pos < this.selectPos)
-				{
-					return this.content.text.Substring(this.pos, this.selectPos - this.pos);
-				}
-				return this.content.text.Substring(this.selectPos, this.pos - this.selectPos);
+				return result;
 			}
 		}
+
+		[RequiredByNativeCode]
+		public TextEditor()
+		{
+		}
+
 		private void ClearCursorPos()
 		{
 			this.hasHorizontalCursorPos = false;
 			this.m_iAltCursorPos = -1;
 		}
+
 		public void OnFocus()
 		{
 			if (this.multiline)
 			{
-				this.pos = (this.selectPos = 0);
+				int num = 0;
+				this.selectIndex = num;
+				this.cursorIndex = num;
 			}
 			else
 			{
@@ -140,894 +250,994 @@ namespace UnityEngine
 			}
 			this.m_HasFocus = true;
 		}
+
 		public void OnLostFocus()
 		{
 			this.m_HasFocus = false;
 			this.scrollOffset = Vector2.zero;
 		}
+
 		private void GrabGraphicalCursorPos()
 		{
 			if (!this.hasHorizontalCursorPos)
 			{
-				this.graphicalCursorPos = this.style.GetCursorPixelPosition(this.position, this.content, this.pos);
-				this.graphicalSelectCursorPos = this.style.GetCursorPixelPosition(this.position, this.content, this.selectPos);
+				this.graphicalCursorPos = this.style.GetCursorPixelPosition(this.position, this.m_Content, this.cursorIndex);
+				this.graphicalSelectCursorPos = this.style.GetCursorPixelPosition(this.position, this.m_Content, this.selectIndex);
 				this.hasHorizontalCursorPos = false;
 			}
 		}
+
 		public bool HandleKeyEvent(Event e)
 		{
 			this.InitKeyActions();
 			EventModifiers modifiers = e.modifiers;
 			e.modifiers &= ~EventModifiers.CapsLock;
+			bool result;
 			if (TextEditor.s_Keyactions.ContainsKey(e))
 			{
 				TextEditor.TextEditOp operation = TextEditor.s_Keyactions[e];
 				this.PerformOperation(operation);
 				e.modifiers = modifiers;
-				this.UpdateScrollOffset();
-				return true;
+				result = true;
 			}
-			e.modifiers = modifiers;
-			return false;
+			else
+			{
+				e.modifiers = modifiers;
+				result = false;
+			}
+			return result;
 		}
+
 		public bool DeleteLineBack()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			int num = this.pos;
-			int num2 = num;
-			while (num2-- != 0)
+			else
 			{
-				if (this.content.text[num2] == '\n')
+				int num = this.cursorIndex;
+				int num2 = num;
+				while (num2-- != 0)
 				{
-					num = num2 + 1;
-					break;
+					if (this.text[num2] == '\n')
+					{
+						num = num2 + 1;
+						break;
+					}
+				}
+				if (num2 == -1)
+				{
+					num = 0;
+				}
+				if (this.cursorIndex != num)
+				{
+					this.m_Content.text = this.text.Remove(num, this.cursorIndex - num);
+					int num3 = num;
+					this.cursorIndex = num3;
+					this.selectIndex = num3;
+					result = true;
+				}
+				else
+				{
+					result = false;
 				}
 			}
-			if (num2 == -1)
-			{
-				num = 0;
-			}
-			if (this.pos != num)
-			{
-				this.content.text = this.content.text.Remove(num, this.pos - num);
-				this.selectPos = (this.pos = num);
-				return true;
-			}
-			return false;
+			return result;
 		}
+
 		public bool DeleteWordBack()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			int num = this.FindEndOfPreviousWord(this.pos);
-			if (this.pos != num)
+			else
 			{
-				this.content.text = this.content.text.Remove(num, this.pos - num);
-				this.selectPos = (this.pos = num);
-				return true;
+				int num = this.FindEndOfPreviousWord(this.cursorIndex);
+				if (this.cursorIndex != num)
+				{
+					this.m_Content.text = this.text.Remove(num, this.cursorIndex - num);
+					int num2 = num;
+					this.cursorIndex = num2;
+					this.selectIndex = num2;
+					result = true;
+				}
+				else
+				{
+					result = false;
+				}
 			}
-			return false;
+			return result;
 		}
+
 		public bool DeleteWordForward()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			int num = this.FindStartOfNextWord(this.pos);
-			if (this.pos < this.content.text.Length)
+			else
 			{
-				this.content.text = this.content.text.Remove(this.pos, num - this.pos);
-				return true;
+				int num = this.FindStartOfNextWord(this.cursorIndex);
+				if (this.cursorIndex < this.text.Length)
+				{
+					this.m_Content.text = this.text.Remove(this.cursorIndex, num - this.cursorIndex);
+					result = true;
+				}
+				else
+				{
+					result = false;
+				}
 			}
-			return false;
+			return result;
 		}
+
 		public bool Delete()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			if (this.pos < this.content.text.Length)
+			else if (this.cursorIndex < this.text.Length)
 			{
-				this.content.text = this.content.text.Remove(this.pos, 1);
-				return true;
+				this.m_Content.text = this.text.Remove(this.cursorIndex, 1);
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
+
 		public bool CanPaste()
 		{
 			return GUIUtility.systemCopyBuffer.Length != 0;
 		}
+
 		public bool Backspace()
 		{
+			bool result;
 			if (this.hasSelection)
 			{
 				this.DeleteSelection();
-				return true;
+				result = true;
 			}
-			if (this.pos > 0)
+			else if (this.cursorIndex > 0)
 			{
-				this.content.text = this.content.text.Remove(this.pos - 1, 1);
-				this.selectPos = --this.pos;
+				this.m_Content.text = this.text.Remove(this.cursorIndex - 1, 1);
+				int num = this.cursorIndex - 1;
+				this.cursorIndex = num;
+				this.selectIndex = num;
 				this.ClearCursorPos();
-				return true;
-			}
-			return false;
-		}
-		public void SelectAll()
-		{
-			this.pos = 0;
-			this.selectPos = this.content.text.Length;
-			this.ClearCursorPos();
-		}
-		public void SelectNone()
-		{
-			this.selectPos = this.pos;
-			this.ClearCursorPos();
-		}
-		public bool DeleteSelection()
-		{
-			int length = this.content.text.Length;
-			if (this.pos > length)
-			{
-				this.pos = length;
-			}
-			if (this.selectPos > length)
-			{
-				this.selectPos = length;
-			}
-			if (this.pos == this.selectPos)
-			{
-				return false;
-			}
-			if (this.pos < this.selectPos)
-			{
-				this.content.text = this.content.text.Substring(0, this.pos) + this.content.text.Substring(this.selectPos, this.content.text.Length - this.selectPos);
-				this.selectPos = this.pos;
+				result = true;
 			}
 			else
 			{
-				this.content.text = this.content.text.Substring(0, this.selectPos) + this.content.text.Substring(this.pos, this.content.text.Length - this.pos);
-				this.pos = this.selectPos;
+				result = false;
 			}
-			this.ClearCursorPos();
-			return true;
+			return result;
 		}
+
+		public void SelectAll()
+		{
+			this.cursorIndex = 0;
+			this.selectIndex = this.text.Length;
+			this.ClearCursorPos();
+		}
+
+		public void SelectNone()
+		{
+			this.selectIndex = this.cursorIndex;
+			this.ClearCursorPos();
+		}
+
+		public bool DeleteSelection()
+		{
+			bool result;
+			if (this.cursorIndex == this.selectIndex)
+			{
+				result = false;
+			}
+			else
+			{
+				if (this.cursorIndex < this.selectIndex)
+				{
+					this.m_Content.text = this.text.Substring(0, this.cursorIndex) + this.text.Substring(this.selectIndex, this.text.Length - this.selectIndex);
+					this.selectIndex = this.cursorIndex;
+				}
+				else
+				{
+					this.m_Content.text = this.text.Substring(0, this.selectIndex) + this.text.Substring(this.cursorIndex, this.text.Length - this.cursorIndex);
+					this.cursorIndex = this.selectIndex;
+				}
+				this.ClearCursorPos();
+				result = true;
+			}
+			return result;
+		}
+
 		public void ReplaceSelection(string replace)
 		{
 			this.DeleteSelection();
-			this.content.text = this.content.text.Insert(this.pos, replace);
-			this.selectPos = (this.pos += replace.Length);
+			this.m_Content.text = this.text.Insert(this.cursorIndex, replace);
+			this.selectIndex = (this.cursorIndex += replace.Length);
 			this.ClearCursorPos();
-			this.UpdateScrollOffset();
-			this.m_TextHeightPotentiallyChanged = true;
 		}
+
 		public void Insert(char c)
 		{
 			this.ReplaceSelection(c.ToString());
 		}
+
 		public void MoveSelectionToAltCursor()
 		{
-			if (this.m_iAltCursorPos == -1)
+			if (this.m_iAltCursorPos != -1)
 			{
-				return;
+				int iAltCursorPos = this.m_iAltCursorPos;
+				string selectedText = this.SelectedText;
+				this.m_Content.text = this.text.Insert(iAltCursorPos, selectedText);
+				if (iAltCursorPos < this.cursorIndex)
+				{
+					this.cursorIndex += selectedText.Length;
+					this.selectIndex += selectedText.Length;
+				}
+				this.DeleteSelection();
+				int num = iAltCursorPos;
+				this.cursorIndex = num;
+				this.selectIndex = num;
+				this.ClearCursorPos();
 			}
-			int iAltCursorPos = this.m_iAltCursorPos;
-			string selectedText = this.SelectedText;
-			this.content.text = this.content.text.Insert(iAltCursorPos, selectedText);
-			if (iAltCursorPos < this.pos)
-			{
-				this.pos += selectedText.Length;
-				this.selectPos += selectedText.Length;
-			}
-			this.DeleteSelection();
-			this.selectPos = (this.pos = iAltCursorPos);
-			this.ClearCursorPos();
-			this.UpdateScrollOffset();
 		}
+
 		public void MoveRight()
 		{
 			this.ClearCursorPos();
-			if (this.selectPos == this.pos)
+			if (this.selectIndex == this.cursorIndex)
 			{
-				this.pos++;
-				this.ClampPos();
-				this.selectPos = this.pos;
+				this.cursorIndex++;
+				this.DetectFocusChange();
+				this.selectIndex = this.cursorIndex;
+			}
+			else if (this.selectIndex > this.cursorIndex)
+			{
+				this.cursorIndex = this.selectIndex;
 			}
 			else
 			{
-				if (this.selectPos > this.pos)
-				{
-					this.pos = this.selectPos;
-				}
-				else
-				{
-					this.selectPos = this.pos;
-				}
+				this.selectIndex = this.cursorIndex;
 			}
-			this.UpdateScrollOffset();
 		}
+
 		public void MoveLeft()
 		{
-			if (this.selectPos == this.pos)
+			if (this.selectIndex == this.cursorIndex)
 			{
-				this.pos--;
-				if (this.pos < 0)
-				{
-					this.pos = 0;
-				}
-				this.selectPos = this.pos;
+				this.cursorIndex--;
+				this.selectIndex = this.cursorIndex;
+			}
+			else if (this.selectIndex > this.cursorIndex)
+			{
+				this.selectIndex = this.cursorIndex;
 			}
 			else
 			{
-				if (this.selectPos > this.pos)
-				{
-					this.selectPos = this.pos;
-				}
-				else
-				{
-					this.pos = this.selectPos;
-				}
+				this.cursorIndex = this.selectIndex;
 			}
 			this.ClearCursorPos();
-			this.UpdateScrollOffset();
 		}
+
 		public void MoveUp()
 		{
-			if (this.selectPos < this.pos)
+			if (this.selectIndex < this.cursorIndex)
 			{
-				this.selectPos = this.pos;
+				this.selectIndex = this.cursorIndex;
 			}
 			else
 			{
-				this.pos = this.selectPos;
+				this.cursorIndex = this.selectIndex;
 			}
 			this.GrabGraphicalCursorPos();
 			this.graphicalCursorPos.y = this.graphicalCursorPos.y - 1f;
-			this.pos = (this.selectPos = this.style.GetCursorStringIndex(this.position, this.content, this.graphicalCursorPos));
-			if (this.pos <= 0)
+			int cursorStringIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, this.graphicalCursorPos);
+			this.selectIndex = cursorStringIndex;
+			this.cursorIndex = cursorStringIndex;
+			if (this.cursorIndex <= 0)
 			{
 				this.ClearCursorPos();
 			}
-			this.UpdateScrollOffset();
 		}
+
 		public void MoveDown()
 		{
-			if (this.selectPos > this.pos)
+			if (this.selectIndex > this.cursorIndex)
 			{
-				this.selectPos = this.pos;
+				this.selectIndex = this.cursorIndex;
 			}
 			else
 			{
-				this.pos = this.selectPos;
+				this.cursorIndex = this.selectIndex;
 			}
 			this.GrabGraphicalCursorPos();
 			this.graphicalCursorPos.y = this.graphicalCursorPos.y + (this.style.lineHeight + 5f);
-			this.pos = (this.selectPos = this.style.GetCursorStringIndex(this.position, this.content, this.graphicalCursorPos));
-			if (this.pos == this.content.text.Length)
+			int cursorStringIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, this.graphicalCursorPos);
+			this.selectIndex = cursorStringIndex;
+			this.cursorIndex = cursorStringIndex;
+			if (this.cursorIndex == this.text.Length)
 			{
 				this.ClearCursorPos();
 			}
-			this.UpdateScrollOffset();
 		}
+
 		public void MoveLineStart()
 		{
-			int num = (this.selectPos >= this.pos) ? this.pos : this.selectPos;
+			int num = (this.selectIndex >= this.cursorIndex) ? this.cursorIndex : this.selectIndex;
 			int num2 = num;
+			int num3;
 			while (num2-- != 0)
 			{
-				if (this.content.text[num2] == '\n')
+				if (this.text[num2] == '\n')
 				{
-					this.selectPos = (this.pos = num2 + 1);
+					num3 = num2 + 1;
+					this.cursorIndex = num3;
+					this.selectIndex = num3;
 					return;
 				}
 			}
-			this.selectPos = (this.pos = 0);
-			this.UpdateScrollOffset();
+			num3 = 0;
+			this.cursorIndex = num3;
+			this.selectIndex = num3;
 		}
+
 		public void MoveLineEnd()
 		{
-			int num = (this.selectPos <= this.pos) ? this.pos : this.selectPos;
+			int num = (this.selectIndex <= this.cursorIndex) ? this.cursorIndex : this.selectIndex;
 			int i = num;
-			int length = this.content.text.Length;
+			int length = this.text.Length;
+			int num2;
 			while (i < length)
 			{
-				if (this.content.text[i] == '\n')
+				if (this.text[i] == '\n')
 				{
-					this.selectPos = (this.pos = i);
+					num2 = i;
+					this.cursorIndex = num2;
+					this.selectIndex = num2;
 					return;
 				}
 				i++;
 			}
-			this.selectPos = (this.pos = length);
-			this.UpdateScrollOffset();
+			num2 = length;
+			this.cursorIndex = num2;
+			this.selectIndex = num2;
 		}
+
 		public void MoveGraphicalLineStart()
 		{
-			this.pos = (this.selectPos = this.GetGraphicalLineStart((this.pos >= this.selectPos) ? this.selectPos : this.pos));
-			this.UpdateScrollOffset();
+			int graphicalLineStart = this.GetGraphicalLineStart((this.cursorIndex >= this.selectIndex) ? this.selectIndex : this.cursorIndex);
+			this.selectIndex = graphicalLineStart;
+			this.cursorIndex = graphicalLineStart;
 		}
+
 		public void MoveGraphicalLineEnd()
 		{
-			this.pos = (this.selectPos = this.GetGraphicalLineEnd((this.pos <= this.selectPos) ? this.selectPos : this.pos));
-			this.UpdateScrollOffset();
+			int graphicalLineEnd = this.GetGraphicalLineEnd((this.cursorIndex <= this.selectIndex) ? this.selectIndex : this.cursorIndex);
+			this.selectIndex = graphicalLineEnd;
+			this.cursorIndex = graphicalLineEnd;
 		}
+
 		public void MoveTextStart()
 		{
-			this.selectPos = (this.pos = 0);
-			this.UpdateScrollOffset();
+			int num = 0;
+			this.cursorIndex = num;
+			this.selectIndex = num;
 		}
+
 		public void MoveTextEnd()
 		{
-			this.selectPos = (this.pos = this.content.text.Length);
-			this.UpdateScrollOffset();
+			int length = this.text.Length;
+			this.cursorIndex = length;
+			this.selectIndex = length;
 		}
+
+		private int IndexOfEndOfLine(int startIndex)
+		{
+			int num = this.text.IndexOf('\n', startIndex);
+			return (num == -1) ? this.text.Length : num;
+		}
+
 		public void MoveParagraphForward()
 		{
-			this.pos = ((this.pos <= this.selectPos) ? this.selectPos : this.pos);
-			if (this.pos < this.content.text.Length)
+			this.cursorIndex = ((this.cursorIndex <= this.selectIndex) ? this.selectIndex : this.cursorIndex);
+			if (this.cursorIndex < this.text.Length)
 			{
-				this.selectPos = (this.pos = this.content.text.IndexOf('\n', this.pos + 1));
-				if (this.pos == -1)
-				{
-					this.selectPos = (this.pos = this.content.text.Length);
-				}
+				int num = this.IndexOfEndOfLine(this.cursorIndex + 1);
+				this.cursorIndex = num;
+				this.selectIndex = num;
 			}
-			this.UpdateScrollOffset();
 		}
+
 		public void MoveParagraphBackward()
 		{
-			this.pos = ((this.pos >= this.selectPos) ? this.selectPos : this.pos);
-			if (this.pos > 1)
+			this.cursorIndex = ((this.cursorIndex >= this.selectIndex) ? this.selectIndex : this.cursorIndex);
+			if (this.cursorIndex > 1)
 			{
-				this.selectPos = (this.pos = this.content.text.LastIndexOf('\n', this.pos - 2) + 1);
+				int num = this.text.LastIndexOf('\n', this.cursorIndex - 2) + 1;
+				this.cursorIndex = num;
+				this.selectIndex = num;
 			}
 			else
 			{
-				this.selectPos = (this.pos = 0);
+				int num = 0;
+				this.cursorIndex = num;
+				this.selectIndex = num;
 			}
-			this.UpdateScrollOffset();
 		}
+
 		public void MoveCursorToPosition(Vector2 cursorPosition)
 		{
-			this.selectPos = this.style.GetCursorStringIndex(this.position, this.content, cursorPosition + this.scrollOffset);
+			this.selectIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
 			if (!Event.current.shift)
 			{
-				this.pos = this.selectPos;
+				this.cursorIndex = this.selectIndex;
 			}
-			this.ClampPos();
-			this.UpdateScrollOffset();
+			this.DetectFocusChange();
 		}
+
 		public void MoveAltCursorToPosition(Vector2 cursorPosition)
 		{
-			this.m_iAltCursorPos = this.style.GetCursorStringIndex(this.position, this.content, cursorPosition + this.scrollOffset);
-			this.ClampPos();
-			this.UpdateScrollOffset();
+			int cursorStringIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
+			this.m_iAltCursorPos = Mathf.Min(this.text.Length, cursorStringIndex);
+			this.DetectFocusChange();
 		}
+
 		public bool IsOverSelection(Vector2 cursorPosition)
 		{
-			int cursorStringIndex = this.style.GetCursorStringIndex(this.position, this.content, cursorPosition + this.scrollOffset);
-			return cursorStringIndex < Mathf.Max(this.pos, this.selectPos) && cursorStringIndex > Mathf.Min(this.pos, this.selectPos);
+			int cursorStringIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
+			return cursorStringIndex < Mathf.Max(this.cursorIndex, this.selectIndex) && cursorStringIndex > Mathf.Min(this.cursorIndex, this.selectIndex);
 		}
+
 		public void SelectToPosition(Vector2 cursorPosition)
 		{
 			if (!this.m_MouseDragSelectsWholeWords)
 			{
-				this.pos = this.style.GetCursorStringIndex(this.position, this.content, cursorPosition + this.scrollOffset);
+				this.cursorIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
 			}
 			else
 			{
-				int num = this.style.GetCursorStringIndex(this.position, this.content, cursorPosition + this.scrollOffset);
+				int num = this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPosition + this.scrollOffset);
 				if (this.m_DblClickSnap == TextEditor.DblClickSnapping.WORDS)
 				{
 					if (num < this.m_DblClickInitPos)
 					{
-						this.pos = this.FindEndOfClassification(num, -1);
-						this.selectPos = this.FindEndOfClassification(this.m_DblClickInitPos, 1);
+						this.cursorIndex = this.FindEndOfClassification(num, -1);
+						this.selectIndex = this.FindEndOfClassification(this.m_DblClickInitPos, 1);
 					}
 					else
 					{
-						if (num >= this.content.text.Length)
+						if (num >= this.text.Length)
 						{
-							num = this.content.text.Length - 1;
+							num = this.text.Length - 1;
 						}
-						this.pos = this.FindEndOfClassification(num, 1);
-						this.selectPos = this.FindEndOfClassification(this.m_DblClickInitPos - 1, -1);
+						this.cursorIndex = this.FindEndOfClassification(num, 1);
+						this.selectIndex = this.FindEndOfClassification(this.m_DblClickInitPos - 1, -1);
 					}
+				}
+				else if (num < this.m_DblClickInitPos)
+				{
+					if (num > 0)
+					{
+						this.cursorIndex = this.text.LastIndexOf('\n', Mathf.Max(0, num - 2)) + 1;
+					}
+					else
+					{
+						this.cursorIndex = 0;
+					}
+					this.selectIndex = this.text.LastIndexOf('\n', this.m_DblClickInitPos);
 				}
 				else
 				{
-					if (num < this.m_DblClickInitPos)
+					if (num < this.text.Length)
 					{
-						if (num > 0)
-						{
-							this.pos = this.content.text.LastIndexOf('\n', num - 2) + 1;
-						}
-						else
-						{
-							this.pos = 0;
-						}
-						this.selectPos = this.content.text.LastIndexOf('\n', this.m_DblClickInitPos);
+						this.cursorIndex = this.IndexOfEndOfLine(num);
 					}
 					else
 					{
-						if (num < this.content.text.Length)
-						{
-							this.pos = this.content.text.IndexOf('\n', num + 1) + 1;
-							if (this.pos <= 0)
-							{
-								this.pos = this.content.text.Length;
-							}
-						}
-						else
-						{
-							this.pos = this.content.text.Length;
-						}
-						this.selectPos = this.content.text.LastIndexOf('\n', this.m_DblClickInitPos - 2) + 1;
+						this.cursorIndex = this.text.Length;
 					}
+					this.selectIndex = this.text.LastIndexOf('\n', Mathf.Max(0, this.m_DblClickInitPos - 2)) + 1;
 				}
 			}
-			this.UpdateScrollOffset();
 		}
+
 		public void SelectLeft()
 		{
-			if (this.m_bJustSelected && this.pos > this.selectPos)
+			if (this.m_bJustSelected && this.cursorIndex > this.selectIndex)
 			{
-				int num = this.pos;
-				this.pos = this.selectPos;
-				this.selectPos = num;
+				int cursorIndex = this.cursorIndex;
+				this.cursorIndex = this.selectIndex;
+				this.selectIndex = cursorIndex;
 			}
 			this.m_bJustSelected = false;
-			this.pos--;
-			if (this.pos < 0)
-			{
-				this.pos = 0;
-			}
-			this.UpdateScrollOffset();
+			this.cursorIndex--;
 		}
+
 		public void SelectRight()
 		{
-			if (this.m_bJustSelected && this.pos < this.selectPos)
+			if (this.m_bJustSelected && this.cursorIndex < this.selectIndex)
 			{
-				int num = this.pos;
-				this.pos = this.selectPos;
-				this.selectPos = num;
+				int cursorIndex = this.cursorIndex;
+				this.cursorIndex = this.selectIndex;
+				this.selectIndex = cursorIndex;
 			}
 			this.m_bJustSelected = false;
-			this.pos++;
-			int length = this.content.text.Length;
-			if (this.pos > length)
-			{
-				this.pos = length;
-			}
-			this.UpdateScrollOffset();
+			this.cursorIndex++;
 		}
+
 		public void SelectUp()
 		{
 			this.GrabGraphicalCursorPos();
 			this.graphicalCursorPos.y = this.graphicalCursorPos.y - 1f;
-			this.pos = this.style.GetCursorStringIndex(this.position, this.content, this.graphicalCursorPos);
-			this.UpdateScrollOffset();
+			this.cursorIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, this.graphicalCursorPos);
 		}
+
 		public void SelectDown()
 		{
 			this.GrabGraphicalCursorPos();
 			this.graphicalCursorPos.y = this.graphicalCursorPos.y + (this.style.lineHeight + 5f);
-			this.pos = this.style.GetCursorStringIndex(this.position, this.content, this.graphicalCursorPos);
-			this.UpdateScrollOffset();
+			this.cursorIndex = this.style.GetCursorStringIndex(this.position, this.m_Content, this.graphicalCursorPos);
 		}
+
 		public void SelectTextEnd()
 		{
-			this.pos = this.content.text.Length;
-			this.UpdateScrollOffset();
+			this.cursorIndex = this.text.Length;
 		}
+
 		public void SelectTextStart()
 		{
-			this.pos = 0;
-			this.UpdateScrollOffset();
+			this.cursorIndex = 0;
 		}
+
 		public void MouseDragSelectsWholeWords(bool on)
 		{
 			this.m_MouseDragSelectsWholeWords = on;
-			this.m_DblClickInitPos = this.pos;
+			this.m_DblClickInitPos = this.cursorIndex;
 		}
+
 		public void DblClickSnap(TextEditor.DblClickSnapping snapping)
 		{
 			this.m_DblClickSnap = snapping;
 		}
+
 		private int GetGraphicalLineStart(int p)
 		{
-			Vector2 cursorPixelPosition = this.style.GetCursorPixelPosition(this.position, this.content, p);
+			Vector2 cursorPixelPosition = this.style.GetCursorPixelPosition(this.position, this.m_Content, p);
 			cursorPixelPosition.x = 0f;
-			return this.style.GetCursorStringIndex(this.position, this.content, cursorPixelPosition);
+			return this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPixelPosition);
 		}
+
 		private int GetGraphicalLineEnd(int p)
 		{
-			Vector2 cursorPixelPosition = this.style.GetCursorPixelPosition(this.position, this.content, p);
+			Vector2 cursorPixelPosition = this.style.GetCursorPixelPosition(this.position, this.m_Content, p);
 			cursorPixelPosition.x += 5000f;
-			return this.style.GetCursorStringIndex(this.position, this.content, cursorPixelPosition);
+			return this.style.GetCursorStringIndex(this.position, this.m_Content, cursorPixelPosition);
 		}
+
 		private int FindNextSeperator(int startPos)
 		{
-			int length = this.content.text.Length;
-			while (startPos < length && !TextEditor.isLetterLikeChar(this.content.text[startPos]))
+			int length = this.text.Length;
+			while (startPos < length && !TextEditor.isLetterLikeChar(this.text[startPos]))
 			{
 				startPos++;
 			}
-			while (startPos < length && TextEditor.isLetterLikeChar(this.content.text[startPos]))
+			while (startPos < length && TextEditor.isLetterLikeChar(this.text[startPos]))
 			{
 				startPos++;
 			}
 			return startPos;
 		}
+
 		private static bool isLetterLikeChar(char c)
 		{
 			return char.IsLetterOrDigit(c) || c == '\'';
 		}
+
 		private int FindPrevSeperator(int startPos)
 		{
 			startPos--;
-			while (startPos > 0 && !TextEditor.isLetterLikeChar(this.content.text[startPos]))
+			while (startPos > 0 && !TextEditor.isLetterLikeChar(this.text[startPos]))
 			{
 				startPos--;
 			}
-			while (startPos >= 0 && TextEditor.isLetterLikeChar(this.content.text[startPos]))
+			while (startPos >= 0 && TextEditor.isLetterLikeChar(this.text[startPos]))
 			{
 				startPos--;
 			}
 			return startPos + 1;
 		}
+
 		public void MoveWordRight()
 		{
-			this.pos = ((this.pos <= this.selectPos) ? this.selectPos : this.pos);
-			this.pos = (this.selectPos = this.FindNextSeperator(this.pos));
+			this.cursorIndex = ((this.cursorIndex <= this.selectIndex) ? this.selectIndex : this.cursorIndex);
+			int num = this.FindNextSeperator(this.cursorIndex);
+			this.selectIndex = num;
+			this.cursorIndex = num;
 			this.ClearCursorPos();
-			this.UpdateScrollOffset();
 		}
+
 		public void MoveToStartOfNextWord()
 		{
 			this.ClearCursorPos();
-			if (this.pos != this.selectPos)
+			if (this.cursorIndex != this.selectIndex)
 			{
 				this.MoveRight();
-				return;
 			}
-			this.pos = (this.selectPos = this.FindStartOfNextWord(this.pos));
-			this.UpdateScrollOffset();
+			else
+			{
+				int num = this.FindStartOfNextWord(this.cursorIndex);
+				this.selectIndex = num;
+				this.cursorIndex = num;
+			}
 		}
+
 		public void MoveToEndOfPreviousWord()
 		{
 			this.ClearCursorPos();
-			if (this.pos != this.selectPos)
+			if (this.cursorIndex != this.selectIndex)
 			{
 				this.MoveLeft();
-				return;
 			}
-			this.pos = (this.selectPos = this.FindEndOfPreviousWord(this.pos));
-			this.UpdateScrollOffset();
+			else
+			{
+				int num = this.FindEndOfPreviousWord(this.cursorIndex);
+				this.selectIndex = num;
+				this.cursorIndex = num;
+			}
 		}
+
 		public void SelectToStartOfNextWord()
 		{
 			this.ClearCursorPos();
-			this.pos = this.FindStartOfNextWord(this.pos);
-			this.UpdateScrollOffset();
+			this.cursorIndex = this.FindStartOfNextWord(this.cursorIndex);
 		}
+
 		public void SelectToEndOfPreviousWord()
 		{
 			this.ClearCursorPos();
-			this.pos = this.FindEndOfPreviousWord(this.pos);
-			this.UpdateScrollOffset();
+			this.cursorIndex = this.FindEndOfPreviousWord(this.cursorIndex);
 		}
+
 		private TextEditor.CharacterType ClassifyChar(char c)
 		{
+			TextEditor.CharacterType result;
 			if (char.IsWhiteSpace(c))
 			{
-				return TextEditor.CharacterType.WhiteSpace;
+				result = TextEditor.CharacterType.WhiteSpace;
 			}
-			if (char.IsLetterOrDigit(c) || c == '\'')
+			else if (char.IsLetterOrDigit(c) || c == '\'')
 			{
-				return TextEditor.CharacterType.LetterLike;
+				result = TextEditor.CharacterType.LetterLike;
 			}
-			return TextEditor.CharacterType.Symbol;
+			else
+			{
+				result = TextEditor.CharacterType.Symbol;
+			}
+			return result;
 		}
+
 		public int FindStartOfNextWord(int p)
 		{
-			int length = this.content.text.Length;
+			int length = this.text.Length;
+			int result;
 			if (p == length)
 			{
-				return p;
+				result = p;
 			}
-			char c = this.content.text[p];
-			TextEditor.CharacterType characterType = this.ClassifyChar(c);
-			if (characterType != TextEditor.CharacterType.WhiteSpace)
+			else
 			{
-				p++;
-				while (p < length && this.ClassifyChar(this.content.text[p]) == characterType)
+				char c = this.text[p];
+				TextEditor.CharacterType characterType = this.ClassifyChar(c);
+				if (characterType != TextEditor.CharacterType.WhiteSpace)
 				{
 					p++;
+					while (p < length && this.ClassifyChar(this.text[p]) == characterType)
+					{
+						p++;
+					}
 				}
-			}
-			else
-			{
-				if (c == '\t' || c == '\n')
+				else if (c == '\t' || c == '\n')
 				{
-					return p + 1;
+					result = p + 1;
+					return result;
 				}
-			}
-			if (p == length)
-			{
-				return p;
-			}
-			c = this.content.text[p];
-			if (c == ' ')
-			{
-				while (p < length && char.IsWhiteSpace(this.content.text[p]))
+				if (p == length)
 				{
-					p++;
-				}
-			}
-			else
-			{
-				if (c == '\t' || c == '\n')
-				{
-					return p;
-				}
-			}
-			return p;
-		}
-		private int FindEndOfPreviousWord(int p)
-		{
-			if (p == 0)
-			{
-				return p;
-			}
-			p--;
-			while (p > 0 && this.content.text[p] == ' ')
-			{
-				p--;
-			}
-			TextEditor.CharacterType characterType = this.ClassifyChar(this.content.text[p]);
-			if (characterType != TextEditor.CharacterType.WhiteSpace)
-			{
-				while (p > 0 && this.ClassifyChar(this.content.text[p - 1]) == characterType)
-				{
-					p--;
-				}
-			}
-			return p;
-		}
-		public void MoveWordLeft()
-		{
-			this.pos = ((this.pos >= this.selectPos) ? this.selectPos : this.pos);
-			this.pos = this.FindPrevSeperator(this.pos);
-			this.selectPos = this.pos;
-			this.UpdateScrollOffset();
-		}
-		public void SelectWordRight()
-		{
-			this.ClearCursorPos();
-			int num = this.selectPos;
-			if (this.pos < this.selectPos)
-			{
-				this.selectPos = this.pos;
-				this.MoveWordRight();
-				this.selectPos = num;
-				this.pos = ((this.pos >= this.selectPos) ? this.selectPos : this.pos);
-				return;
-			}
-			this.selectPos = this.pos;
-			this.MoveWordRight();
-			this.selectPos = num;
-			this.UpdateScrollOffset();
-		}
-		public void SelectWordLeft()
-		{
-			this.ClearCursorPos();
-			int num = this.selectPos;
-			if (this.pos > this.selectPos)
-			{
-				this.selectPos = this.pos;
-				this.MoveWordLeft();
-				this.selectPos = num;
-				this.pos = ((this.pos <= this.selectPos) ? this.selectPos : this.pos);
-				return;
-			}
-			this.selectPos = this.pos;
-			this.MoveWordLeft();
-			this.selectPos = num;
-			this.UpdateScrollOffset();
-		}
-		public void ExpandSelectGraphicalLineStart()
-		{
-			this.ClearCursorPos();
-			if (this.pos < this.selectPos)
-			{
-				this.pos = this.GetGraphicalLineStart(this.pos);
-			}
-			else
-			{
-				int num = this.pos;
-				this.pos = this.GetGraphicalLineStart(this.selectPos);
-				this.selectPos = num;
-			}
-			this.UpdateScrollOffset();
-		}
-		public void ExpandSelectGraphicalLineEnd()
-		{
-			this.ClearCursorPos();
-			if (this.pos > this.selectPos)
-			{
-				this.pos = this.GetGraphicalLineEnd(this.pos);
-			}
-			else
-			{
-				int num = this.pos;
-				this.pos = this.GetGraphicalLineEnd(this.selectPos);
-				this.selectPos = num;
-			}
-			this.UpdateScrollOffset();
-		}
-		public void SelectGraphicalLineStart()
-		{
-			this.ClearCursorPos();
-			this.pos = this.GetGraphicalLineStart(this.pos);
-			this.UpdateScrollOffset();
-		}
-		public void SelectGraphicalLineEnd()
-		{
-			this.ClearCursorPos();
-			this.pos = this.GetGraphicalLineEnd(this.pos);
-			this.UpdateScrollOffset();
-		}
-		public void SelectParagraphForward()
-		{
-			this.ClearCursorPos();
-			bool flag = this.pos < this.selectPos;
-			if (this.pos < this.content.text.Length)
-			{
-				this.pos = this.content.text.IndexOf('\n', this.pos + 1);
-				if (this.pos == -1)
-				{
-					this.pos = this.content.text.Length;
-				}
-				if (flag && this.pos > this.selectPos)
-				{
-					this.pos = this.selectPos;
-				}
-			}
-			this.UpdateScrollOffset();
-		}
-		public void SelectParagraphBackward()
-		{
-			this.ClearCursorPos();
-			bool flag = this.pos > this.selectPos;
-			if (this.pos > 1)
-			{
-				this.pos = this.content.text.LastIndexOf('\n', this.pos - 2) + 1;
-				if (flag && this.pos < this.selectPos)
-				{
-					this.pos = this.selectPos;
-				}
-			}
-			else
-			{
-				this.selectPos = (this.pos = 0);
-			}
-			this.UpdateScrollOffset();
-		}
-		public void SelectCurrentWord()
-		{
-			this.ClearCursorPos();
-			int length = this.content.text.Length;
-			this.selectPos = this.pos;
-			if (length == 0)
-			{
-				return;
-			}
-			if (this.pos >= length)
-			{
-				this.pos = length - 1;
-			}
-			if (this.selectPos >= length)
-			{
-				this.selectPos--;
-			}
-			if (this.pos < this.selectPos)
-			{
-				this.pos = this.FindEndOfClassification(this.pos, -1);
-				this.selectPos = this.FindEndOfClassification(this.selectPos, 1);
-			}
-			else
-			{
-				this.pos = this.FindEndOfClassification(this.pos, 1);
-				this.selectPos = this.FindEndOfClassification(this.selectPos, -1);
-			}
-			this.m_bJustSelected = true;
-			this.UpdateScrollOffset();
-		}
-		private int FindEndOfClassification(int p, int dir)
-		{
-			int length = this.content.text.Length;
-			if (p >= length || p < 0)
-			{
-				return p;
-			}
-			TextEditor.CharacterType characterType = this.ClassifyChar(this.content.text[p]);
-			while (true)
-			{
-				p += dir;
-				if (p < 0)
-				{
-					break;
-				}
-				if (p >= length)
-				{
-					return length;
-				}
-				if (this.ClassifyChar(this.content.text[p]) != characterType)
-				{
-					goto Block_4;
-				}
-			}
-			return 0;
-			Block_4:
-			if (dir == 1)
-			{
-				return p;
-			}
-			return p + 1;
-		}
-		public void SelectCurrentParagraph()
-		{
-			this.ClearCursorPos();
-			int length = this.content.text.Length;
-			if (this.pos < length)
-			{
-				this.pos = this.content.text.IndexOf('\n', this.pos);
-				if (this.pos == -1)
-				{
-					this.pos = this.content.text.Length;
+					result = p;
 				}
 				else
 				{
-					this.pos++;
+					c = this.text[p];
+					if (c == ' ')
+					{
+						while (p < length && char.IsWhiteSpace(this.text[p]))
+						{
+							p++;
+						}
+					}
+					else if (c == '\t' || c == '\n')
+					{
+						result = p;
+						return result;
+					}
+					result = p;
 				}
 			}
-			if (this.selectPos != 0)
-			{
-				this.selectPos = this.content.text.LastIndexOf('\n', this.selectPos - 1) + 1;
-			}
-			this.UpdateScrollOffset();
+			return result;
 		}
-		public void UpdateScrollOffsetIfNeeded()
+
+		private int FindEndOfPreviousWord(int p)
 		{
-			if (this.m_TextHeightPotentiallyChanged)
+			int result;
+			if (p == 0)
+			{
+				result = p;
+			}
+			else
+			{
+				p--;
+				while (p > 0 && this.text[p] == ' ')
+				{
+					p--;
+				}
+				TextEditor.CharacterType characterType = this.ClassifyChar(this.text[p]);
+				if (characterType != TextEditor.CharacterType.WhiteSpace)
+				{
+					while (p > 0 && this.ClassifyChar(this.text[p - 1]) == characterType)
+					{
+						p--;
+					}
+				}
+				result = p;
+			}
+			return result;
+		}
+
+		public void MoveWordLeft()
+		{
+			this.cursorIndex = ((this.cursorIndex >= this.selectIndex) ? this.selectIndex : this.cursorIndex);
+			this.cursorIndex = this.FindPrevSeperator(this.cursorIndex);
+			this.selectIndex = this.cursorIndex;
+		}
+
+		public void SelectWordRight()
+		{
+			this.ClearCursorPos();
+			int selectIndex = this.selectIndex;
+			if (this.cursorIndex < this.selectIndex)
+			{
+				this.selectIndex = this.cursorIndex;
+				this.MoveWordRight();
+				this.selectIndex = selectIndex;
+				this.cursorIndex = ((this.cursorIndex >= this.selectIndex) ? this.selectIndex : this.cursorIndex);
+			}
+			else
+			{
+				this.selectIndex = this.cursorIndex;
+				this.MoveWordRight();
+				this.selectIndex = selectIndex;
+			}
+		}
+
+		public void SelectWordLeft()
+		{
+			this.ClearCursorPos();
+			int selectIndex = this.selectIndex;
+			if (this.cursorIndex > this.selectIndex)
+			{
+				this.selectIndex = this.cursorIndex;
+				this.MoveWordLeft();
+				this.selectIndex = selectIndex;
+				this.cursorIndex = ((this.cursorIndex <= this.selectIndex) ? this.selectIndex : this.cursorIndex);
+			}
+			else
+			{
+				this.selectIndex = this.cursorIndex;
+				this.MoveWordLeft();
+				this.selectIndex = selectIndex;
+			}
+		}
+
+		public void ExpandSelectGraphicalLineStart()
+		{
+			this.ClearCursorPos();
+			if (this.cursorIndex < this.selectIndex)
+			{
+				this.cursorIndex = this.GetGraphicalLineStart(this.cursorIndex);
+			}
+			else
+			{
+				int cursorIndex = this.cursorIndex;
+				this.cursorIndex = this.GetGraphicalLineStart(this.selectIndex);
+				this.selectIndex = cursorIndex;
+			}
+		}
+
+		public void ExpandSelectGraphicalLineEnd()
+		{
+			this.ClearCursorPos();
+			if (this.cursorIndex > this.selectIndex)
+			{
+				this.cursorIndex = this.GetGraphicalLineEnd(this.cursorIndex);
+			}
+			else
+			{
+				int cursorIndex = this.cursorIndex;
+				this.cursorIndex = this.GetGraphicalLineEnd(this.selectIndex);
+				this.selectIndex = cursorIndex;
+			}
+		}
+
+		public void SelectGraphicalLineStart()
+		{
+			this.ClearCursorPos();
+			this.cursorIndex = this.GetGraphicalLineStart(this.cursorIndex);
+		}
+
+		public void SelectGraphicalLineEnd()
+		{
+			this.ClearCursorPos();
+			this.cursorIndex = this.GetGraphicalLineEnd(this.cursorIndex);
+		}
+
+		public void SelectParagraphForward()
+		{
+			this.ClearCursorPos();
+			bool flag = this.cursorIndex < this.selectIndex;
+			if (this.cursorIndex < this.text.Length)
+			{
+				this.cursorIndex = this.IndexOfEndOfLine(this.cursorIndex + 1);
+				if (flag && this.cursorIndex > this.selectIndex)
+				{
+					this.cursorIndex = this.selectIndex;
+				}
+			}
+		}
+
+		public void SelectParagraphBackward()
+		{
+			this.ClearCursorPos();
+			bool flag = this.cursorIndex > this.selectIndex;
+			if (this.cursorIndex > 1)
+			{
+				this.cursorIndex = this.text.LastIndexOf('\n', this.cursorIndex - 2) + 1;
+				if (flag && this.cursorIndex < this.selectIndex)
+				{
+					this.cursorIndex = this.selectIndex;
+				}
+			}
+			else
+			{
+				int num = 0;
+				this.cursorIndex = num;
+				this.selectIndex = num;
+			}
+		}
+
+		public void SelectCurrentWord()
+		{
+			this.ClearCursorPos();
+			int length = this.text.Length;
+			this.selectIndex = this.cursorIndex;
+			if (length != 0)
+			{
+				if (this.cursorIndex >= length)
+				{
+					this.cursorIndex = length - 1;
+				}
+				if (this.selectIndex >= length)
+				{
+					this.selectIndex--;
+				}
+				if (this.cursorIndex < this.selectIndex)
+				{
+					this.cursorIndex = this.FindEndOfClassification(this.cursorIndex, -1);
+					this.selectIndex = this.FindEndOfClassification(this.selectIndex, 1);
+				}
+				else
+				{
+					this.cursorIndex = this.FindEndOfClassification(this.cursorIndex, 1);
+					this.selectIndex = this.FindEndOfClassification(this.selectIndex, -1);
+				}
+				this.m_bJustSelected = true;
+			}
+		}
+
+		private int FindEndOfClassification(int p, int dir)
+		{
+			int length = this.text.Length;
+			int result;
+			if (p >= length || p < 0)
+			{
+				result = p;
+			}
+			else
+			{
+				TextEditor.CharacterType characterType = this.ClassifyChar(this.text[p]);
+				while (true)
+				{
+					p += dir;
+					if (p < 0)
+					{
+						break;
+					}
+					if (p >= length)
+					{
+						goto Block_3;
+					}
+					if (this.ClassifyChar(this.text[p]) != characterType)
+					{
+						goto Block_4;
+					}
+				}
+				result = 0;
+				return result;
+				Block_3:
+				result = length;
+				return result;
+				Block_4:
+				if (dir == 1)
+				{
+					result = p;
+				}
+				else
+				{
+					result = p + 1;
+				}
+			}
+			return result;
+		}
+
+		public void SelectCurrentParagraph()
+		{
+			this.ClearCursorPos();
+			int length = this.text.Length;
+			if (this.cursorIndex < length)
+			{
+				this.cursorIndex = this.IndexOfEndOfLine(this.cursorIndex) + 1;
+			}
+			if (this.selectIndex != 0)
+			{
+				this.selectIndex = this.text.LastIndexOf('\n', this.selectIndex - 1) + 1;
+			}
+		}
+
+		public void UpdateScrollOffsetIfNeeded(Event evt)
+		{
+			if (evt.type != EventType.Repaint && evt.type != EventType.Layout)
 			{
 				this.UpdateScrollOffset();
-				this.m_TextHeightPotentiallyChanged = false;
 			}
 		}
+
 		private void UpdateScrollOffset()
 		{
-			int cursorStringIndex = this.pos;
-			this.graphicalCursorPos = this.style.GetCursorPixelPosition(new Rect(0f, 0f, this.position.width, this.position.height), this.content, cursorStringIndex);
+			int cursorIndex = this.cursorIndex;
+			this.graphicalCursorPos = this.style.GetCursorPixelPosition(new Rect(0f, 0f, this.position.width, this.position.height), this.m_Content, cursorIndex);
 			Rect rect = this.style.padding.Remove(this.position);
-			Vector2 vector = new Vector2(this.style.CalcSize(this.content).x, this.style.CalcHeight(this.content, this.position.width));
+			Vector2 vector = new Vector2(this.style.CalcSize(this.m_Content).x, this.style.CalcHeight(this.m_Content, this.position.width));
 			if (vector.x < this.position.width)
 			{
 				this.scrollOffset.x = 0f;
 			}
-			else
+			else if (this.m_RevealCursor)
 			{
 				if (this.graphicalCursorPos.x + 1f > this.scrollOffset.x + rect.width)
 				{
@@ -1042,7 +1252,7 @@ namespace UnityEngine
 			{
 				this.scrollOffset.y = 0f;
 			}
-			else
+			else if (this.m_RevealCursor)
 			{
 				if (this.graphicalCursorPos.y + this.style.lineHeight > this.scrollOffset.y + rect.height + (float)this.style.padding.top)
 				{
@@ -1058,212 +1268,232 @@ namespace UnityEngine
 				this.scrollOffset.y = vector.y - rect.height - (float)this.style.padding.top - (float)this.style.padding.bottom;
 			}
 			this.scrollOffset.y = ((this.scrollOffset.y >= 0f) ? this.scrollOffset.y : 0f);
+			this.m_RevealCursor = false;
 		}
-		public void DrawCursor(string text)
+
+		public void DrawCursor(string newText)
 		{
-			string text2 = this.content.text;
-			int num = this.pos;
+			string text = this.text;
+			int num = this.cursorIndex;
 			if (Input.compositionString.Length > 0)
 			{
-				this.content.text = text.Substring(0, this.pos) + Input.compositionString + text.Substring(this.selectPos);
+				this.m_Content.text = newText.Substring(0, this.cursorIndex) + Input.compositionString + newText.Substring(this.selectIndex);
 				num += Input.compositionString.Length;
 			}
 			else
 			{
-				this.content.text = text;
+				this.m_Content.text = newText;
 			}
-			this.graphicalCursorPos = this.style.GetCursorPixelPosition(new Rect(0f, 0f, this.position.width, this.position.height), this.content, num);
-			this.UpdateScrollOffset();
+			this.graphicalCursorPos = this.style.GetCursorPixelPosition(new Rect(0f, 0f, this.position.width, this.position.height), this.m_Content, num);
 			Vector2 contentOffset = this.style.contentOffset;
 			this.style.contentOffset -= this.scrollOffset;
 			this.style.Internal_clipOffset = this.scrollOffset;
 			Input.compositionCursorPos = this.graphicalCursorPos + new Vector2(this.position.x, this.position.y + this.style.lineHeight) - this.scrollOffset;
 			if (Input.compositionString.Length > 0)
 			{
-				this.style.DrawWithTextSelection(this.position, this.content, this.controlID, this.pos, this.pos + Input.compositionString.Length, true);
+				this.style.DrawWithTextSelection(this.position, this.m_Content, this.controlID, this.cursorIndex, this.cursorIndex + Input.compositionString.Length, true);
 			}
 			else
 			{
-				this.style.DrawWithTextSelection(this.position, this.content, this.controlID, this.pos, this.selectPos);
+				this.style.DrawWithTextSelection(this.position, this.m_Content, this.controlID, this.cursorIndex, this.selectIndex);
 			}
 			if (this.m_iAltCursorPos != -1)
 			{
-				this.style.DrawCursor(this.position, this.content, this.controlID, this.m_iAltCursorPos);
+				this.style.DrawCursor(this.position, this.m_Content, this.controlID, this.m_iAltCursorPos);
 			}
 			this.style.contentOffset = contentOffset;
 			this.style.Internal_clipOffset = Vector2.zero;
-			this.content.text = text2;
+			this.m_Content.text = text;
 		}
+
 		private bool PerformOperation(TextEditor.TextEditOp operation)
 		{
+			this.m_RevealCursor = true;
+			bool result;
 			switch (operation)
 			{
 			case TextEditor.TextEditOp.MoveLeft:
 				this.MoveLeft();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveRight:
 				this.MoveRight();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveUp:
 				this.MoveUp();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveDown:
 				this.MoveDown();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveLineStart:
 				this.MoveLineStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveLineEnd:
 				this.MoveLineEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveTextStart:
 				this.MoveTextStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveTextEnd:
 				this.MoveTextEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveGraphicalLineStart:
 				this.MoveGraphicalLineStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveGraphicalLineEnd:
 				this.MoveGraphicalLineEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveWordLeft:
 				this.MoveWordLeft();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveWordRight:
 				this.MoveWordRight();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveParagraphForward:
 				this.MoveParagraphForward();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveParagraphBackward:
 				this.MoveParagraphBackward();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveToStartOfNextWord:
 				this.MoveToStartOfNextWord();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.MoveToEndOfPreviousWord:
 				this.MoveToEndOfPreviousWord();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectLeft:
 				this.SelectLeft();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectRight:
 				this.SelectRight();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectUp:
 				this.SelectUp();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectDown:
 				this.SelectDown();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectTextStart:
 				this.SelectTextStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectTextEnd:
 				this.SelectTextEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.ExpandSelectGraphicalLineStart:
 				this.ExpandSelectGraphicalLineStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd:
 				this.ExpandSelectGraphicalLineEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectGraphicalLineStart:
 				this.SelectGraphicalLineStart();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectGraphicalLineEnd:
 				this.SelectGraphicalLineEnd();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectWordLeft:
 				this.SelectWordLeft();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectWordRight:
 				this.SelectWordRight();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectToEndOfPreviousWord:
 				this.SelectToEndOfPreviousWord();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectToStartOfNextWord:
 				this.SelectToStartOfNextWord();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectParagraphBackward:
 				this.SelectParagraphBackward();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectParagraphForward:
 				this.SelectParagraphForward();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.Delete:
-				return this.Delete();
+				result = this.Delete();
+				return result;
 			case TextEditor.TextEditOp.Backspace:
-				return this.Backspace();
+				result = this.Backspace();
+				return result;
 			case TextEditor.TextEditOp.DeleteWordBack:
-				return this.DeleteWordBack();
+				result = this.DeleteWordBack();
+				return result;
 			case TextEditor.TextEditOp.DeleteWordForward:
-				return this.DeleteWordForward();
+				result = this.DeleteWordForward();
+				return result;
 			case TextEditor.TextEditOp.DeleteLineBack:
-				return this.DeleteLineBack();
+				result = this.DeleteLineBack();
+				return result;
 			case TextEditor.TextEditOp.Cut:
-				return this.Cut();
+				result = this.Cut();
+				return result;
 			case TextEditor.TextEditOp.Copy:
 				this.Copy();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.Paste:
-				return this.Paste();
+				result = this.Paste();
+				return result;
 			case TextEditor.TextEditOp.SelectAll:
 				this.SelectAll();
-				return false;
+				goto IL_2BA;
 			case TextEditor.TextEditOp.SelectNone:
 				this.SelectNone();
-				return false;
+				goto IL_2BA;
 			}
 			Debug.Log("Unimplemented: " + operation);
-			return false;
+			IL_2BA:
+			result = false;
+			return result;
 		}
+
 		public void SaveBackup()
 		{
-			this.oldText = this.content.text;
-			this.oldPos = this.pos;
-			this.oldSelectPos = this.selectPos;
+			this.oldText = this.text;
+			this.oldPos = this.cursorIndex;
+			this.oldSelectPos = this.selectIndex;
 		}
+
 		public void Undo()
 		{
-			this.content.text = this.oldText;
-			this.pos = this.oldPos;
-			this.selectPos = this.oldSelectPos;
-			this.UpdateScrollOffset();
+			this.m_Content.text = this.oldText;
+			this.cursorIndex = this.oldPos;
+			this.selectIndex = this.oldSelectPos;
 		}
+
 		public bool Cut()
 		{
+			bool result;
 			if (this.isPasswordField)
 			{
-				return false;
-			}
-			this.Copy();
-			return this.DeleteSelection();
-		}
-		public void Copy()
-		{
-			if (this.selectPos == this.pos)
-			{
-				return;
-			}
-			if (this.isPasswordField)
-			{
-				return;
-			}
-			string systemCopyBuffer;
-			if (this.pos < this.selectPos)
-			{
-				systemCopyBuffer = this.content.text.Substring(this.pos, this.selectPos - this.pos);
+				result = false;
 			}
 			else
 			{
-				systemCopyBuffer = this.content.text.Substring(this.selectPos, this.pos - this.selectPos);
+				this.Copy();
+				result = this.DeleteSelection();
 			}
-			GUIUtility.systemCopyBuffer = systemCopyBuffer;
+			return result;
 		}
+
+		public void Copy()
+		{
+			if (this.selectIndex != this.cursorIndex)
+			{
+				if (!this.isPasswordField)
+				{
+					string systemCopyBuffer;
+					if (this.cursorIndex < this.selectIndex)
+					{
+						systemCopyBuffer = this.text.Substring(this.cursorIndex, this.selectIndex - this.cursorIndex);
+					}
+					else
+					{
+						systemCopyBuffer = this.text.Substring(this.selectIndex, this.cursorIndex - this.selectIndex);
+					}
+					GUIUtility.systemCopyBuffer = systemCopyBuffer;
+				}
+			}
+		}
+
 		private static string ReplaceNewlinesWithSpaces(string value)
 		{
 			value = value.Replace("\r\n", " ");
@@ -1271,113 +1501,121 @@ namespace UnityEngine
 			value = value.Replace('\r', ' ');
 			return value;
 		}
+
 		public bool Paste()
 		{
 			string text = GUIUtility.systemCopyBuffer;
-			if (text != string.Empty)
+			bool result;
+			if (text != "")
 			{
 				if (!this.multiline)
 				{
 					text = TextEditor.ReplaceNewlinesWithSpaces(text);
 				}
 				this.ReplaceSelection(text);
-				return true;
+				result = true;
 			}
-			return false;
+			else
+			{
+				result = false;
+			}
+			return result;
 		}
+
 		private static void MapKey(string key, TextEditor.TextEditOp action)
 		{
 			TextEditor.s_Keyactions[Event.KeyboardEvent(key)] = action;
 		}
+
 		private void InitKeyActions()
 		{
-			if (TextEditor.s_Keyactions != null)
+			if (TextEditor.s_Keyactions == null)
 			{
-				return;
-			}
-			TextEditor.s_Keyactions = new Dictionary<Event, TextEditor.TextEditOp>();
-			TextEditor.MapKey("left", TextEditor.TextEditOp.MoveLeft);
-			TextEditor.MapKey("right", TextEditor.TextEditOp.MoveRight);
-			TextEditor.MapKey("up", TextEditor.TextEditOp.MoveUp);
-			TextEditor.MapKey("down", TextEditor.TextEditOp.MoveDown);
-			TextEditor.MapKey("#left", TextEditor.TextEditOp.SelectLeft);
-			TextEditor.MapKey("#right", TextEditor.TextEditOp.SelectRight);
-			TextEditor.MapKey("#up", TextEditor.TextEditOp.SelectUp);
-			TextEditor.MapKey("#down", TextEditor.TextEditOp.SelectDown);
-			TextEditor.MapKey("delete", TextEditor.TextEditOp.Delete);
-			TextEditor.MapKey("backspace", TextEditor.TextEditOp.Backspace);
-			TextEditor.MapKey("#backspace", TextEditor.TextEditOp.Backspace);
-			if (Application.platform == RuntimePlatform.OSXPlayer || Application.platform == RuntimePlatform.OSXWebPlayer || Application.platform == RuntimePlatform.OSXDashboardPlayer || Application.platform == RuntimePlatform.OSXEditor)
-			{
-				TextEditor.MapKey("^left", TextEditor.TextEditOp.MoveGraphicalLineStart);
-				TextEditor.MapKey("^right", TextEditor.TextEditOp.MoveGraphicalLineEnd);
-				TextEditor.MapKey("&left", TextEditor.TextEditOp.MoveWordLeft);
-				TextEditor.MapKey("&right", TextEditor.TextEditOp.MoveWordRight);
-				TextEditor.MapKey("&up", TextEditor.TextEditOp.MoveParagraphBackward);
-				TextEditor.MapKey("&down", TextEditor.TextEditOp.MoveParagraphForward);
-				TextEditor.MapKey("%left", TextEditor.TextEditOp.MoveGraphicalLineStart);
-				TextEditor.MapKey("%right", TextEditor.TextEditOp.MoveGraphicalLineEnd);
-				TextEditor.MapKey("%up", TextEditor.TextEditOp.MoveTextStart);
-				TextEditor.MapKey("%down", TextEditor.TextEditOp.MoveTextEnd);
-				TextEditor.MapKey("#home", TextEditor.TextEditOp.SelectTextStart);
-				TextEditor.MapKey("#end", TextEditor.TextEditOp.SelectTextEnd);
-				TextEditor.MapKey("#^left", TextEditor.TextEditOp.ExpandSelectGraphicalLineStart);
-				TextEditor.MapKey("#^right", TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd);
-				TextEditor.MapKey("#^up", TextEditor.TextEditOp.SelectParagraphBackward);
-				TextEditor.MapKey("#^down", TextEditor.TextEditOp.SelectParagraphForward);
-				TextEditor.MapKey("#&left", TextEditor.TextEditOp.SelectWordLeft);
-				TextEditor.MapKey("#&right", TextEditor.TextEditOp.SelectWordRight);
-				TextEditor.MapKey("#&up", TextEditor.TextEditOp.SelectParagraphBackward);
-				TextEditor.MapKey("#&down", TextEditor.TextEditOp.SelectParagraphForward);
-				TextEditor.MapKey("#%left", TextEditor.TextEditOp.ExpandSelectGraphicalLineStart);
-				TextEditor.MapKey("#%right", TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd);
-				TextEditor.MapKey("#%up", TextEditor.TextEditOp.SelectTextStart);
-				TextEditor.MapKey("#%down", TextEditor.TextEditOp.SelectTextEnd);
-				TextEditor.MapKey("%a", TextEditor.TextEditOp.SelectAll);
-				TextEditor.MapKey("%x", TextEditor.TextEditOp.Cut);
-				TextEditor.MapKey("%c", TextEditor.TextEditOp.Copy);
-				TextEditor.MapKey("%v", TextEditor.TextEditOp.Paste);
-				TextEditor.MapKey("^d", TextEditor.TextEditOp.Delete);
-				TextEditor.MapKey("^h", TextEditor.TextEditOp.Backspace);
-				TextEditor.MapKey("^b", TextEditor.TextEditOp.MoveLeft);
-				TextEditor.MapKey("^f", TextEditor.TextEditOp.MoveRight);
-				TextEditor.MapKey("^a", TextEditor.TextEditOp.MoveLineStart);
-				TextEditor.MapKey("^e", TextEditor.TextEditOp.MoveLineEnd);
-				TextEditor.MapKey("&delete", TextEditor.TextEditOp.DeleteWordForward);
-				TextEditor.MapKey("&backspace", TextEditor.TextEditOp.DeleteWordBack);
-				TextEditor.MapKey("%backspace", TextEditor.TextEditOp.DeleteLineBack);
-			}
-			else
-			{
-				TextEditor.MapKey("home", TextEditor.TextEditOp.MoveGraphicalLineStart);
-				TextEditor.MapKey("end", TextEditor.TextEditOp.MoveGraphicalLineEnd);
-				TextEditor.MapKey("%left", TextEditor.TextEditOp.MoveWordLeft);
-				TextEditor.MapKey("%right", TextEditor.TextEditOp.MoveWordRight);
-				TextEditor.MapKey("%up", TextEditor.TextEditOp.MoveParagraphBackward);
-				TextEditor.MapKey("%down", TextEditor.TextEditOp.MoveParagraphForward);
-				TextEditor.MapKey("^left", TextEditor.TextEditOp.MoveToEndOfPreviousWord);
-				TextEditor.MapKey("^right", TextEditor.TextEditOp.MoveToStartOfNextWord);
-				TextEditor.MapKey("^up", TextEditor.TextEditOp.MoveParagraphBackward);
-				TextEditor.MapKey("^down", TextEditor.TextEditOp.MoveParagraphForward);
-				TextEditor.MapKey("#^left", TextEditor.TextEditOp.SelectToEndOfPreviousWord);
-				TextEditor.MapKey("#^right", TextEditor.TextEditOp.SelectToStartOfNextWord);
-				TextEditor.MapKey("#^up", TextEditor.TextEditOp.SelectParagraphBackward);
-				TextEditor.MapKey("#^down", TextEditor.TextEditOp.SelectParagraphForward);
-				TextEditor.MapKey("#home", TextEditor.TextEditOp.SelectGraphicalLineStart);
-				TextEditor.MapKey("#end", TextEditor.TextEditOp.SelectGraphicalLineEnd);
-				TextEditor.MapKey("^delete", TextEditor.TextEditOp.DeleteWordForward);
-				TextEditor.MapKey("^backspace", TextEditor.TextEditOp.DeleteWordBack);
-				TextEditor.MapKey("%backspace", TextEditor.TextEditOp.DeleteLineBack);
-				TextEditor.MapKey("^a", TextEditor.TextEditOp.SelectAll);
-				TextEditor.MapKey("^x", TextEditor.TextEditOp.Cut);
-				TextEditor.MapKey("^c", TextEditor.TextEditOp.Copy);
-				TextEditor.MapKey("^v", TextEditor.TextEditOp.Paste);
-				TextEditor.MapKey("#delete", TextEditor.TextEditOp.Cut);
-				TextEditor.MapKey("^insert", TextEditor.TextEditOp.Copy);
-				TextEditor.MapKey("#insert", TextEditor.TextEditOp.Paste);
+				TextEditor.s_Keyactions = new Dictionary<Event, TextEditor.TextEditOp>();
+				TextEditor.MapKey("left", TextEditor.TextEditOp.MoveLeft);
+				TextEditor.MapKey("right", TextEditor.TextEditOp.MoveRight);
+				TextEditor.MapKey("up", TextEditor.TextEditOp.MoveUp);
+				TextEditor.MapKey("down", TextEditor.TextEditOp.MoveDown);
+				TextEditor.MapKey("#left", TextEditor.TextEditOp.SelectLeft);
+				TextEditor.MapKey("#right", TextEditor.TextEditOp.SelectRight);
+				TextEditor.MapKey("#up", TextEditor.TextEditOp.SelectUp);
+				TextEditor.MapKey("#down", TextEditor.TextEditOp.SelectDown);
+				TextEditor.MapKey("delete", TextEditor.TextEditOp.Delete);
+				TextEditor.MapKey("backspace", TextEditor.TextEditOp.Backspace);
+				TextEditor.MapKey("#backspace", TextEditor.TextEditOp.Backspace);
+				if (SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX)
+				{
+					TextEditor.MapKey("^left", TextEditor.TextEditOp.MoveGraphicalLineStart);
+					TextEditor.MapKey("^right", TextEditor.TextEditOp.MoveGraphicalLineEnd);
+					TextEditor.MapKey("&left", TextEditor.TextEditOp.MoveWordLeft);
+					TextEditor.MapKey("&right", TextEditor.TextEditOp.MoveWordRight);
+					TextEditor.MapKey("&up", TextEditor.TextEditOp.MoveParagraphBackward);
+					TextEditor.MapKey("&down", TextEditor.TextEditOp.MoveParagraphForward);
+					TextEditor.MapKey("%left", TextEditor.TextEditOp.MoveGraphicalLineStart);
+					TextEditor.MapKey("%right", TextEditor.TextEditOp.MoveGraphicalLineEnd);
+					TextEditor.MapKey("%up", TextEditor.TextEditOp.MoveTextStart);
+					TextEditor.MapKey("%down", TextEditor.TextEditOp.MoveTextEnd);
+					TextEditor.MapKey("#home", TextEditor.TextEditOp.SelectTextStart);
+					TextEditor.MapKey("#end", TextEditor.TextEditOp.SelectTextEnd);
+					TextEditor.MapKey("#^left", TextEditor.TextEditOp.ExpandSelectGraphicalLineStart);
+					TextEditor.MapKey("#^right", TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd);
+					TextEditor.MapKey("#^up", TextEditor.TextEditOp.SelectParagraphBackward);
+					TextEditor.MapKey("#^down", TextEditor.TextEditOp.SelectParagraphForward);
+					TextEditor.MapKey("#&left", TextEditor.TextEditOp.SelectWordLeft);
+					TextEditor.MapKey("#&right", TextEditor.TextEditOp.SelectWordRight);
+					TextEditor.MapKey("#&up", TextEditor.TextEditOp.SelectParagraphBackward);
+					TextEditor.MapKey("#&down", TextEditor.TextEditOp.SelectParagraphForward);
+					TextEditor.MapKey("#%left", TextEditor.TextEditOp.ExpandSelectGraphicalLineStart);
+					TextEditor.MapKey("#%right", TextEditor.TextEditOp.ExpandSelectGraphicalLineEnd);
+					TextEditor.MapKey("#%up", TextEditor.TextEditOp.SelectTextStart);
+					TextEditor.MapKey("#%down", TextEditor.TextEditOp.SelectTextEnd);
+					TextEditor.MapKey("%a", TextEditor.TextEditOp.SelectAll);
+					TextEditor.MapKey("%x", TextEditor.TextEditOp.Cut);
+					TextEditor.MapKey("%c", TextEditor.TextEditOp.Copy);
+					TextEditor.MapKey("%v", TextEditor.TextEditOp.Paste);
+					TextEditor.MapKey("^d", TextEditor.TextEditOp.Delete);
+					TextEditor.MapKey("^h", TextEditor.TextEditOp.Backspace);
+					TextEditor.MapKey("^b", TextEditor.TextEditOp.MoveLeft);
+					TextEditor.MapKey("^f", TextEditor.TextEditOp.MoveRight);
+					TextEditor.MapKey("^a", TextEditor.TextEditOp.MoveLineStart);
+					TextEditor.MapKey("^e", TextEditor.TextEditOp.MoveLineEnd);
+					TextEditor.MapKey("&delete", TextEditor.TextEditOp.DeleteWordForward);
+					TextEditor.MapKey("&backspace", TextEditor.TextEditOp.DeleteWordBack);
+					TextEditor.MapKey("%backspace", TextEditor.TextEditOp.DeleteLineBack);
+				}
+				else
+				{
+					TextEditor.MapKey("home", TextEditor.TextEditOp.MoveGraphicalLineStart);
+					TextEditor.MapKey("end", TextEditor.TextEditOp.MoveGraphicalLineEnd);
+					TextEditor.MapKey("%left", TextEditor.TextEditOp.MoveWordLeft);
+					TextEditor.MapKey("%right", TextEditor.TextEditOp.MoveWordRight);
+					TextEditor.MapKey("%up", TextEditor.TextEditOp.MoveParagraphBackward);
+					TextEditor.MapKey("%down", TextEditor.TextEditOp.MoveParagraphForward);
+					TextEditor.MapKey("^left", TextEditor.TextEditOp.MoveToEndOfPreviousWord);
+					TextEditor.MapKey("^right", TextEditor.TextEditOp.MoveToStartOfNextWord);
+					TextEditor.MapKey("^up", TextEditor.TextEditOp.MoveParagraphBackward);
+					TextEditor.MapKey("^down", TextEditor.TextEditOp.MoveParagraphForward);
+					TextEditor.MapKey("#^left", TextEditor.TextEditOp.SelectToEndOfPreviousWord);
+					TextEditor.MapKey("#^right", TextEditor.TextEditOp.SelectToStartOfNextWord);
+					TextEditor.MapKey("#^up", TextEditor.TextEditOp.SelectParagraphBackward);
+					TextEditor.MapKey("#^down", TextEditor.TextEditOp.SelectParagraphForward);
+					TextEditor.MapKey("#home", TextEditor.TextEditOp.SelectGraphicalLineStart);
+					TextEditor.MapKey("#end", TextEditor.TextEditOp.SelectGraphicalLineEnd);
+					TextEditor.MapKey("^delete", TextEditor.TextEditOp.DeleteWordForward);
+					TextEditor.MapKey("^backspace", TextEditor.TextEditOp.DeleteWordBack);
+					TextEditor.MapKey("%backspace", TextEditor.TextEditOp.DeleteLineBack);
+					TextEditor.MapKey("^a", TextEditor.TextEditOp.SelectAll);
+					TextEditor.MapKey("^x", TextEditor.TextEditOp.Cut);
+					TextEditor.MapKey("^c", TextEditor.TextEditOp.Copy);
+					TextEditor.MapKey("^v", TextEditor.TextEditOp.Paste);
+					TextEditor.MapKey("#delete", TextEditor.TextEditOp.Cut);
+					TextEditor.MapKey("^insert", TextEditor.TextEditOp.Copy);
+					TextEditor.MapKey("#insert", TextEditor.TextEditOp.Paste);
+				}
 			}
 		}
-		public void ClampPos()
+
+		public void DetectFocusChange()
 		{
 			if (this.m_HasFocus && this.controlID != GUIUtility.keyboardControl)
 			{
@@ -1387,32 +1625,11 @@ namespace UnityEngine
 			{
 				this.OnFocus();
 			}
-			if (this.pos < 0)
-			{
-				this.pos = 0;
-			}
-			else
-			{
-				if (this.pos > this.content.text.Length)
-				{
-					this.pos = this.content.text.Length;
-				}
-			}
-			if (this.selectPos < 0)
-			{
-				this.selectPos = 0;
-			}
-			else
-			{
-				if (this.selectPos > this.content.text.Length)
-				{
-					this.selectPos = this.content.text.Length;
-				}
-			}
-			if (this.m_iAltCursorPos > this.content.text.Length)
-			{
-				this.m_iAltCursorPos = this.content.text.Length;
-			}
+		}
+
+		private void ClampTextIndex(ref int index)
+		{
+			index = Mathf.Clamp(index, 0, this.text.Length);
 		}
 	}
 }

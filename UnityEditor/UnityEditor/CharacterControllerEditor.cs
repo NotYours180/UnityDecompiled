@@ -1,19 +1,31 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(CharacterController))]
 	internal class CharacterControllerEditor : Editor
 	{
 		private SerializedProperty m_Height;
+
 		private SerializedProperty m_Radius;
+
 		private SerializedProperty m_SlopeLimit;
+
 		private SerializedProperty m_StepOffset;
+
 		private SerializedProperty m_SkinWidth;
+
 		private SerializedProperty m_MinMoveDistance;
+
 		private SerializedProperty m_Center;
-		private SerializedProperty m_Direction;
+
 		private int m_HandleControlID;
+
+		[CompilerGenerated]
+		private static Handles.CapFunction <>f__mg$cache0;
+
 		public void OnEnable()
 		{
 			this.m_Height = base.serializedObject.FindProperty("m_Height");
@@ -25,9 +37,11 @@ namespace UnityEditor
 			this.m_Center = base.serializedObject.FindProperty("m_Center");
 			this.m_HandleControlID = -1;
 		}
+
 		public void OnDisable()
 		{
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.serializedObject.Update();
@@ -40,10 +54,11 @@ namespace UnityEditor
 			EditorGUILayout.PropertyField(this.m_Height, new GUILayoutOption[0]);
 			base.serializedObject.ApplyModifiedProperties();
 		}
+
 		public void OnSceneGUI()
 		{
 			bool flag = GUIUtility.hotControl == this.m_HandleControlID;
-			CharacterController characterController = (CharacterController)this.target;
+			CharacterController characterController = (CharacterController)base.target;
 			Color color = Handles.color;
 			if (characterController.enabled)
 			{
@@ -107,6 +122,7 @@ namespace UnityEditor
 			Handles.color = color;
 			GUI.enabled = enabled;
 		}
+
 		private static float SizeHandle(Vector3 localPos, Vector3 localPullDir, Matrix4x4 matrix, bool isEdgeHandle)
 		{
 			Vector3 vector = matrix.MultiplyVector(localPullDir);
@@ -133,7 +149,14 @@ namespace UnityEditor
 			{
 				Handles.color = new Color(Handles.color.r, Handles.color.g, Handles.color.b, Handles.color.a * Handles.backfaceAlphaMultiplier);
 			}
-			Vector3 point = Handles.Slider(vector2, vector, handleSize * 0.03f, new Handles.DrawCapFunction(Handles.DotCap), 0f);
+			Vector3 arg_119_0 = vector2;
+			Vector3 arg_119_1 = vector;
+			float arg_119_2 = handleSize * 0.03f;
+			if (CharacterControllerEditor.<>f__mg$cache0 == null)
+			{
+				CharacterControllerEditor.<>f__mg$cache0 = new Handles.CapFunction(Handles.DotHandleCap);
+			}
+			Vector3 point = Handles.Slider(arg_119_0, arg_119_1, arg_119_2, CharacterControllerEditor.<>f__mg$cache0, 0f);
 			float result = 0f;
 			if (GUI.changed)
 			{

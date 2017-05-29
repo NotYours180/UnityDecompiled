@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	internal class ScriptAttributeUtility
@@ -10,15 +11,24 @@ namespace UnityEditor
 		private struct DrawerKeySet
 		{
 			public Type drawer;
+
 			public Type type;
 		}
+
 		internal static Stack<PropertyDrawer> s_DrawerStack = new Stack<PropertyDrawer>();
+
 		private static Dictionary<Type, ScriptAttributeUtility.DrawerKeySet> s_DrawerTypeForType = null;
+
 		private static Dictionary<string, List<PropertyAttribute>> s_BuiltinAttributes = null;
+
 		private static PropertyHandler s_SharedNullHandler = new PropertyHandler();
+
 		private static PropertyHandler s_NextHandler = new PropertyHandler();
+
 		private static PropertyHandlerCache s_GlobalCache = new PropertyHandlerCache();
+
 		private static PropertyHandlerCache s_CurrentCache = null;
+
 		internal static PropertyHandlerCache propertyHandlerCache
 		{
 			get
@@ -30,16 +40,19 @@ namespace UnityEditor
 				ScriptAttributeUtility.s_CurrentCache = value;
 			}
 		}
+
 		internal static void ClearGlobalCache()
 		{
 			ScriptAttributeUtility.s_GlobalCache.Clear();
 		}
+
 		private static void PopulateBuiltinAttributes()
 		{
 			ScriptAttributeUtility.s_BuiltinAttributes = new Dictionary<string, List<PropertyAttribute>>();
 			ScriptAttributeUtility.AddBuiltinAttribute("GUIText", "m_Text", new MultilineAttribute());
 			ScriptAttributeUtility.AddBuiltinAttribute("TextMesh", "m_Text", new MultilineAttribute());
 		}
+
 		private static void AddBuiltinAttribute(string componentTypeName, string propertyPath, PropertyAttribute attr)
 		{
 			string key = componentTypeName + "_" + propertyPath;
@@ -49,22 +62,32 @@ namespace UnityEditor
 			}
 			ScriptAttributeUtility.s_BuiltinAttributes[key].Add(attr);
 		}
+
 		private static List<PropertyAttribute> GetBuiltinAttributes(SerializedProperty property)
 		{
+			List<PropertyAttribute> result;
 			if (property.serializedObject.targetObject == null)
 			{
-				return null;
+				result = null;
 			}
-			Type type = property.serializedObject.targetObject.GetType();
-			if (type == null)
+			else
 			{
-				return null;
+				Type type = property.serializedObject.targetObject.GetType();
+				if (type == null)
+				{
+					result = null;
+				}
+				else
+				{
+					string key = type.Name + "_" + property.propertyPath;
+					List<PropertyAttribute> list = null;
+					ScriptAttributeUtility.s_BuiltinAttributes.TryGetValue(key, out list);
+					result = list;
+				}
 			}
-			string key = type.Name + "_" + property.propertyPath;
-			List<PropertyAttribute> result = null;
-			ScriptAttributeUtility.s_BuiltinAttributes.TryGetValue(key, out result);
 			return result;
 		}
+
 		private static void BuildDrawerTypeForTypeDictionary()
 		{
 			ScriptAttributeUtility.s_DrawerTypeForType = new Dictionary<Type, ScriptAttributeUtility.DrawerKeySet>();
@@ -73,10 +96,9 @@ namespace UnityEditor
 			{
 				object[] customAttributes = current.GetCustomAttributes(typeof(CustomPropertyDrawer), true);
 				object[] array = customAttributes;
-				CustomPropertyDrawer editor;
 				for (int i = 0; i < array.Length; i++)
 				{
-					editor = (CustomPropertyDrawer)array[i];
+					CustomPropertyDrawer editor = (CustomPropertyDrawer)array[i];
 					ScriptAttributeUtility.s_DrawerTypeForType[editor.m_Type] = new ScriptAttributeUtility.DrawerKeySet
 					{
 						drawer = current,
@@ -84,10 +106,9 @@ namespace UnityEditor
 					};
 					if (editor.m_UseForChildren)
 					{
-						IEnumerable<Type> enumerable = 
-							from x in source
-							where x.IsSubclassOf(editor.m_Type)
-							select x;
+						IEnumerable<Type> enumerable = from x in source
+						where x.IsSubclassOf(editor.m_Type)
+						select x;
 						foreach (Type current2 in enumerable)
 						{
 							if (!ScriptAttributeUtility.s_DrawerTypeForType.ContainsKey(current2) || !editor.m_Type.IsAssignableFrom(ScriptAttributeUtility.s_DrawerTypeForType[current2].type))
@@ -103,6 +124,7 @@ namespace UnityEditor
 				}
 			}
 		}
+
 		internal static Type GetDrawerTypeForType(Type type)
 		{
 			if (ScriptAttributeUtility.s_DrawerTypeForType == null)
@@ -111,57 +133,86 @@ namespace UnityEditor
 			}
 			ScriptAttributeUtility.DrawerKeySet drawerKeySet;
 			ScriptAttributeUtility.s_DrawerTypeForType.TryGetValue(type, out drawerKeySet);
+			Type drawer;
 			if (drawerKeySet.drawer != null)
 			{
-				return drawerKeySet.drawer;
+				drawer = drawerKeySet.drawer;
 			}
-			if (type.IsGenericType)
+			else
 			{
-				ScriptAttributeUtility.s_DrawerTypeForType.TryGetValue(type.GetGenericTypeDefinition(), out drawerKeySet);
+				if (type.IsGenericType)
+				{
+					ScriptAttributeUtility.s_DrawerTypeForType.TryGetValue(type.GetGenericTypeDefinition(), out drawerKeySet);
+				}
+				drawer = drawerKeySet.drawer;
 			}
-			return drawerKeySet.drawer;
+			return drawer;
 		}
+
 		private static List<PropertyAttribute> GetFieldAttributes(FieldInfo field)
 		{
+			List<PropertyAttribute> result;
 			if (field == null)
 			{
-				return null;
+				result = null;
 			}
-			object[] customAttributes = field.GetCustomAttributes(typeof(PropertyAttribute), true);
-			if (customAttributes != null && customAttributes.Length > 0)
+			else
 			{
-				return new List<PropertyAttribute>(
-					from e in customAttributes
+				object[] customAttributes = field.GetCustomAttributes(typeof(PropertyAttribute), true);
+				if (customAttributes != null && customAttributes.Length > 0)
+				{
+					result = new List<PropertyAttribute>(from e in customAttributes
 					select e as PropertyAttribute into e
 					orderby -e.order
 					select e);
+				}
+				else
+				{
+					result = null;
+				}
 			}
-			return null;
+			return result;
 		}
+
 		private static FieldInfo GetFieldInfoFromProperty(SerializedProperty property, out Type type)
 		{
 			Type scriptTypeFromProperty = ScriptAttributeUtility.GetScriptTypeFromProperty(property);
+			FieldInfo result;
 			if (scriptTypeFromProperty == null)
 			{
 				type = null;
-				return null;
+				result = null;
 			}
-			return ScriptAttributeUtility.GetFieldInfoFromPropertyPath(scriptTypeFromProperty, property.propertyPath, out type);
+			else
+			{
+				result = ScriptAttributeUtility.GetFieldInfoFromPropertyPath(scriptTypeFromProperty, property.propertyPath, out type);
+			}
+			return result;
 		}
+
 		private static Type GetScriptTypeFromProperty(SerializedProperty property)
 		{
 			SerializedProperty serializedProperty = property.serializedObject.FindProperty("m_Script");
+			Type result;
 			if (serializedProperty == null)
 			{
-				return null;
+				result = null;
 			}
-			MonoScript monoScript = serializedProperty.objectReferenceValue as MonoScript;
-			if (monoScript == null)
+			else
 			{
-				return null;
+				MonoScript monoScript = serializedProperty.objectReferenceValue as MonoScript;
+				if (monoScript == null)
+				{
+					result = null;
+				}
+				else
+				{
+					result = monoScript.GetClass();
+				}
 			}
-			return monoScript.GetClass();
+			return result;
 		}
+
 		private static FieldInfo GetFieldInfoFromPropertyPath(Type host, string path, out Type type)
 		{
 			FieldInfo fieldInfo = null;
@@ -170,6 +221,7 @@ namespace UnityEditor
 			{
 				'.'
 			});
+			FieldInfo result;
 			for (int i = 0; i < array.Length; i++)
 			{
 				string text = array[i];
@@ -193,72 +245,83 @@ namespace UnityEditor
 					if (fieldInfo2 == null)
 					{
 						type = null;
-						return null;
+						result = null;
+						return result;
 					}
 					fieldInfo = fieldInfo2;
 					type = fieldInfo.FieldType;
 				}
 			}
-			return fieldInfo;
+			result = fieldInfo;
+			return result;
 		}
+
 		internal static PropertyHandler GetHandler(SerializedProperty property)
 		{
+			PropertyHandler result;
 			if (property == null)
 			{
-				return ScriptAttributeUtility.s_SharedNullHandler;
+				result = ScriptAttributeUtility.s_SharedNullHandler;
 			}
-			if (property.serializedObject.inspectorMode != InspectorMode.Normal)
+			else if (property.serializedObject.inspectorMode != InspectorMode.Normal)
 			{
-				return ScriptAttributeUtility.s_SharedNullHandler;
-			}
-			PropertyHandler handler = ScriptAttributeUtility.propertyHandlerCache.GetHandler(property);
-			if (handler != null)
-			{
-				return handler;
-			}
-			Type type = null;
-			List<PropertyAttribute> list = null;
-			FieldInfo field = null;
-			UnityEngine.Object targetObject = property.serializedObject.targetObject;
-			if (targetObject is MonoBehaviour || targetObject is ScriptableObject)
-			{
-				field = ScriptAttributeUtility.GetFieldInfoFromProperty(property, out type);
-				list = ScriptAttributeUtility.GetFieldAttributes(field);
+				result = ScriptAttributeUtility.s_SharedNullHandler;
 			}
 			else
 			{
-				if (ScriptAttributeUtility.s_BuiltinAttributes == null)
+				PropertyHandler handler = ScriptAttributeUtility.propertyHandlerCache.GetHandler(property);
+				if (handler != null)
 				{
-					ScriptAttributeUtility.PopulateBuiltinAttributes();
+					result = handler;
 				}
-				if (list == null)
+				else
 				{
-					list = ScriptAttributeUtility.GetBuiltinAttributes(property);
+					Type type = null;
+					List<PropertyAttribute> list = null;
+					FieldInfo field = null;
+					UnityEngine.Object targetObject = property.serializedObject.targetObject;
+					if (targetObject is MonoBehaviour || targetObject is ScriptableObject)
+					{
+						field = ScriptAttributeUtility.GetFieldInfoFromProperty(property, out type);
+						list = ScriptAttributeUtility.GetFieldAttributes(field);
+					}
+					else
+					{
+						if (ScriptAttributeUtility.s_BuiltinAttributes == null)
+						{
+							ScriptAttributeUtility.PopulateBuiltinAttributes();
+						}
+						if (list == null)
+						{
+							list = ScriptAttributeUtility.GetBuiltinAttributes(property);
+						}
+					}
+					handler = ScriptAttributeUtility.s_NextHandler;
+					if (list != null)
+					{
+						for (int i = list.Count - 1; i >= 0; i--)
+						{
+							handler.HandleAttribute(list[i], field, type);
+						}
+					}
+					if (!handler.hasPropertyDrawer && type != null)
+					{
+						handler.HandleDrawnType(type, type, field, null);
+					}
+					if (handler.empty)
+					{
+						ScriptAttributeUtility.propertyHandlerCache.SetHandler(property, ScriptAttributeUtility.s_SharedNullHandler);
+						handler = ScriptAttributeUtility.s_SharedNullHandler;
+					}
+					else
+					{
+						ScriptAttributeUtility.propertyHandlerCache.SetHandler(property, handler);
+						ScriptAttributeUtility.s_NextHandler = new PropertyHandler();
+					}
+					result = handler;
 				}
 			}
-			handler = ScriptAttributeUtility.s_NextHandler;
-			if (list != null)
-			{
-				for (int i = list.Count - 1; i >= 0; i--)
-				{
-					handler.HandleAttribute(list[i], field, type);
-				}
-			}
-			if (!handler.hasPropertyDrawer && type != null)
-			{
-				handler.HandleDrawnType(type, type, field, null);
-			}
-			if (handler.empty)
-			{
-				ScriptAttributeUtility.propertyHandlerCache.SetHandler(property, ScriptAttributeUtility.s_SharedNullHandler);
-				handler = ScriptAttributeUtility.s_SharedNullHandler;
-			}
-			else
-			{
-				ScriptAttributeUtility.propertyHandlerCache.SetHandler(property, handler);
-				ScriptAttributeUtility.s_NextHandler = new PropertyHandler();
-			}
-			return handler;
+			return result;
 		}
 	}
 }

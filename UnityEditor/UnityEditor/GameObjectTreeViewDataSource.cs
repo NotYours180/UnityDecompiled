@@ -1,49 +1,59 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.IMGUI.Controls;
+using UnityEditor.SceneManagement;
+using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Profiling;
+using UnityEngine.SceneManagement;
+
 namespace UnityEditor
 {
 	internal class GameObjectTreeViewDataSource : LazyTreeViewDataSource
 	{
-		public class SortingState
+		private const double k_LongFetchTime = 0.05;
+
+		private const double k_FetchDelta = 0.1;
+
+		private const int k_MaxDelayedFetch = 5;
+
+		private const HierarchyType k_HierarchyType = HierarchyType.GameObjects;
+
+		private readonly int kGameObjectClassID = UnityType.FindTypeByName("GameObject").persistentTypeID;
+
+		private const int k_DefaultStartCapacity = 1000;
+
+		private int m_RootInstanceID;
+
+		private string m_SearchString = "";
+
+		private int m_SearchMode = 0;
+
+		private double m_LastFetchTime = 0.0;
+
+		private int m_DelayedFetches = 0;
+
+		private bool m_NeedsChildParentReferenceSetup;
+
+		private bool m_RowsPartiallyInitialized;
+
+		private int m_RowCount;
+
+		private List<TreeViewItem> m_ListOfRows;
+
+		private List<GameObjectTreeViewItem> m_StickySceneHeaderItems = new List<GameObjectTreeViewItem>();
+
+		public HierarchySorting sortingState = new TransformSorting();
+
+		public List<GameObjectTreeViewItem> sceneHeaderItems
 		{
-			private BaseHierarchySort m_HierarchySort;
-			private bool m_ImplementsCompare;
-			public BaseHierarchySort sortingObject
+			get
 			{
-				get
-				{
-					return this.m_HierarchySort;
-				}
-				set
-				{
-					this.m_HierarchySort = value;
-					if (this.m_HierarchySort != null)
-					{
-						this.m_ImplementsCompare = (this.m_HierarchySort.GetType().GetMethod("Compare").DeclaringType != typeof(BaseHierarchySort));
-					}
-				}
-			}
-			public bool implementsCompare
-			{
-				get
-				{
-					return this.m_ImplementsCompare;
-				}
+				return this.m_StickySceneHeaderItems;
 			}
 		}
-		private const double k_LongFetchTime = 0.05;
-		private const double k_FetchDelta = 0.1;
-		private const int k_MaxDelayedFetch = 5;
-		private const HierarchyType k_HierarchyType = HierarchyType.GameObjects;
-		private readonly int m_RootInstanceID;
-		private string m_SearchString = string.Empty;
-		private int m_SearchMode;
-		private double m_LastFetchTime;
-		private int m_DelayedFetches;
-		private bool m_NeedsChildParentReferenceSetup;
-		public GameObjectTreeViewDataSource.SortingState sortingState = new GameObjectTreeViewDataSource.SortingState();
+
 		public string searchString
 		{
 			get
@@ -52,9 +62,14 @@ namespace UnityEditor
 			}
 			set
 			{
+				if (string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(this.m_SearchString))
+				{
+					this.ClearSearchFilter();
+				}
 				this.m_SearchString = value;
 			}
 		}
+
 		public int searchMode
 		{
 			get
@@ -66,6 +81,7 @@ namespace UnityEditor
 				this.m_SearchMode = value;
 			}
 		}
+
 		public bool isFetchAIssue
 		{
 			get
@@ -73,63 +89,196 @@ namespace UnityEditor
 				return this.m_DelayedFetches >= 5;
 			}
 		}
-		public GameObjectTreeViewDataSource(TreeView treeView, int rootInstanceID, bool showRootNode, bool rootNodeIsCollapsable) : base(treeView)
+
+		public override int rowCount
+		{
+			get
+			{
+				return this.m_RowCount;
+			}
+		}
+
+		public GameObjectTreeViewDataSource(TreeViewController treeView, int rootInstanceID, bool showRoot, bool rootItemIsCollapsable) : base(treeView)
 		{
 			this.m_RootInstanceID = rootInstanceID;
-			this.showRootNode = showRootNode;
-			base.rootIsCollapsable = rootNodeIsCollapsable;
+			base.showRootItem = showRoot;
+			base.rootIsCollapsable = rootItemIsCollapsable;
 		}
+
+		public override void OnInitialize()
+		{
+			base.OnInitialize();
+			GameObjectTreeViewGUI gameObjectTreeViewGUI = (GameObjectTreeViewGUI)this.m_TreeView.gui;
+			gameObjectTreeViewGUI.scrollHeightChanged += new Action(this.EnsureFullyInitialized);
+			gameObjectTreeViewGUI.scrollPositionChanged += new Action(this.EnsureFullyInitialized);
+			gameObjectTreeViewGUI.mouseAndKeyboardInput += new Action(this.EnsureFullyInitialized);
+		}
+
 		internal void SetupChildParentReferencesIfNeeded()
 		{
+			this.EnsureFullyInitialized();
 			if (this.m_NeedsChildParentReferenceSetup)
 			{
 				this.m_NeedsChildParentReferenceSetup = false;
-				TreeViewUtility.SetChildParentReferences(this.GetVisibleRows(), this.m_RootItem);
+				TreeViewUtility.SetChildParentReferences(this.GetRows(), this.m_RootItem);
 			}
 		}
+
+		public void EnsureFullyInitialized()
+		{
+			if (this.m_RowsPartiallyInitialized)
+			{
+				this.InitializeFull();
+				this.m_RowsPartiallyInitialized = false;
+			}
+		}
+
+		public override void RevealItem(int itemID)
+		{
+			if (this.IsValidHierarchyInstanceID(itemID))
+			{
+				base.RevealItem(itemID);
+			}
+		}
+
+		public override bool IsRevealed(int id)
+		{
+			return this.GetRow(id) != -1;
+		}
+
+		private bool IsValidHierarchyInstanceID(int instanceID)
+		{
+			bool flag = SceneHierarchyWindow.IsSceneHeaderInHierarchyWindow(EditorSceneManager.GetSceneByHandle(instanceID));
+			bool flag2 = InternalEditorUtility.GetClassIDWithoutLoadingObject(instanceID) == this.kGameObjectClassID;
+			return flag || flag2;
+		}
+
+		private HierarchyProperty FindHierarchyProperty(int instanceID)
+		{
+			HierarchyProperty result;
+			if (!this.IsValidHierarchyInstanceID(instanceID))
+			{
+				result = null;
+			}
+			else
+			{
+				HierarchyProperty hierarchyProperty = this.CreateHierarchyProperty();
+				if (hierarchyProperty.Find(instanceID, this.m_TreeView.state.expandedIDs.ToArray()))
+				{
+					result = hierarchyProperty;
+				}
+				else
+				{
+					result = null;
+				}
+			}
+			return result;
+		}
+
+		public override int GetRow(int id)
+		{
+			bool flag = !string.IsNullOrEmpty(this.m_SearchString);
+			int result;
+			if (flag)
+			{
+				result = base.GetRow(id);
+			}
+			else
+			{
+				HierarchyProperty hierarchyProperty = this.FindHierarchyProperty(id);
+				if (hierarchyProperty != null)
+				{
+					result = hierarchyProperty.row;
+				}
+				else
+				{
+					result = -1;
+				}
+			}
+			return result;
+		}
+
+		public override TreeViewItem GetItem(int row)
+		{
+			return this.m_Rows[row];
+		}
+
+		public override IList<TreeViewItem> GetRows()
+		{
+			this.InitIfNeeded();
+			this.EnsureFullyInitialized();
+			return this.m_Rows;
+		}
+
 		public override TreeViewItem FindItem(int id)
 		{
 			this.RevealItem(id);
 			this.SetupChildParentReferencesIfNeeded();
 			return base.FindItem(id);
 		}
-		public override void FetchData()
+
+		private HierarchyProperty CreateHierarchyProperty()
 		{
-			Profiler.BeginSample("SceneHierarchyWindow.FetchData");
-			int depth = 0;
-			double timeSinceStartup = EditorApplication.timeSinceStartup;
 			HierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
 			hierarchyProperty.Reset();
 			hierarchyProperty.alphaSorted = this.IsUsingAlphaSort();
-			if (this.m_RootInstanceID != 0)
+			return hierarchyProperty;
+		}
+
+		private void CreateRootItem(HierarchyProperty property)
+		{
+			int depth = 0;
+			if (property.isValid)
 			{
-				bool flag = hierarchyProperty.Find(this.m_RootInstanceID, null);
-				string displayName = (!flag) ? "RootOfSceneHierarchy" : hierarchyProperty.name;
-				this.m_RootItem = new GameObjectTreeViewItem(this.m_RootInstanceID, depth, null, displayName);
-				if (!flag)
-				{
-					Debug.LogError("Root gameobject with id " + this.m_RootInstanceID + " not found!!");
-				}
+				this.m_RootItem = new GameObjectTreeViewItem(this.m_RootInstanceID, depth, null, property.name);
 			}
 			else
 			{
-				this.m_RootItem = new GameObjectTreeViewItem(this.m_RootInstanceID, depth, null, "RootOfSceneHierarchy");
+				this.m_RootItem = new GameObjectTreeViewItem(this.m_RootInstanceID, depth, null, "RootOfAll");
 			}
-			if (!base.showRootNode)
+			if (!base.showRootItem)
 			{
 				this.SetExpanded(this.m_RootItem, true);
 			}
-			bool flag2 = !string.IsNullOrEmpty(this.m_SearchString);
-			if (flag2)
+		}
+
+		private void ClearSearchFilter()
+		{
+			HierarchyProperty hierarchyProperty = this.CreateHierarchyProperty();
+			hierarchyProperty.SetSearchFilter("", 0);
+		}
+
+		public override void FetchData()
+		{
+			Profiler.BeginSample("SceneHierarchyWindow.FetchData");
+			this.m_RowsPartiallyInitialized = false;
+			double timeSinceStartup = EditorApplication.timeSinceStartup;
+			HierarchyProperty hierarchyProperty = this.CreateHierarchyProperty();
+			if (this.m_RootInstanceID != 0)
 			{
-				hierarchyProperty.SetSearchFilter(this.m_SearchString, this.m_SearchMode);
+				if (!hierarchyProperty.Find(this.m_RootInstanceID, null))
+				{
+					Debug.LogError("Root gameobject with id " + this.m_RootInstanceID + " not found!!");
+					this.m_RootInstanceID = 0;
+					hierarchyProperty.Reset();
+				}
 			}
-			this.m_VisibleRows = this.CalcVisibleItems(hierarchyProperty, flag2);
+			this.CreateRootItem(hierarchyProperty);
+			this.m_NeedRefreshRows = false;
 			this.m_NeedsChildParentReferenceSetup = true;
-			this.m_NeedRefreshVisibleFolders = false;
-			if (this.sortingState.sortingObject != null && this.sortingState.implementsCompare)
+			bool flag = this.m_RootInstanceID != 0;
+			bool flag2 = !string.IsNullOrEmpty(this.m_SearchString);
+			if (flag2 || flag)
 			{
-				this.SortVisibleRows();
+				if (flag2)
+				{
+					hierarchyProperty.SetSearchFilter(this.m_SearchString, this.m_SearchMode);
+				}
+				this.InitializeProgressivly(hierarchyProperty, flag, flag2);
+			}
+			else
+			{
+				this.InitializeMinimal();
 			}
 			double timeSinceStartup2 = EditorApplication.timeSinceStartup;
 			double num = timeSinceStartup2 - timeSinceStartup;
@@ -144,6 +293,7 @@ namespace UnityEditor
 			}
 			this.m_LastFetchTime = timeSinceStartup;
 			this.m_TreeView.SetSelection(Selection.instanceIDs, false);
+			this.CreateSceneHeaderItems();
 			if (SceneHierarchyWindow.s_Debug)
 			{
 				Debug.Log(string.Concat(new object[]
@@ -156,102 +306,296 @@ namespace UnityEditor
 			}
 			Profiler.EndSample();
 		}
+
+		public override bool CanBeParent(TreeViewItem item)
+		{
+			this.SetupChildParentReferencesIfNeeded();
+			return base.CanBeParent(item);
+		}
+
 		private bool IsUsingAlphaSort()
 		{
-			return this.sortingState.sortingObject.GetType() == typeof(AlphabeticalSort);
+			return this.sortingState.GetType() == typeof(AlphabeticalSorting);
 		}
-		private List<TreeViewItem> CalcVisibleItems(HierarchyProperty property, bool hasSearchString)
+
+		private static void Resize(List<TreeViewItem> list, int count)
 		{
-			int depth = property.depth;
-			int[] expanded = base.expandedIDs.ToArray();
-			List<TreeViewItem> list = new List<TreeViewItem>();
-			while (property.NextWithDepthCheck(expanded, depth))
+			int count2 = list.Count;
+			if (count < count2)
 			{
-				int adjustedItemDepth = this.GetAdjustedItemDepth(hasSearchString, depth, property.depth);
-				GameObjectTreeViewItem item = this.CreateTreeViewItem(property, hasSearchString, adjustedItemDepth, true);
-				list.Add(item);
+				list.RemoveRange(count, count2 - count);
 			}
-			return list;
-		}
-		private GameObjectTreeViewItem CreateTreeViewItem(HierarchyProperty property, bool hasSearchString, int depth, bool shouldDisplay)
-		{
-			GameObjectTreeViewItem gameObjectTreeViewItem = new GameObjectTreeViewItem(property.instanceID, depth, null, string.Empty);
-			gameObjectTreeViewItem.colorCode = property.colorCode;
-			gameObjectTreeViewItem.objectPPTR = property.pptrValue;
-			gameObjectTreeViewItem.shouldDisplay = shouldDisplay;
-			if (!hasSearchString && property.hasChildren)
+			else if (count > count2)
 			{
-				gameObjectTreeViewItem.children = LazyTreeViewDataSource.CreateChildListForCollapsedParent();
+				if (count > list.Capacity)
+				{
+					list.Capacity = count + 20;
+				}
+				list.AddRange(Enumerable.Repeat<TreeViewItem>(null, count - count2));
+			}
+		}
+
+		private void ResizeItemList(int count)
+		{
+			this.AllocateBackingArrayIfNeeded();
+			if (this.m_ListOfRows.Count != count)
+			{
+				GameObjectTreeViewDataSource.Resize(this.m_ListOfRows, count);
+			}
+		}
+
+		private void AllocateBackingArrayIfNeeded()
+		{
+			if (this.m_Rows == null)
+			{
+				int capacity = (this.m_RowCount <= 1000) ? 1000 : this.m_RowCount;
+				this.m_ListOfRows = new List<TreeViewItem>(capacity);
+				this.m_Rows = this.m_ListOfRows;
+			}
+		}
+
+		private void InitializeMinimal()
+		{
+			int[] expanded = this.m_TreeView.state.expandedIDs.ToArray();
+			HierarchyProperty hierarchyProperty = this.CreateHierarchyProperty();
+			this.m_RowCount = hierarchyProperty.CountRemaining(expanded);
+			this.ResizeItemList(this.m_RowCount);
+			hierarchyProperty.Reset();
+			if (SceneHierarchyWindow.debug)
+			{
+				GameObjectTreeViewDataSource.Log("Init minimal (" + this.m_RowCount + ")");
+			}
+			int firstRow;
+			int lastRow;
+			this.m_TreeView.gui.GetFirstAndLastRowVisible(out firstRow, out lastRow);
+			this.InitializeRows(hierarchyProperty, firstRow, lastRow);
+			this.m_RowsPartiallyInitialized = true;
+		}
+
+		private void InitializeFull()
+		{
+			if (SceneHierarchyWindow.debug)
+			{
+				GameObjectTreeViewDataSource.Log("Init full (" + this.m_RowCount + ")");
+			}
+			HierarchyProperty property = this.CreateHierarchyProperty();
+			this.InitializeRows(property, 0, this.m_RowCount - 1);
+		}
+
+		private void InitializeProgressivly(HierarchyProperty property, bool subTreeWanted, bool isSearching)
+		{
+			this.AllocateBackingArrayIfNeeded();
+			int num = (!subTreeWanted) ? 0 : (property.depth + 1);
+			if (!isSearching)
+			{
+				int num2 = 0;
+				int[] expanded = base.expandedIDs.ToArray();
+				int num3 = (!subTreeWanted) ? 0 : (property.depth + 1);
+				while (property.NextWithDepthCheck(expanded, num))
+				{
+					GameObjectTreeViewItem item = this.EnsureCreatedItem(num2);
+					this.InitTreeViewItem(item, property, property.hasChildren, property.depth - num3);
+					num2++;
+				}
+				this.m_RowCount = num2;
+			}
+			else
+			{
+				this.m_RowCount = this.InitializeSearchResults(property, num);
+			}
+			this.ResizeItemList(this.m_RowCount);
+		}
+
+		private int InitializeSearchResults(HierarchyProperty property, int minAllowedDepth)
+		{
+			int num = -1;
+			int num2 = 0;
+			List<int> list = new List<int>();
+			while (property.NextWithDepthCheck(null, minAllowedDepth))
+			{
+				GameObjectTreeViewItem item = this.EnsureCreatedItem(num2);
+				if (this.AddSceneHeaderToSearchIfNeeded(item, property, ref num))
+				{
+					num2++;
+					list.Add(num2);
+					if (this.IsSceneHeader(property))
+					{
+						continue;
+					}
+					item = this.EnsureCreatedItem(num2);
+				}
+				this.InitTreeViewItem(item, property, false, 0);
+				num2++;
+			}
+			int num3 = num2;
+			if (list.Count > 0)
+			{
+				int num4 = list[0];
+				for (int i = 1; i < list.Count; i++)
+				{
+					int count = list[i] - num4 - 1;
+					this.m_ListOfRows.Sort(num4, count, new TreeViewItemAlphaNumericSort());
+					num4 = list[i];
+				}
+				this.m_ListOfRows.Sort(num4, num3 - num4, new TreeViewItemAlphaNumericSort());
+			}
+			return num3;
+		}
+
+		private bool AddSceneHeaderToSearchIfNeeded(GameObjectTreeViewItem item, HierarchyProperty property, ref int currentSceneHandle)
+		{
+			Scene scene = property.GetScene();
+			bool result;
+			if (currentSceneHandle != scene.handle)
+			{
+				currentSceneHandle = scene.handle;
+				this.InitTreeViewItem(item, scene.handle, scene, true, 0, null, false, 0);
+				result = true;
+			}
+			else
+			{
+				result = false;
+			}
+			return result;
+		}
+
+		private GameObjectTreeViewItem EnsureCreatedItem(int row)
+		{
+			if (row >= this.m_Rows.Count)
+			{
+				this.m_Rows.Add(null);
+			}
+			GameObjectTreeViewItem gameObjectTreeViewItem = (GameObjectTreeViewItem)this.m_Rows[row];
+			if (gameObjectTreeViewItem == null)
+			{
+				gameObjectTreeViewItem = new GameObjectTreeViewItem(0, 0, null, null);
+				this.m_Rows[row] = gameObjectTreeViewItem;
 			}
 			return gameObjectTreeViewItem;
 		}
-		private int GetAdjustedItemDepth(bool hasSearchString, int minDepth, int adjPropertyDepth)
+
+		private void InitializeRows(HierarchyProperty property, int firstRow, int lastRow)
 		{
-			return (!hasSearchString) ? (adjPropertyDepth - minDepth) : 0;
+			property.Reset();
+			int[] expanded = base.expandedIDs.ToArray();
+			if (firstRow > 0)
+			{
+				if (!property.Skip(firstRow, expanded))
+				{
+					Debug.LogError("Failed to skip " + firstRow);
+				}
+			}
+			int num = firstRow;
+			while (property.Next(expanded) && num <= lastRow)
+			{
+				GameObjectTreeViewItem item = this.EnsureCreatedItem(num);
+				this.InitTreeViewItem(item, property, property.hasChildren, property.depth);
+				num++;
+			}
 		}
+
+		private void InitTreeViewItem(GameObjectTreeViewItem item, HierarchyProperty property, bool itemHasChildren, int itemDepth)
+		{
+			this.InitTreeViewItem(item, property.instanceID, property.GetScene(), this.IsSceneHeader(property), property.colorCode, property.pptrValue, itemHasChildren, itemDepth);
+		}
+
+		private void InitTreeViewItem(GameObjectTreeViewItem item, int itemID, Scene scene, bool isSceneHeader, int colorCode, UnityEngine.Object pptrObject, bool hasChildren, int depth)
+		{
+			item.children = null;
+			item.id = itemID;
+			item.depth = depth;
+			item.parent = null;
+			if (isSceneHeader)
+			{
+				item.displayName = ((!string.IsNullOrEmpty(scene.name)) ? scene.name : "Untitled");
+			}
+			else
+			{
+				item.displayName = null;
+			}
+			item.colorCode = colorCode;
+			item.objectPPTR = pptrObject;
+			item.shouldDisplay = true;
+			item.isSceneHeader = isSceneHeader;
+			item.scene = scene;
+			item.icon = ((!isSceneHeader) ? null : EditorGUIUtility.FindTexture("SceneAsset Icon"));
+			if (hasChildren)
+			{
+				item.children = LazyTreeViewDataSource.CreateChildListForCollapsedParent();
+			}
+		}
+
+		private bool IsSceneHeader(HierarchyProperty property)
+		{
+			return property.pptrValue == null;
+		}
+
 		protected override HashSet<int> GetParentsAbove(int id)
 		{
 			HashSet<int> hashSet = new HashSet<int>();
-			IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
-			if (hierarchyProperty.Find(id, null))
+			HashSet<int> result;
+			if (!this.IsValidHierarchyInstanceID(id))
 			{
-				while (hierarchyProperty.Parent())
-				{
-					hashSet.Add(hierarchyProperty.instanceID);
-				}
+				result = hashSet;
 			}
-			return hashSet;
-		}
-		protected override HashSet<int> GetParentsBelow(int id)
-		{
-			HashSet<int> hashSet = new HashSet<int>();
-			IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
-			if (hierarchyProperty.Find(id, null))
+			else
 			{
-				hashSet.Add(id);
-				int depth = hierarchyProperty.depth;
-				while (hierarchyProperty.Next(null) && hierarchyProperty.depth > depth)
+				IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
+				if (hierarchyProperty.Find(id, null))
 				{
-					if (hierarchyProperty.hasChildren)
+					while (hierarchyProperty.Parent())
 					{
 						hashSet.Add(hierarchyProperty.instanceID);
 					}
 				}
+				result = hashSet;
 			}
-			return hashSet;
+			return result;
 		}
-		private void SortVisibleRows()
+
+		protected override HashSet<int> GetParentsBelow(int id)
 		{
-			this.SetupChildParentReferencesIfNeeded();
-			this.SortChildrenRecursively(this.m_RootItem, this.sortingState.sortingObject);
-			this.m_VisibleRows.Clear();
-			this.RebuildVisibilityTree(this.m_RootItem, this.m_VisibleRows);
-		}
-		private void SortChildrenRecursively(TreeViewItem item, BaseHierarchySort comparer)
-		{
-			if (item == null || !item.hasChildren)
+			HashSet<int> hashSet = new HashSet<int>();
+			HashSet<int> result;
+			if (!this.IsValidHierarchyInstanceID(id))
 			{
-				return;
+				result = hashSet;
 			}
-			item.children = item.children.OrderBy((TreeViewItem x) => (x as GameObjectTreeViewItem).objectPPTR as GameObject, comparer).ToList<TreeViewItem>();
-			for (int i = 0; i < item.children.Count; i++)
+			else
 			{
-				this.SortChildrenRecursively(item.children[i], comparer);
-			}
-		}
-		private void RebuildVisibilityTree(TreeViewItem item, List<TreeViewItem> visibleItems)
-		{
-			if (item == null || !item.hasChildren)
-			{
-				return;
-			}
-			for (int i = 0; i < item.children.Count; i++)
-			{
-				if (item.children[i] != null)
+				IHierarchyProperty hierarchyProperty = new HierarchyProperty(HierarchyType.GameObjects);
+				if (hierarchyProperty.Find(id, null))
 				{
-					visibleItems.Add(item.children[i]);
-					this.RebuildVisibilityTree(item.children[i], visibleItems);
+					hashSet.Add(id);
+					int depth = hierarchyProperty.depth;
+					while (hierarchyProperty.Next(null) && hierarchyProperty.depth > depth)
+					{
+						if (hierarchyProperty.hasChildren)
+						{
+							hashSet.Add(hierarchyProperty.instanceID);
+						}
+					}
 				}
+				result = hashSet;
+			}
+			return result;
+		}
+
+		private static void Log(string text)
+		{
+			Debug.Log(text);
+		}
+
+		private void CreateSceneHeaderItems()
+		{
+			this.m_StickySceneHeaderItems.Clear();
+			int sceneCount = SceneManager.sceneCount;
+			for (int i = 0; i < sceneCount; i++)
+			{
+				Scene sceneAt = SceneManager.GetSceneAt(i);
+				GameObjectTreeViewItem item = new GameObjectTreeViewItem(0, 0, null, null);
+				this.InitTreeViewItem(item, sceneAt.handle, sceneAt, true, 0, null, false, 0);
+				this.m_StickySceneHeaderItems.Add(item);
 			}
 		}
 	}

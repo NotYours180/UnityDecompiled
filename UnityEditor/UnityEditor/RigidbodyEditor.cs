@@ -1,17 +1,22 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor
 {
 	[CanEditMultipleObjects, CustomEditor(typeof(Rigidbody))]
 	internal class RigidbodyEditor : Editor
 	{
 		private SerializedProperty m_Constraints;
+
 		private static GUIContent m_FreezePositionLabel = new GUIContent("Freeze Position");
+
 		private static GUIContent m_FreezeRotationLabel = new GUIContent("Freeze Rotation");
+
 		public void OnEnable()
 		{
 			this.m_Constraints = base.serializedObject.FindProperty("m_Constraints");
 		}
+
 		private void ConstraintToggle(Rect r, string label, RigidbodyConstraints value, int bit)
 		{
 			bool value2 = (value & (RigidbodyConstraints)(1 << bit)) != RigidbodyConstraints.None;
@@ -28,6 +33,7 @@ namespace UnityEditor
 			}
 			EditorGUI.showMixedValue = false;
 		}
+
 		private void ToggleBlock(RigidbodyConstraints constraints, GUIContent label, int x, int y, int z)
 		{
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
@@ -42,11 +48,12 @@ namespace UnityEditor
 			this.ConstraintToggle(rect, "Z", constraints, z);
 			GUILayout.EndHorizontal();
 		}
+
 		public override void OnInspectorGUI()
 		{
 			base.DrawDefaultInspector();
 			GUILayout.BeginHorizontal(new GUILayoutOption[0]);
-			this.m_Constraints.isExpanded = EditorGUILayout.Foldout(this.m_Constraints.isExpanded, "Constraints");
+			this.m_Constraints.isExpanded = EditorGUILayout.Foldout(this.m_Constraints.isExpanded, "Constraints", true);
 			GUILayout.EndHorizontal();
 			base.serializedObject.Update();
 			RigidbodyConstraints intValue = (RigidbodyConstraints)this.m_Constraints.intValue;

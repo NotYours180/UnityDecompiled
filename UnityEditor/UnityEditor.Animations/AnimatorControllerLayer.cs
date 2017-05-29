@@ -1,19 +1,30 @@
 using System;
 using UnityEngine;
+
 namespace UnityEditor.Animations
 {
 	public sealed class AnimatorControllerLayer
 	{
 		private string m_Name;
+
 		private AnimatorStateMachine m_StateMachine;
+
 		private AvatarMask m_AvatarMask;
+
 		private StateMotionPair[] m_Motions;
+
 		private StateBehavioursPair[] m_Behaviours;
+
 		private AnimatorLayerBlendingMode m_BlendingMode;
+
 		private int m_SyncedLayerIndex = -1;
+
 		private bool m_IKPass;
+
 		private float m_DefaultWeight;
+
 		private bool m_SyncedLayerAffectsTiming;
+
 		public string name
 		{
 			get
@@ -25,6 +36,7 @@ namespace UnityEditor.Animations
 				this.m_Name = value;
 			}
 		}
+
 		public AnimatorStateMachine stateMachine
 		{
 			get
@@ -36,6 +48,7 @@ namespace UnityEditor.Animations
 				this.m_StateMachine = value;
 			}
 		}
+
 		public AvatarMask avatarMask
 		{
 			get
@@ -47,6 +60,7 @@ namespace UnityEditor.Animations
 				this.m_AvatarMask = value;
 			}
 		}
+
 		public AnimatorLayerBlendingMode blendingMode
 		{
 			get
@@ -58,6 +72,7 @@ namespace UnityEditor.Animations
 				this.m_BlendingMode = value;
 			}
 		}
+
 		public int syncedLayerIndex
 		{
 			get
@@ -69,6 +84,7 @@ namespace UnityEditor.Animations
 				this.m_SyncedLayerIndex = value;
 			}
 		}
+
 		public bool iKPass
 		{
 			get
@@ -80,6 +96,7 @@ namespace UnityEditor.Animations
 				this.m_IKPass = value;
 			}
 		}
+
 		public float defaultWeight
 		{
 			get
@@ -91,6 +108,7 @@ namespace UnityEditor.Animations
 				this.m_DefaultWeight = value;
 			}
 		}
+
 		public bool syncedLayerAffectsTiming
 		{
 			get
@@ -102,8 +120,10 @@ namespace UnityEditor.Animations
 				this.m_SyncedLayerAffectsTiming = value;
 			}
 		}
+
 		public Motion GetOverrideMotion(AnimatorState state)
 		{
+			Motion result;
 			if (this.m_Motions != null)
 			{
 				StateMotionPair[] motions = this.m_Motions;
@@ -112,12 +132,15 @@ namespace UnityEditor.Animations
 					StateMotionPair stateMotionPair = motions[i];
 					if (stateMotionPair.m_State == state)
 					{
-						return stateMotionPair.m_Motion;
+						result = stateMotionPair.m_Motion;
+						return result;
 					}
 				}
 			}
-			return null;
+			result = null;
+			return result;
 		}
+
 		public void SetOverrideMotion(AnimatorState state, Motion motion)
 		{
 			if (this.m_Motions == null)
@@ -137,8 +160,10 @@ namespace UnityEditor.Animations
 			item.m_Motion = motion;
 			ArrayUtility.Add<StateMotionPair>(ref this.m_Motions, item);
 		}
+
 		public StateMachineBehaviour[] GetOverrideBehaviours(AnimatorState state)
 		{
+			StateMachineBehaviour[] result;
 			if (this.m_Behaviours != null)
 			{
 				StateBehavioursPair[] behaviours = this.m_Behaviours;
@@ -147,12 +172,15 @@ namespace UnityEditor.Animations
 					StateBehavioursPair stateBehavioursPair = behaviours[i];
 					if (stateBehavioursPair.m_State == state)
 					{
-						return stateBehavioursPair.m_Behaviours;
+						result = stateBehavioursPair.m_Behaviours;
+						return result;
 					}
 				}
 			}
-			return new StateMachineBehaviour[0];
+			result = new StateMachineBehaviour[0];
+			return result;
 		}
+
 		public void SetOverrideBehaviours(AnimatorState state, StateMachineBehaviour[] behaviours)
 		{
 			if (this.m_Behaviours == null)
